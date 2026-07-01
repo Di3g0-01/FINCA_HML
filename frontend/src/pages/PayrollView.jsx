@@ -95,7 +95,7 @@ export default function PayrollView() {
   const exportPDF = () => {
     try {
       const doc = new jsPDF('landscape');
-      doc.text(`PLANILLA TRABAJADORES FINCA HML - ${payrollName}`, 14, 20);
+      doc.text(`PLANILLA TRABAJADORES FINCA HM - ${payrollName}`, 14, 20);
 
       // FIJOS
       doc.setFontSize(14);
@@ -150,7 +150,7 @@ export default function PayrollView() {
         styles: { minCellHeight: 20, valign: 'middle' }
       });
 
-      doc.save(`Planilla_HML_${payrollName.replace(/ /g, '_')}.pdf`);
+      doc.save(`Planilla_HM_${payrollName.replace(/ /g, '_')}.pdf`);
     } catch (error) {
       console.error('Error generando PDF:', error);
       CustomAlert.info("Aviso", 'Hubo un error al generar el PDF. Revisa la consola para más detalles.');
@@ -191,7 +191,7 @@ export default function PayrollView() {
     const ws2 = XLSX.utils.json_to_sheet(tempSheet);
     XLSX.utils.book_append_sheet(wb, ws2, "Temporales");
 
-    XLSX.writeFile(wb, `Planilla_HML_${payrollName.replace(/ /g, '_')}.xlsx`);
+    XLSX.writeFile(wb, `Planilla_HM_${payrollName.replace(/ /g, '_')}.xlsx`);
   };
 
   if (isLoading) return <div style={{ padding: '40px', color: 'var(--text-muted)' }}>Cargando motor de planillas...</div>;

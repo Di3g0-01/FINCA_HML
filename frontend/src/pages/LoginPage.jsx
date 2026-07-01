@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import logoImg from '../assets/logo.png';
+
 
 import heroImg from '../assets/hero.png';
 
@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="premium-card fade-in" style={{ padding: '40px', width: '100%', maxWidth: '400px', borderRadius: '24px', position: 'relative' }}>
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <img src={logoImg} alt="Logo Finca HM" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
+          <img src="/logo.png" alt="Logo Finca HM" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
         </div>
         
         <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '1.8rem', fontWeight: '700' }}>
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </form>
         
         <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          Tip: Pass: AdministradorHML
+          Tip: Pass: AdministradorHM
         </div>
       </div>
     </div>

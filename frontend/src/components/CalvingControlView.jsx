@@ -61,7 +61,7 @@ export default function CalvingControlView() {
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Control_Partos");
-      XLSX.writeFile(wb, "Control_Partos_FincaHML.xlsx");
+      XLSX.writeFile(wb, "Control_Partos_FincaHM.xlsx");
     } catch (err) {
       CustomAlert.info("Aviso", "Error al exportar Excel");
     }
@@ -140,6 +140,7 @@ export default function CalvingControlView() {
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Total Partos</th>
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Último Parto</th>
                   <th style={{ padding: '16px', color: '#FF9800', fontWeight: '500' }}>Preñez</th>
+                  <th style={{ padding: '16px', color: '#10B981', fontWeight: '500' }}>Aprox. Parto</th>
                 </tr>
               </thead>
               <tbody>

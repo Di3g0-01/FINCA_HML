@@ -51,9 +51,19 @@ const AnimalRow = memo(({
             : (animal.birth_date ? new Date(animal.birth_date).toLocaleDateString() : '-')}
         </td>
         {viewMode === 'CALVING' ? (
-          <td style={{ padding: '16px', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)', fontWeight: 'bold' }}>
-            {animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}
-          </td>
+          <>
+            <td style={{ padding: '16px', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)', fontWeight: 'bold' }}>
+              {animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}
+            </td>
+            <td style={{ padding: '16px', color: animal.is_pregnant ? '#10B981' : 'var(--text-muted)', fontWeight: 'bold' }}>
+              {animal.is_pregnant ? (() => {
+                 const monthsLeft = 9 - (animal.pregnancy_months || 0);
+                 const daysLeft = Math.round(monthsLeft * 30.44);
+                 const d = new Date(); d.setDate(d.getDate() + daysLeft);
+                 return d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+              })() : '-'}
+            </td>
+          </>
         ) : (
           <td style={{ padding: '16px', color: '#2196F3', fontWeight: 'bold', fontSize: '1.1rem' }}>{animal.current_weight ? animal.current_weight + ' lbs' : '-'}</td>
         )}

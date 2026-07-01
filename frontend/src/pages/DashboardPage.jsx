@@ -3,7 +3,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, LogOut, FileText, ShoppingCart, DollarSign, AlertCircle, Users, WalletCards, Menu, X, Activity, ChevronDown, ChevronRight, Briefcase, Beef } from 'lucide-react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import logoImg from '../assets/logo.png';
+
 
 // Lazy load components for better initial performance
 const AnimalsView = lazy(() => import('../components/AnimalsView'));
@@ -50,7 +50,7 @@ export default function DashboardPage() {
       <aside className={`sidebar ${isSidebarOpen ? 'sidebar-visible' : 'sidebar-hidden'}`} style={{ width: '260px', borderRight: '1px solid var(--panel-border)', background: '#0d1117', padding: '24px', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={logoImg} alt="Logo Finca HM" style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
+            <img src="/logo.png" alt="Logo Finca HM" style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
             <h3 style={{ fontSize: '1.2rem', fontWeight: '600' }}>Finca HM</h3>
           </div>
           <button className="mobile-only" onClick={toggleSidebar} style={{ background: 'transparent', color: 'var(--text-muted)' }}><X size={24} /></button>
@@ -192,7 +192,7 @@ function DashboardHome() {
 
   return (
     <div className="fade-in">
-      <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', marginBottom: '8px' }}>FINCA HERMANOS MARTÍNEZ</h1>
+      <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', marginBottom: '8px' }}>FINCA MARTÍNEZ</h1>
       <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Gestión ganadera optimizada</p>
 
       {isLoading ? ( <div style={{ color: 'var(--text-muted)' }}>Cargando estadísticas...</div> ) : (
