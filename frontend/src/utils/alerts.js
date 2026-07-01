@@ -1,6 +1,6 @@
 import Swal from 'sweetalert2';
 
-// Base styling options for the Finca HML dark premium theme
+// Base styling options for the Finca HM dark premium theme
 const baseConfig = {
   background: '#1a1a1a',
   color: '#ffffff',

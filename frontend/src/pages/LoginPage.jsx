@@ -4,6 +4,8 @@ import { LogIn, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import logoImg from '../assets/logo.png';
 
+import heroImg from '../assets/hero.png';
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -29,15 +31,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: '#05070a' }}>
+    <div className="auth-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: `url(${heroImg}) no-repeat center center / cover` }}>
       <div className="premium-card fade-in" style={{ padding: '40px', width: '100%', maxWidth: '400px', borderRadius: '24px', position: 'relative' }}>
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <img src={logoImg} alt="Logo Finca HML" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
+          <img src={logoImg} alt="Logo Finca HM" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
         </div>
         
         <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '1.8rem', fontWeight: '700' }}>
-          Finca HML
+          Finca HM
         </h2>
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '32px', fontSize: '0.9rem' }}>
           CONTROL DE INVENTARIO GANADERO

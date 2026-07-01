@@ -53,7 +53,7 @@ export default function LogsView() {
 
   const handleExportPDF = (dataToExport = logs) => {
     const doc = new jsPDF('landscape');
-    doc.text("Bitácora de Actividad - Finca HML", 14, 15);
+    doc.text("Bitácora de Actividad - Finca HM", 14, 15);
     doc.setFontSize(10);
     doc.text(`Rango: ${dateRange.startDate} a ${dateRange.endDate}`, 14, 22);
 

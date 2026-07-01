@@ -43,7 +43,7 @@ const AnimalRow = memo(({
         <td style={{ padding: '16px', fontWeight: 'bold' }}>{animal.sex || '-'}</td>
         <td style={{ padding: '16px', color: (isChild || isMother) ? 'rgba(255,255,255,0.2)' : 'var(--text-muted)' }}>{(isChild || isMother) ? '-' : animal.lote}</td>
         <td style={{ padding: '16px', fontWeight: 'bold', color: animal.total_calvings > 0 ? '#FF9800' : 'var(--text-muted)' }}>
-          {animal.type === 'VACA' ? animal.total_calvings || 0 : '-'}
+          {['VACA', 'NOVILLA', 'CHIVA'].includes(animal.type) ? animal.total_calvings || 0 : '-'}
         </td>
         <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
           {viewMode === 'CALVING' 
@@ -83,7 +83,7 @@ const AnimalRow = memo(({
                 <div style={{ background: 'rgba(255, 152, 0, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 152, 0, 0.1)' }}>
                   <h4 style={{ color: '#FF9800', marginBottom: '16px', borderBottom: '1px solid rgba(255, 152, 0, 0.2)', paddingBottom: '8px' }}>Historial Ginecológico y Médico</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {animal.type === 'VACA' ? (
+                    {['VACA', 'NOVILLA', 'CHIVA'].includes(animal.type) ? (
                       <>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Preñez Actual:</span> <span style={{ fontWeight: 'bold', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)' }}>{animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Cantidad de Partos:</span> <span>{animal.total_calvings || 0}</span></div>
@@ -91,7 +91,7 @@ const AnimalRow = memo(({
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Penúltimo Parto:</span> <span>{animal.second_last_calving_date ? new Date(animal.second_last_calving_date).toLocaleDateString() : 'N/A'}</span></div>
                       </>
                     ) : (
-                      <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '8px' }}>El módulo ginecológico solo aplica biológicamente a las vacas.</div>
+                      <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '8px' }}>El módulo ginecológico solo aplica biológicamente a las hembras.</div>
                     )}
                     <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Observaciones Médicas Generales:</span>

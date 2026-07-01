@@ -191,14 +191,14 @@ export class AnimalsService implements OnModuleInit {
 
     if (isControlPartos) {
       if (isPregnant) {
-        query.andWhere('animal.is_pregnant = 1');
+        query.andWhere('animal.is_pregnant = :isPregnant', { isPregnant: true });
       } else {
         query.andWhere(new Brackets(qb => {
-          qb.where('animal.is_pregnant = 1')
+          qb.where('animal.is_pregnant = :isPregnant', { isPregnant: true })
             .orWhere('animal.total_calvings > 0');
         }));
       }
-      query.andWhere('animal.type = :type', { type: AnimalType.VACA });
+      query.andWhere('animal.type IN (:...types)', { types: [AnimalType.VACA, AnimalType.NOVILLA, AnimalType.CHIVA] });
     }
 
     if (search) {

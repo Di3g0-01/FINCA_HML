@@ -42,7 +42,7 @@ export default function DashboardPage() {
       {/* Mobile Header */}
       <div className="mobile-only" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '60px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', display: 'flex', alignItems: 'center', padding: '0 20px', zIndex: 900, borderBottom: '1px solid var(--panel-border)' }}>
         <button onClick={toggleSidebar} style={{ background: 'transparent', color: 'white' }}><Menu size={24} /></button>
-        <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>Finca HML</span>
+        <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>Finca HM</span>
       </div>
 
       {isSidebarOpen && <div className="mobile-only" onClick={toggleSidebar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />}
@@ -50,8 +50,8 @@ export default function DashboardPage() {
       <aside className={`sidebar ${isSidebarOpen ? 'sidebar-visible' : 'sidebar-hidden'}`} style={{ width: '260px', borderRight: '1px solid var(--panel-border)', background: '#0d1117', padding: '24px', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={logoImg} alt="Logo Finca HML" style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '600' }}>Finca HML</h3>
+            <img src={logoImg} alt="Logo Finca HM" style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '600' }}>Finca HM</h3>
           </div>
           <button className="mobile-only" onClick={toggleSidebar} style={{ background: 'transparent', color: 'var(--text-muted)' }}><X size={24} /></button>
         </div>
@@ -192,7 +192,7 @@ function DashboardHome() {
 
   return (
     <div className="fade-in">
-      <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', marginBottom: '8px' }}>FINCA HERMANOS MARTÍNEZ LARA</h1>
+      <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', marginBottom: '8px' }}>FINCA HERMANOS MARTÍNEZ</h1>
       <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Gestión ganadera optimizada</p>
 
       {isLoading ? ( <div style={{ color: 'var(--text-muted)' }}>Cargando estadísticas...</div> ) : (

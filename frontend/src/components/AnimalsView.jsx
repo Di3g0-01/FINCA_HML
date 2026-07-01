@@ -177,7 +177,7 @@ export default function AnimalsView() {
       const res = await axios.get(`http://localhost:3001/animals?status=${filterStatus}&limit=5000`);
       const data = res.data.data || res.data;
       const doc = new jsPDF('landscape', 'pt', 'a4');
-      doc.text("Inventario Activo Básico - Finca HML", 14, 25);
+      doc.text("Inventario Activo Básico - Finca HM", 14, 25);
       
       const tableColumn = [
         "Identificador", "Clasif.", "Lote", "Grado", "Nacimiento", 
