@@ -177,8 +177,8 @@ export class AnimalsService implements OnModuleInit {
       query.orderBy('animal.death_date', 'DESC')
            .addOrderBy('animal.updated_at', 'DESC');
     } else {
-      query.orderBy("CAST(SUBSTRING_INDEX(animal.identifier, '/', -1) AS UNSIGNED)", 'ASC')
-           .addOrderBy("CAST(SUBSTRING_INDEX(animal.identifier, '/', 1) AS UNSIGNED)", 'ASC');
+      query.orderBy("CAST(NULLIF(regexp_replace(split_part(animal.identifier, '/', 2), '[^0-9]', '', 'g'), '') AS INTEGER)", 'ASC', 'NULLS LAST')
+           .addOrderBy("CAST(NULLIF(regexp_replace(split_part(animal.identifier, '/', 1), '[^0-9]', '', 'g'), '') AS INTEGER)", 'ASC', 'NULLS LAST');
     }
 
     if (status && status !== 'TODOS') {
@@ -334,9 +334,7 @@ export class AnimalsService implements OnModuleInit {
     await queryRunner.startTransaction();
     
     try {
-      await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
-      await queryRunner.query('DELETE FROM animals');
-      await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+      await queryRunner.query('TRUNCATE TABLE animals CASCADE');
       await queryRunner.commitTransaction();
       this.logger.log('Limpieza completada exitosamente.');
     } catch (e) {
