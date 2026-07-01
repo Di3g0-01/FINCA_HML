@@ -1,0 +1,8 @@
+{
+  "name": "proyecto-finca-hml",
+  "version": "1.0.0",
+  "description": "Root package for Finca HML project",
+  "scripts": {
+    "start": "docker-compose up -d && npx concurrently \"cd backend && npm run start:dev\" \"cd frontend && npm run dev\""
+  }
+}
