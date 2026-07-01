@@ -438,47 +438,44 @@ export default function AnimalsView() {
 
     const renderedIds = new Set();
     const resultRows = [];
-    const query = searchTerm.toLowerCase();
+    const query = searchTerm.toLowerCase().trim();
 
-    animals.forEach(animal => {
-      if (renderedIds.has(animal.id)) return;
+    // 1. Buscar el animal exacto solicitado
+    const exactMatches = animals.filter(a => (a.identifier || '').toLowerCase().trim() === query);
 
-      const matchesTarget = (animal.identifier || '').toLowerCase().includes(query) || 
-                            (animal.type || '').toLowerCase().includes(query) ||
-                            (animal.mother?.identifier || '').toLowerCase().includes(query);
+    exactMatches.forEach(targetAnimal => {
+      if (!renderedIds.has(targetAnimal.id)) {
+        resultRows.push(renderAnimalRow(targetAnimal));
+        renderedIds.add(targetAnimal.id);
+      }
 
-      if (matchesTarget) {
-        // Añadir el animal encontrado
-        if (!renderedIds.has(animal.id)) {
-          resultRows.push(renderAnimalRow(animal));
-          renderedIds.add(animal.id);
+      // Si el animal encontrado tiene hijos en la lista, los ponemos DEBAJO etiquetados como HIJO
+      const children = animals.filter(c => c.mother_id === targetAnimal.id);
+      children.forEach(child => {
+        if (!renderedIds.has(child.id)) {
+          resultRows.push(renderAnimalRow(child, 'HIJO'));
+          renderedIds.add(child.id);
         }
+      });
 
-        // Si es VACA, añadir sus hijos que estén en el set de datos actual
-        if (animal.type === 'VACA') {
-          animals.filter(c => c.mother_id === animal.id).forEach(child => {
-            if (!renderedIds.has(child.id)) {
-              resultRows.push(renderAnimalRow(child, 'HIJO'));
-              renderedIds.add(child.id);
-            }
-          });
-        }
-
-        // Siempre añadir a la MADRE si existe (independientemente del tipo de animal encontrado)
-        if (animal.mother && !renderedIds.has(animal.mother.id)) {
-          resultRows.push(renderAnimalRow(animal.mother, 'MADRE'));
-          renderedIds.add(animal.mother.id);
-        }
+      // Si el animal encontrado tiene una madre en la lista, la ponemos (si no fue renderizada ya)
+      if (targetAnimal.mother && !renderedIds.has(targetAnimal.mother.id)) {
+        resultRows.push(renderAnimalRow(targetAnimal.mother, 'MADRE'));
+        renderedIds.add(targetAnimal.mother.id);
       }
     });
 
-    // Agregar el resto que no coincida directamente pero esté en la lista (por si acaso)
-    animals.forEach(animal => {
-      if (!renderedIds.has(animal.id)) {
-        resultRows.push(renderAnimalRow(animal));
-        renderedIds.add(animal.id);
-      }
-    });
+    // 2. Por si el animal exacto no está activo pero sus hijos sí
+    if (exactMatches.length === 0) {
+      const orphanChildren = animals.filter(c => c.mother && (c.mother.identifier || '').toLowerCase().trim() === query);
+      orphanChildren.forEach(child => {
+        if (!renderedIds.has(child.id)) {
+          resultRows.push(renderAnimalRow(child, 'HIJO'));
+          renderedIds.add(child.id);
+        }
+      });
+    }
+
     return resultRows;
   }, [animals, searchTerm, expandedRowId, onToggleExpand, openForm, handleDelete]);
 

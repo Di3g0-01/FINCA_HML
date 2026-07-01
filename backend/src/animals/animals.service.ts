@@ -202,11 +202,11 @@ export class AnimalsService implements OnModuleInit {
     }
 
     if (search) {
+      const exactSearch = search.trim();
       query.andWhere(
         new Brackets(qb => {
-          qb.where('LOWER(animal.identifier) LIKE LOWER(:search)', { search: `%${search}%` })
-            .orWhere('LOWER(mother.identifier) LIKE LOWER(:search)', { search: `%${search}%` })
-            .orWhere('LOWER(animal.type) LIKE LOWER(:search)', { search: `%${search}%` });
+          qb.where('animal.identifier = :exactSearch', { exactSearch })
+            .orWhere('mother.identifier = :exactSearch', { exactSearch });
         })
       );
     }
