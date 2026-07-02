@@ -4,7 +4,6 @@ import { LogIn, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
 
-import heroImg from '../assets/hero.png';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -31,7 +30,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: `url(${heroImg}) no-repeat center center / cover` }}>
+    <div className="auth-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-color, #0d1117)' }}>
       <div className="premium-card fade-in" style={{ padding: '40px', width: '100%', maxWidth: '400px', borderRadius: '24px', position: 'relative' }}>
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
