@@ -141,31 +141,32 @@ export default function AnimalsView() {
       const data = res.data.data || res.data;
       const exportData = data.map(a => {
         return {
-          'L1': a.lote || 'GENERAL',
-          'ANIMA': a.identifier,
+          'LOTE': a.lote || 'GENERAL',
+          'ANIMAL': a.identifier,
           'SEXO': a.sex || '',
           'COLOR': a.color || '',
-          'CLASIFICACIO': a.type || 'VACA',
-          'No. Part': a.total_calvings || 0,
-          'No. MAD': a.mother?.identifier || '',
+          'CLASIFICACION': a.type || 'VACA',
+          'No. PARTOS': a.total_calvings || 0,
+          'No. MADRE': a.mother?.identifier || '',
           'FECHA DE NACIMIENTO': a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '',
           'PENULTIMO PARTO': a.second_last_calving_date ? a.second_last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
           'ULTIMO PARTO': a.last_calving_date ? a.last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
-          'CARGADA MESE': a.is_pregnant ? a.pregnancy_months || 0 : '',
+          'CARGADA MESES': a.is_pregnant ? a.pregnancy_months || 0 : '',
           'OBSERVACIONES': a.observations || a.nickname || '',
-          'FECHA DE COMPR': a.purchase_date ? a.purchase_date.split('T')[0].split('-').reverse().join('/') : '',
+          'FECHA DE COMPRA': a.purchase_date ? a.purchase_date.split('T')[0].split('-').reverse().join('/') : '',
           'FECHA DE VENTA': a.sale_date ? a.sale_date.split('T')[0].split('-').reverse().join('/') : '',
-          'FECHA DE MUERT': a.death_date ? a.death_date.split('T')[0].split('-').reverse().join('/') : '',
+          'FECHA DE MUERTE': a.death_date ? a.death_date.split('T')[0].split('-').reverse().join('/') : '',
           'GRADO': a.grado || '',
-          'PESO AL NACER': a.birth_weight || ''
+          'PESO AL NACER': a.birth_weight || '',
+          'PESO ACTUAL': a.current_weight || ''
         };
       });
 
       const headers = [
-        'L1', 'ANIMA', 'SEXO', 'COLOR', 'CLASIFICACIO', 'No. Part', 'No. MAD',
-        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'CARGADA MESE',
-        'OBSERVACIONES', 'FECHA DE COMPR', 'FECHA DE VENTA', 'FECHA DE MUERT',
-        'GRADO', 'PESO AL NACER'
+        'LOTE', 'ANIMAL', 'SEXO', 'COLOR', 'CLASIFICACION', 'No. PARTOS', 'No. MADRE',
+        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'CARGADA MESES',
+        'OBSERVACIONES', 'FECHA DE COMPRA', 'FECHA DE VENTA', 'FECHA DE MUERTE',
+        'GRADO', 'PESO AL NACER', 'PESO ACTUAL'
       ];
 
       const ws = exportData.length > 0 
@@ -174,7 +175,8 @@ export default function AnimalsView() {
         
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-      XLSX.writeFile(wb, "Inventario_Activo.xlsx");
+      const filename = filterStatus === 'TODOS' ? "Inventario_General.xlsx" : `Inventario_${filterStatus}.xlsx`;
+      XLSX.writeFile(wb, filename);
     } catch (err) {
       CustomAlert.info("Aviso", "Error al exportar Excel");
     }
@@ -185,10 +187,11 @@ export default function AnimalsView() {
       const res = await axios.get(`http://localhost:3001/animals?status=${filterStatus}&limit=5000`);
       const data = res.data.data || res.data;
       const doc = new jsPDF('landscape', 'pt', 'a4');
-      doc.text("Inventario Activo Básico - Finca HM", 14, 25);
+      const title = filterStatus === 'TODOS' ? "Inventario General Completo - Finca HM" : `Inventario (${filterStatus}) - Finca HM`;
+      doc.text(title, 14, 25);
       
       const tableColumn = [
-        "L1", "ANIMA", "SEXO", "COLOR", "CLASIFICACIO", "No. Part", "No. MAD", "FECHA DE NACIMIENTO", "PENULTIMO PARTO", "ULTIMO PARTO", "CARGADA MESE"
+        "LOTE", "ANIMAL", "SEXO", "COLOR", "CLASIFICACION", "No. PARTOS", "No. MADRE", "FECHA NACIMIENTO", "PENULTIMO PARTO", "ULTIMO PARTO", "PESO ACTUAL"
       ];
       
       const tableRows = data.map(a => [
@@ -202,7 +205,7 @@ export default function AnimalsView() {
         a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '',
         a.second_last_calving_date ? a.second_last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
         a.last_calving_date ? a.last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
-        a.is_pregnant ? `${a.pregnancy_months} m` : 'No'
+        a.current_weight ? `${a.current_weight} lbs` : ''
       ]);
 
       autoTable(doc, {
@@ -212,7 +215,8 @@ export default function AnimalsView() {
         styles: { fontSize: 7 },
         headStyles: { fillColor: [33, 150, 243] }
       });
-      doc.save("Inventario_Activo.pdf");
+      const filename = filterStatus === 'TODOS' ? "Inventario_General.pdf" : `Inventario_${filterStatus}.pdf`;
+      doc.save(filename);
     } catch (err) {
       console.error(err);
       CustomAlert.info("Aviso", "Error al exportar PDF");

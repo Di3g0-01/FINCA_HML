@@ -1,6 +1,16 @@
 import { Fragment, memo } from 'react';
 import { ChevronDown, ChevronRight, Tag, Edit, Trash2 } from 'lucide-react';
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const dStr = dateStr.split('T')[0];
+  const parts = dStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+};
+
 const AnimalRow = memo(({ 
   animal, 
   isExpanded, 
@@ -47,8 +57,8 @@ const AnimalRow = memo(({
         </td>
         <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
           {viewMode === 'CALVING' 
-            ? (animal.last_calving_date ? new Date(animal.last_calving_date).toLocaleDateString() : 'N/A')
-            : (animal.birth_date ? new Date(animal.birth_date).toLocaleDateString() : '-')}
+            ? (animal.last_calving_date ? formatDate(animal.last_calving_date) : 'N/A')
+            : (animal.birth_date ? formatDate(animal.birth_date) : '-')}
         </td>
         {viewMode === 'CALVING' ? (
           <>
@@ -83,7 +93,7 @@ const AnimalRow = memo(({
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Grado (Genética):</span> <span style={{ fontWeight: 'bold' }}>{animal.grado || 'N/A'}</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Color o Capa:</span> <span>{animal.color || 'N/A'}</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Apodo / Opcional:</span> <span style={{ fontStyle: 'italic' }}>{animal.nickname || 'N/A'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Fecha de Compra:</span> <span>{animal.purchase_date ? new Date(animal.purchase_date).toLocaleDateString() : 'N/A (Nacimiento Local)'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Fecha de Compra:</span> <span>{animal.purchase_date ? formatDate(animal.purchase_date) : 'N/A (Nacimiento Local)'}</span></div>
                   </div>
                 </div>
 
@@ -97,8 +107,8 @@ const AnimalRow = memo(({
                       <>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Preñez Actual:</span> <span style={{ fontWeight: 'bold', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)' }}>{animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Cantidad de Partos:</span> <span>{animal.total_calvings || 0}</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Último Parto:</span> <span>{animal.last_calving_date ? new Date(animal.last_calving_date).toLocaleDateString() : 'N/A'}</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Penúltimo Parto:</span> <span>{animal.second_last_calving_date ? new Date(animal.second_last_calving_date).toLocaleDateString() : 'N/A'}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Último Parto:</span> <span>{animal.last_calving_date ? formatDate(animal.last_calving_date) : 'N/A'}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Penúltimo Parto:</span> <span>{animal.second_last_calving_date ? formatDate(animal.second_last_calving_date) : 'N/A'}</span></div>
                       </>
                     ) : (
                       <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '8px' }}>El módulo ginecológico solo aplica biológicamente a las hembras.</div>
