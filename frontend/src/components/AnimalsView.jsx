@@ -151,6 +151,7 @@ export default function AnimalsView() {
           'FECHA DE NACIMIENTO': a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '',
           'PENULTIMO PARTO': a.second_last_calving_date ? a.second_last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
           'ULTIMO PARTO': a.last_calving_date ? a.last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
+          'No. DE PARTOS': a.total_calvings || 0,
           'GRADO': a.grado || '',
           'OBSERVACIONES': a.observations || a.nickname || '',
           'FECHA DE COMPRA': a.purchase_date ? new Date(a.purchase_date).toLocaleDateString() : '',
@@ -166,7 +167,7 @@ export default function AnimalsView() {
 
       const headers = [
         'N.VACA / ANIMAL', 'LOTE', 'SEXO', 'COLOR', 'CLASIFICACION', 'No. MADRE',
-        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'GRADO',
+        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'No. DE PARTOS', 'GRADO',
         'OBSERVACIONES', 'FECHA DE COMPRA', 'PESO AL NACER', 'PESO 4MESES',
         'GANANCIA DIARIA EN 4 MESES', 'PESO AL DESMADRE', 'GANANCIA DIARIA AL DESMADRE',
         'PESO', 'GANANCIA PESO MENS.'
@@ -275,11 +276,15 @@ export default function AnimalsView() {
             if (val < 4000) { year = val; month = 0; day = 1; }
             else {
               const excelEpoch = new Date(Date.UTC(1899, 11, 30)); 
-              const d = new Date(excelEpoch.getTime() + val * 86400000);
+              const d = new Date(excelEpoch.getTime() + Math.round(val * 86400000));
               year = d.getUTCFullYear(); month = d.getUTCMonth(); day = d.getUTCDate();
             }
           } else {
-            const sVal = String(val).trim().split(' ')[0]; // Remove timestamp if any
+            const strVal = String(val).trim();
+            if (strVal.match(/^\d{4}-\d{2}-\d{2}/)) {
+                return strVal.substring(0, 10);
+            }
+            const sVal = strVal.split('T')[0].split(' ')[0]; // Remove timestamp if any
             const parts = sVal.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
             if (parts) {
               year = parseInt(parts[3]);
@@ -290,10 +295,21 @@ export default function AnimalsView() {
               else if (p1 > 12) { month = p2 - 1; day = p1; }
               else { month = p2 - 1; day = p1; } // Assume DD/MM by default
             } else {
-              const d = new Date(sVal);
-              if (!isNaN(d.getTime())) {
-                year = d.getFullYear(); month = d.getMonth(); day = d.getDate();
-              } else return null;
+              const partsYYYYMMDD = sVal.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+              if (partsYYYYMMDD) {
+                  year = parseInt(partsYYYYMMDD[1]);
+                  month = parseInt(partsYYYYMMDD[2]) - 1;
+                  day = parseInt(partsYYYYMMDD[3]);
+              } else {
+                const d = new Date(strVal);
+                if (!isNaN(d.getTime())) {
+                  if (strVal.includes('Z') || strVal.includes('+')) {
+                      year = d.getUTCFullYear(); month = d.getUTCMonth(); day = d.getUTCDate();
+                  } else {
+                      year = d.getFullYear(); month = d.getMonth(); day = d.getDate();
+                  }
+                } else return null;
+              }
             }
           }
           if (year && month !== undefined && day) {
@@ -352,7 +368,7 @@ export default function AnimalsView() {
               second_last_calving_date: parseDate(getVal(row, ['PENULTIMOPARTO', 'FECHAPP', 'PENULTIMOP']))
             };
 
-            const rp = getVal(row, ['PARTOS', 'TOTALPARTOS', 'NOPARTOS']);
+            const rp = getVal(row, ['PARTOS', 'TOTALPARTOS', 'NOPARTOS', 'NODEPARTOS', 'NUMERODEPARTOS', 'NPARTOS']);
             payload.total_calvings = parseInt(rp) || 0;
 
             const cleanId = identifier.toLowerCase();
@@ -367,7 +383,7 @@ export default function AnimalsView() {
             successCount++;
             idMap.set(identifier, response.data.id);
             
-            const rawMother = String(getVal(row, ['MADRE', 'IDMADRE']) || '').trim();
+            const rawMother = String(getVal(row, ['MADRE', 'IDMADRE', 'NODEMADRE', 'NOMADRE', 'NMADRE', 'NUMERODEMADRE']) || '').trim();
             if (rawMother && !['-', '0', 'N/A', 'NONE', 'NULL'].includes(rawMother.toUpperCase())) {
               pendingRelations.push({ childId: response.data.id, motherStr: rawMother });
             }
