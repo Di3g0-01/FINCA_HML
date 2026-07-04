@@ -140,37 +140,32 @@ export default function AnimalsView() {
       const res = await axios.get(`http://localhost:3001/animals?status=${filterStatus}&limit=5000`);
       const data = res.data.data || res.data;
       const exportData = data.map(a => {
-        const gains = calculateGains_Internal(a);
         return {
-          'N.VACA / ANIMAL': a.identifier,
-          'LOTE': a.lote,
+          'L1': a.lote || 'GENERAL',
+          'ANIMA': a.identifier,
           'SEXO': a.sex || '',
           'COLOR': a.color || '',
-          'CLASIFICACION': a.type,
-          'No. MADRE': a.mother?.identifier || '',
+          'CLASIFICACIO': a.type || 'VACA',
+          'No. Part': a.total_calvings || 0,
+          'No. MAD': a.mother?.identifier || '',
           'FECHA DE NACIMIENTO': a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '',
           'PENULTIMO PARTO': a.second_last_calving_date ? a.second_last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
           'ULTIMO PARTO': a.last_calving_date ? a.last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
-          'No. DE PARTOS': a.total_calvings || 0,
-          'GRADO': a.grado || '',
+          'CARGADA MESE': a.is_pregnant ? a.pregnancy_months || 0 : '',
           'OBSERVACIONES': a.observations || a.nickname || '',
-          'FECHA DE COMPRA': a.purchase_date ? new Date(a.purchase_date).toLocaleDateString() : '',
-          'PESO AL NACER': a.birth_weight || '',
-          'PESO 4MESES': a.weight_4m || '',
-          'GANANCIA DIARIA EN 4 MESES': gains.g4m || '',
-          'PESO AL DESMADRE': a.weaning_weight || '',
-          'GANANCIA DIARIA AL DESMADRE': gains.gmD || '',
-          'PESO': a.current_weight || '',
-          'GANANCIA PESO MENS.': gains.gMens || ''
+          'FECHA DE COMPR': a.purchase_date ? a.purchase_date.split('T')[0].split('-').reverse().join('/') : '',
+          'FECHA DE VENTA': a.sale_date ? a.sale_date.split('T')[0].split('-').reverse().join('/') : '',
+          'FECHA DE MUERT': a.death_date ? a.death_date.split('T')[0].split('-').reverse().join('/') : '',
+          'GRADO': a.grado || '',
+          'PESO AL NACER': a.birth_weight || ''
         };
       });
 
       const headers = [
-        'N.VACA / ANIMAL', 'LOTE', 'SEXO', 'COLOR', 'CLASIFICACION', 'No. MADRE',
-        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'No. DE PARTOS', 'GRADO',
-        'OBSERVACIONES', 'FECHA DE COMPRA', 'PESO AL NACER', 'PESO 4MESES',
-        'GANANCIA DIARIA EN 4 MESES', 'PESO AL DESMADRE', 'GANANCIA DIARIA AL DESMADRE',
-        'PESO', 'GANANCIA PESO MENS.'
+        'L1', 'ANIMA', 'SEXO', 'COLOR', 'CLASIFICACIO', 'No. Part', 'No. MAD',
+        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'CARGADA MESE',
+        'OBSERVACIONES', 'FECHA DE COMPR', 'FECHA DE VENTA', 'FECHA DE MUERT',
+        'GRADO', 'PESO AL NACER'
       ];
 
       const ws = exportData.length > 0 
@@ -193,27 +188,28 @@ export default function AnimalsView() {
       doc.text("Inventario Activo Básico - Finca HM", 14, 25);
       
       const tableColumn = [
-        "Identificador", "Clasif.", "Lote", "Grado", "Nacimiento", 
-        "Peso N.", "Peso 4M", "Peso Des.", "Peso Act."
+        "L1", "ANIMA", "SEXO", "COLOR", "CLASIFICACIO", "No. Part", "No. MAD", "FECHA DE NACIMIENTO", "PENULTIMO PARTO", "ULTIMO PARTO", "CARGADA MESE"
       ];
       
       const tableRows = data.map(a => [
+        a.lote || 'GENERAL',
         a.identifier,
-        a.type,
-        a.lote,
-        a.grado || '-',
-        a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '-',
-        a.birth_weight || '-',
-        a.weight_4m || '-',
-        a.weaning_weight || '-',
-        a.current_weight || '-'
+        a.sex || '',
+        a.color || '',
+        a.type || 'VACA',
+        a.total_calvings || 0,
+        a.mother?.identifier || '',
+        a.birth_date ? a.birth_date.split('T')[0].split('-').reverse().join('/') : '',
+        a.second_last_calving_date ? a.second_last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
+        a.last_calving_date ? a.last_calving_date.split('T')[0].split('-').reverse().join('/') : '',
+        a.is_pregnant ? `${a.pregnancy_months} m` : 'No'
       ]);
 
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 35,
-        styles: { fontSize: 8 },
+        styles: { fontSize: 7 },
         headStyles: { fillColor: [33, 150, 243] }
       });
       doc.save("Inventario_Activo.pdf");
@@ -232,7 +228,36 @@ export default function AnimalsView() {
         const bstr = evt.target.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws);
+
+        // Dynamically find the header row index
+        const sheetArray = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        let headerRowIndex = 0;
+        
+        for (let i = 0; i < sheetArray.length; i++) {
+          const rowCells = sheetArray[i];
+          if (!rowCells || rowCells.length === 0) continue;
+          
+          // Check if this row contains identifier-like keywords
+          const hasIdentifier = rowCells.some(cell => {
+            const val = String(cell || '').trim().toUpperCase();
+            return ['ANIMA', 'ANIMAL', 'IDENTIFICADOR', 'ID', 'CHAPA', 'N.VACA', 'N. VACA', 'NOVACA', 'N VACA'].some(k => val.includes(k));
+          });
+          
+          // Or count how many target headers it matches
+          let matchCount = 0;
+          const targetKeywords = ['LOTE', 'L1', 'SEXO', 'COLOR', 'CLASIF', 'TIPO', 'PARTO', 'PART', 'MADRE', 'MAD', 'NACIMIENTO', 'OBSERV'];
+          rowCells.forEach(cell => {
+            const val = String(cell || '').trim().toUpperCase();
+            if (targetKeywords.some(k => val.includes(k))) matchCount++;
+          });
+          
+          if (hasIdentifier || matchCount >= 3) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+        
+        const data = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex });
 
         if (!data || data.length === 0) {
           CustomAlert.info("Aviso", "El archivo Excel parece estar vacío o no tiene el formato correcto.");
@@ -332,15 +357,15 @@ export default function AnimalsView() {
           try {
             // Mapeo extendido para ser más tolerante a diferentes formatos de Excel
             const identifier = String(getVal(row, [
-              'NVACA', 'NOVACA', 'NVACAANIMAL', 'NOVACAANIMAL', 'IDENTIFICADOR', 'ID', 'IDENTIFICACIN', 'CHAPA', 'ANIMAL', 'NUMERO', 'NO'
+              'ANIMA', 'ANIM', 'ANIMAL', 'NVACA', 'NOVACA', 'NVACAANIMAL', 'NOVACAANIMAL', 'IDENTIFICADOR', 'ID', 'IDENTIFICACIN', 'CHAPA', 'NUMERO', 'NO'
             ]) || '').trim();
             
-            if (!identifier || ['ANIMAL', 'IDENTIFICADOR', 'CHAPA', 'ID', 'N. VACA', 'N.VACA', 'NO.', 'IDENTIFICACIN'].includes(identifier.toUpperCase())) {
+            if (!identifier || ['ANIMAL', 'IDENTIFICADOR', 'CHAPA', 'ID', 'N. VACA', 'N.VACA', 'NO.', 'IDENTIFICACIN', 'ANIMA'].includes(identifier.toUpperCase())) {
               console.log("Fila saltada (sin identificador o encabezado):", identifier);
               continue;
             }
 
-            const rType = String(getVal(row, ['CLASIFICACION', 'CLASIFICACIN', 'TIPO', 'TIPOANIMAL', 'CATEGORIA', 'CATEGORA', 'CLAVE', 'RAZA']) || 'VACA').toUpperCase();
+            const rType = String(getVal(row, ['CLASIFICACIO', 'CLASIFICACION', 'CLASIFICACIN', 'TIPO', 'TIPOANIMAL', 'CATEGORIA', 'CATEGORA', 'CLAVE', 'RAZA']) || 'VACA').toUpperCase();
             let normalizedType = 'VACA';
             if (rType.includes('TORO')) normalizedType = 'TORO';
             else if (rType.includes('TORETE')) normalizedType = 'TORETE';
@@ -353,9 +378,11 @@ export default function AnimalsView() {
             if (!sex) sex = (normalizedType === 'TORO' || normalizedType === 'CHIVO') ? 'M' : 'H';
             else sex = sex.startsWith('M') ? 'M' : 'H';
 
+            const loteVal = String(getVal(row, ['L1', 'LOTE', 'L']) || 'GENERAL').toUpperCase().substring(0, 95);
+
             const payload = {
               identifier, type: normalizedType, sex,
-              lote: String(getVal(row, ['LOTE']) || 'GENERAL').toUpperCase().substring(0, 95),
+              lote: loteVal,
               color: getVal(row, ['COLOR']),
               nickname: getVal(row, ['APODO', 'NOMBRE']),
               origin: 'NACIMIENTO', status: 'ACTIVO',
@@ -368,8 +395,35 @@ export default function AnimalsView() {
               second_last_calving_date: parseDate(getVal(row, ['PENULTIMOPARTO', 'FECHAPP', 'PENULTIMOP']))
             };
 
-            const rp = getVal(row, ['PARTOS', 'TOTALPARTOS', 'NOPARTOS', 'NODEPARTOS', 'NUMERODEPARTOS', 'NPARTOS']);
+            const rp = getVal(row, ['PARTOS', 'TOTALPARTOS', 'NOPARTOS', 'NODEPARTOS', 'NUMERODEPARTOS', 'NPARTOS', 'NOPART']);
             payload.total_calvings = parseInt(rp) || 0;
+
+            const pregMonths = parseP(getVal(row, ['CARGADAMESE', 'CARGADAMESES', 'CARGAMESES', 'MESESCARDADA', 'PREG_MONTHS', 'MESES']));
+            if (pregMonths !== null && pregMonths > 0) {
+              payload.is_pregnant = true;
+              payload.pregnancy_months = pregMonths;
+            } else {
+              payload.is_pregnant = false;
+              payload.pregnancy_months = null;
+            }
+
+            const purchaseDate = parseDate(getVal(row, ['FECHADECOMPR', 'FECHADECOMPRA', 'COMPRA', 'FECHACOMPRA']));
+            if (purchaseDate) {
+              payload.purchase_date = purchaseDate;
+              payload.origin = 'COMPRA';
+            }
+
+            const saleDate = parseDate(getVal(row, ['FECHADEVENTA', 'FECHAVENTA', 'VENTA']));
+            if (saleDate) {
+              payload.sale_date = saleDate;
+              payload.status = 'VENDIDO';
+            }
+
+            const deathDate = parseDate(getVal(row, ['FECHADEMUERT', 'FECHADEMUERTE', 'MUERTE']));
+            if (deathDate) {
+              payload.death_date = deathDate;
+              payload.status = 'MUERTO';
+            }
 
             const cleanId = identifier.toLowerCase();
             let response;
@@ -383,7 +437,7 @@ export default function AnimalsView() {
             successCount++;
             idMap.set(identifier, response.data.id);
             
-            const rawMother = String(getVal(row, ['MADRE', 'IDMADRE', 'NODEMADRE', 'NOMADRE', 'NMADRE', 'NUMERODEMADRE']) || '').trim();
+            const rawMother = String(getVal(row, ['NOMAD', 'NOMADRE', 'MADRE', 'IDMADRE', 'NODEMADRE', 'NOMADRE', 'NMADRE', 'NUMERODEMADRE']) || '').trim();
             if (rawMother && !['-', '0', 'N/A', 'NONE', 'NULL'].includes(rawMother.toUpperCase())) {
               pendingRelations.push({ childId: response.data.id, motherStr: rawMother });
             }
