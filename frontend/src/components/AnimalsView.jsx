@@ -163,7 +163,19 @@ export default function AnimalsView() {
           'GANANCIA PESO MENS.': gains.gMens || ''
         };
       });
-      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      const headers = [
+        'N.VACA / ANIMAL', 'LOTE', 'SEXO', 'COLOR', 'CLASIFICACION', 'No. MADRE',
+        'FECHA DE NACIMIENTO', 'PENULTIMO PARTO', 'ULTIMO PARTO', 'GRADO',
+        'OBSERVACIONES', 'FECHA DE COMPRA', 'PESO AL NACER', 'PESO 4MESES',
+        'GANANCIA DIARIA EN 4 MESES', 'PESO AL DESMADRE', 'GANANCIA DIARIA AL DESMADRE',
+        'PESO', 'GANANCIA PESO MENS.'
+      ];
+
+      const ws = exportData.length > 0 
+        ? XLSX.utils.json_to_sheet(exportData) 
+        : XLSX.utils.json_to_sheet([], { header: headers });
+        
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Inventario");
       XLSX.writeFile(wb, "Inventario_Activo.xlsx");
