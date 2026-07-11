@@ -50,14 +50,36 @@ export default function RequestsAdminView() {
     }
   };
 
+  const handleClearAll = async () => {
+    const confirm = await CustomAlert.confirm('Limpiar Historial', '¿Estás seguro de que deseas eliminar permanentemente todo el historial de solicitudes? Esta acción no se puede deshacer.');
+    if (confirm.isConfirmed) {
+      try {
+        await axios.delete('http://localhost:3001/requests');
+        CustomAlert.success('Limpiado', 'Todo el historial de solicitudes ha sido eliminado.');
+        fetchRequests();
+      } catch (e) {
+        CustomAlert.error('Error', 'Ocurrió un error al limpiar el historial.');
+      }
+    }
+  };
+
   return (
     <div className="fade-in">
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '8px', color: '#E91E63', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Clock size={32} />
-          Solicitudes Pendientes
-        </h1>
-        <p style={{ color: 'var(--text-muted)' }}>Aprueba o rechaza los reportes de nacimiento y muerte generados por los operadores.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', marginBottom: '8px', color: '#E91E63', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Clock size={32} />
+            Solicitudes Pendientes
+          </h1>
+          <p style={{ color: 'var(--text-muted)' }}>Aprueba o rechaza los reportes de nacimiento y muerte generados por los operadores.</p>
+        </div>
+        <button 
+          className="btn-primary" 
+          style={{ background: 'rgba(244,67,54,0.1)', color: '#F44336', border: '1px solid rgba(244,67,54,0.2)', display: 'flex', alignItems: 'center', gap: '8px' }} 
+          onClick={handleClearAll}
+        >
+          Limpiar Historial
+        </button>
       </div>
 
       <div className="premium-card">

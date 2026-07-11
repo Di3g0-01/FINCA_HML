@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { AnimalsService } from './animals.service';
 import { Animal } from './entities/animal.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @UseGuards(JwtAuthGuard)
 @Controller('animals')
@@ -29,6 +32,37 @@ export class AnimalsController {
     const controlPartosBool = String(isControlPartos) === 'true';
     const pregnantBool = String(isPregnant) === 'true';
     return this.animalsService.findAll(pageNum, limitNum, status, search, calvingsBool, controlPartosBool, pregnantBool);
+  }
+
+  @Get('alerts')
+  getAlerts() {
+    return this.animalsService.getAlerts();
+  }
+
+  @Post('upload-document')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+          cb(null, true);
+        } else {
+          cb(new Error('Solo se permiten archivos PDF.'), false);
+        }
+      },
+    }),
+  )
+  uploadDocument(@UploadedFile() file: any) {
+    if (!file) {
+      throw new BadRequestException('No se subió ningún archivo.');
+    }
+    return { path: `/uploads/${file.filename}` };
   }
 
   @Get(':id')

@@ -8,6 +8,8 @@ export enum AnimalType {
   TORETE = 'TORETE',
   NOVILLA = 'NOVILLA',
   CABALLO = 'CABALLO',
+  DESMADRE_HEMBRA = 'DESMADRE_HEMBRA',
+  DESMADRE_MACHO = 'DESMADRE_MACHO',
 }
 
 export enum AnimalLote {
@@ -90,6 +92,9 @@ export class Animal {
   pregnancy_months: number | null;
 
   @Column({ type: 'date', nullable: true })
+  pregnancy_start_date: Date | null;
+
+  @Column({ type: 'date', nullable: true })
   last_calving_date: Date | null;
 
   @Column({ type: 'date', nullable: true })
@@ -112,6 +117,9 @@ export class Animal {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   seller_name: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  legal_document_path: string | null;
 
   // VENTAS
   @Column({ type: 'enum', enum: SaleModality, nullable: true })

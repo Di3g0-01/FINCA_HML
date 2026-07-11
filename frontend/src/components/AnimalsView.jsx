@@ -374,6 +374,8 @@ export default function AnimalsView() {
             if (rType.includes('TORO')) normalizedType = 'TORO';
             else if (rType.includes('TORETE')) normalizedType = 'TORETE';
             else if (rType.includes('NOVILLA')) normalizedType = 'NOVILLA';
+            else if (rType.includes('DESMADRE_HEMBRA') || rType.includes('DESMADRE HEMBRA')) normalizedType = 'DESMADRE_HEMBRA';
+            else if (rType.includes('DESMADRE_MACHO') || rType.includes('DESMADRE MACHO') || rType.includes('DESMADRE')) normalizedType = 'DESMADRE_MACHO';
             else if (rType.includes('CHIVA')) normalizedType = 'CHIVA';
             else if (rType.includes('CHIVO')) normalizedType = 'CHIVO';
             else if (rType.includes('CABALLO')) normalizedType = 'CABALLO';

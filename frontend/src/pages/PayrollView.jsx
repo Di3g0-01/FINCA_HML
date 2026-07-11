@@ -58,17 +58,18 @@ export default function PayrollView() {
     const pd = payrollData[worker.id] || { extras: 0 };
     const quincenal = (worker.salary || 0) / 2;
     const devengado = quincenal + pd.extras;
-    const igss = quincenal * 0.0483;
+    const igssRate = worker.is_retired ? 0.03 : 0.0483;
+    const igss = quincenal * igssRate;
     const totalRecibido = devengado - igss;
     return { quincenal, extras: pd.extras, devengado, igss, totalRecibido };
   };
 
   const calculateTemporalRow = (worker) => {
     const pd = payrollData[worker.id] || { days: 0, extras: 0 };
-    const porHora = worker.salary || 0;
-    const devengadoLaborados = porHora * pd.days;
+    const porDia = worker.salary || 0;
+    const devengadoLaborados = porDia * pd.days;
     const totalRecibido = devengadoLaborados + pd.extras;
-    return { porHora, days: pd.days, devengadoLaborados, extras: pd.extras, totalRecibido };
+    return { porHora: porDia, days: pd.days, devengadoLaborados, extras: pd.extras, totalRecibido };
   };
 
   const handleSaveToDB = async () => {
@@ -242,7 +243,7 @@ export default function PayrollView() {
               <th style={{ padding: '16px', color: 'white', fontWeight: 'bold' }}>Quincenal Base</th>
               <th style={{ padding: '16px', color: '#FF9800', fontWeight: 'bold' }}>Extras (Fin Sem.)</th>
               <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Devengado</th>
-              <th style={{ padding: '16px', color: '#E53935', fontWeight: 'bold' }}>IGSS 4.83%</th>
+              <th style={{ padding: '16px', color: '#E53935', fontWeight: 'bold' }}>IGSS (4.83% / 3%)</th>
               <th style={{ padding: '16px', color: '#4CAF50', fontWeight: 'bold', fontSize: '1.1rem' }}>Total a Recibir</th>
             </tr>
           </thead>
@@ -264,7 +265,10 @@ export default function PayrollView() {
                     />
                   </td>
                   <td style={{ padding: '16px' }}>Q {calc.devengado.toFixed(2)}</td>
-                  <td style={{ padding: '16px', color: '#E53935' }}>- Q {calc.igss.toFixed(2)}</td>
+                  <td style={{ padding: '16px', color: '#E53935' }}>
+                    - Q {calc.igss.toFixed(2)}
+                    {w.is_retired && <span style={{ fontSize: '10px', display: 'block', color: 'var(--text-muted)' }}>(Jubilado 3%)</span>}
+                  </td>
                   <td style={{ padding: '16px', color: '#4CAF50', fontWeight: 'bold', fontSize: '1.2rem' }}>Q {calc.totalRecibido.toFixed(2)}</td>
                 </tr>
               );
@@ -280,14 +284,14 @@ export default function PayrollView() {
       </div>
 
       {/* --- TABLA DE TEMPORALES --- */}
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: '#FF9800' }}>2. Trabajadores Temporales (Cobro por Hora)</h2>
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: '#FF9800' }}>2. Trabajadores Temporales (Cobro por Día)</h2>
       <div className="premium-card" style={{ marginBottom: '40px', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--panel-border)', background: 'rgba(255, 152, 0, 0.1)' }}>
               <th style={{ padding: '16px', color: 'white', fontWeight: 'bold' }}>Nombre</th>
-              <th style={{ padding: '16px', color: 'white', fontWeight: 'bold' }}>Sueldo por Hora</th>
-              <th style={{ padding: '16px', color: '#FF9800', fontWeight: 'bold' }}>Horas Laboradas</th>
+              <th style={{ padding: '16px', color: 'white', fontWeight: 'bold' }}>Sueldo por Día</th>
+              <th style={{ padding: '16px', color: '#FF9800', fontWeight: 'bold' }}>Días Laborados</th>
               <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Devengado T.</th>
               <th style={{ padding: '16px', color: '#FF9800', fontWeight: 'bold' }}>Extras (Aumento)</th>
               <th style={{ padding: '16px', color: '#FF9800', fontWeight: 'bold', fontSize: '1.1rem' }}>Total Recibido</th>

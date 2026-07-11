@@ -30,12 +30,12 @@ export class LogsService {
       .orderBy('log.created_at', 'DESC');
 
     if (query.startDate && query.endDate) {
-      qb.andWhere('DATE(log.created_at) >= :startDate AND DATE(log.created_at) <= :endDate', { 
+      qb.andWhere('log.created_at::date >= :startDate AND log.created_at::date <= :endDate', { 
         startDate: query.startDate, 
         endDate: query.endDate 
       });
     } else if (query.startDate) {
-      qb.andWhere('DATE(log.created_at) = :startDate', { startDate: query.startDate });
+      qb.andWhere('log.created_at::date = :startDate', { startDate: query.startDate });
     }
 
     const results = await qb.getMany();

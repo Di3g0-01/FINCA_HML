@@ -10,7 +10,8 @@ export default function WorkerFormModal({ isOpen, onClose, onSaved, workerToEdit
     position: '',
     salary: '',
     contract_type: 'FIJO',
-    is_active: true
+    is_active: true,
+    is_retired: false
   });
 
   useEffect(() => {
@@ -20,7 +21,8 @@ export default function WorkerFormModal({ isOpen, onClose, onSaved, workerToEdit
         position: workerToEdit.position || '',
         salary: workerToEdit.salary || '',
         contract_type: workerToEdit.contract_type || 'FIJO',
-        is_active: workerToEdit.is_active !== undefined ? workerToEdit.is_active : true
+        is_active: workerToEdit.is_active !== undefined ? workerToEdit.is_active : true,
+        is_retired: workerToEdit.is_retired !== undefined ? workerToEdit.is_retired : false
       });
     } else {
       setFormData({
@@ -28,7 +30,8 @@ export default function WorkerFormModal({ isOpen, onClose, onSaved, workerToEdit
         position: '',
         salary: '',
         contract_type: 'FIJO',
-        is_active: true
+        is_active: true,
+        is_retired: false
       });
     }
   }, [workerToEdit, isOpen]);
@@ -98,10 +101,16 @@ export default function WorkerFormModal({ isOpen, onClose, onSaved, workerToEdit
             </div>
             <div className="form-group">
               <label className="form-label">
-                {formData.contract_type === 'FIJO' ? 'Salario Mensual (Q)' : 'Salario por Hora (Q)'}
+                {formData.contract_type === 'FIJO' ? 'Salario Mensual (Q)' : 'Salario por Día (Q)'}
               </label>
-              <input type="number" step="0.01" name="salary" className="input-field" value={formData.salary} onChange={handleChange} placeholder={formData.contract_type === 'FIJO' ? 'Ej. 3000.00' : 'Ej. 15.00'} required />
+              <input type="number" step="0.01" name="salary" className="input-field" value={formData.salary} onChange={handleChange} placeholder={formData.contract_type === 'FIJO' ? 'Ej. 3000.00' : 'Ej. 100.00'} required />
             </div>
+            {formData.contract_type === 'FIJO' && (
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', gridColumn: '1 / -1' }}>
+                <input type="checkbox" name="is_retired" checked={formData.is_retired} onChange={handleChange} style={{ width: '20px', height: '20px', accentColor: 'var(--primary-color)' }} />
+                <label>Jubilado (Descuento IGSS 3%)</label>
+              </div>
+            )}
             {workerToEdit && (
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} style={{ width: '20px', height: '20px', accentColor: 'var(--primary-color)' }} />

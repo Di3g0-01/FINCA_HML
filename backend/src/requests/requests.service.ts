@@ -71,12 +71,31 @@ export class RequestsService {
   }
 
   async reject(id: number, approverId: number) {
-    const request = await this.requestsRepository.findOne({ where: { id } });
+    const request = await this.requestsRepository.findOne({ 
+      where: { id }, 
+      relations: ['requester'] 
+    });
     if (!request) throw new NotFoundException('Solicitud no encontrada');
     if (request.status !== RequestStatus.PENDIENTE) throw new BadRequestException('La solicitud ya fue procesada');
 
     request.status = RequestStatus.RECHAZADA;
     request.approver_id = approverId;
-    return this.requestsRepository.save(request);
+    const saved = await this.requestsRepository.save(request);
+
+    // Obtener información del aprobador para la bitácora
+    const approver = await this.requestsRepository.manager.findOne(User, { where: { id: approverId } });
+    await this.logsService.createLog({
+      username: approver?.username || 'SISTEMA',
+      action_type: 'RECHAZAR_SOLICITUD',
+      details: `Solicitud de ${request.type} rechazada. Solicitado por: ${request.requester?.username || 'Sistema'}`,
+      animal_identifier: request.payload?.identifier || request.payload?.animal_id?.toString()
+    });
+
+    return saved;
+  }
+
+  async clearAll() {
+    await this.requestsRepository.delete({});
+    return { cleared: true };
   }
 }

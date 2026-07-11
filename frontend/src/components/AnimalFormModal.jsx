@@ -70,8 +70,8 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
     setFormData(prev => {
       const updated = { ...prev, [name]: type === 'checkbox' ? checked : value };
       if (name === 'type') {
-        if (['VACA', 'CHIVA', 'NOVILLA'].includes(value)) updated.sex = 'H';
-        else if (['TORO', 'CHIVO', 'TORETE'].includes(value)) updated.sex = 'M';
+        if (['VACA', 'CHIVA', 'NOVILLA', 'DESMADRE_HEMBRA'].includes(value)) updated.sex = 'H';
+        else if (['TORO', 'CHIVO', 'TORETE', 'DESMADRE_MACHO'].includes(value)) updated.sex = 'M';
       }
       return updated;
     });
@@ -85,17 +85,20 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
       const birthDate = new Date(formData.birth_date);
       const diffDays = (new Date() - birthDate) / (1000 * 60 * 60 * 24);
       const ageYears = (diffDays / 365.25).toFixed(1);
+      const ageInMonths = diffDays / 30.4375;
       
       let suggestedType = formData.type;
-      const isMale = formData.sex === 'M' || ['TORO', 'TORETE', 'CHIVO'].includes(formData.type);
+      const isMale = formData.sex === 'M' || ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(formData.type);
       
       if (isMale) {
-        if (diffDays < 365) suggestedType = 'CHIVO';
-        else if (diffDays < 547.5) suggestedType = 'TORETE';
+        if (ageInMonths <= 6.5) suggestedType = 'CHIVO';
+        else if (ageInMonths < 12) suggestedType = 'DESMADRE_MACHO';
+        else if (ageInMonths < 24) suggestedType = 'TORETE';
         else suggestedType = 'TORO';
       } else {
-        if (diffDays < 547.5) suggestedType = 'CHIVA';
-        else if (diffDays < 730) suggestedType = 'NOVILLA';
+        if (ageInMonths <= 6.5) suggestedType = 'CHIVA';
+        else if (ageInMonths < 12) suggestedType = 'DESMADRE_HEMBRA';
+        else if (ageInMonths < 24) suggestedType = 'NOVILLA';
         else suggestedType = 'VACA';
       }
 
@@ -161,9 +164,12 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
                 onChange={handleChange} 
                 required
                 options={[
-                  { label: 'Crias', isGroup: true },
+                  { label: 'Crias (0 a 6.5 meses)', isGroup: true },
                   { label: 'Chiva (Hembra)', value: 'CHIVA' },
                   { label: 'Chivo (Macho)', value: 'CHIVO' },
+                  { label: 'Desmadres (6.5 meses a 1 año)', isGroup: true },
+                  { label: 'Desmadre Hembra', value: 'DESMADRE_HEMBRA' },
+                  { label: 'Desmadre Macho', value: 'DESMADRE_MACHO' },
                   { label: 'Otros', isGroup: true },
                   { label: 'Caballo', value: 'CABALLO' },
                   { label: 'Vaca', value: 'VACA' },
@@ -189,7 +195,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
             </div>
             <div className="form-group">
               <label className="form-label">Identificador</label>
-              <input type="text" className="input-field" value={animalToEdit ? animalToEdit.identifier : 'Autogenerado...'} disabled style={{ background: 'rgba(255,255,255,0.01)', color: 'var(--text-muted)' }} />
+              <input type="text" className="input-field" value={animalToEdit ? animalToEdit.identifier : (formData.type === 'CABALLO' ? 'No Requerido (Solo Nombre)' : 'Autogenerado...')} disabled style={{ background: 'rgba(255,255,255,0.01)', color: 'var(--text-muted)' }} />
             </div>
             <div className="form-group">
               <label className="form-label">Color / Capa</label>
@@ -205,8 +211,8 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
             </div>
             {(formData.type === 'TORO' || formData.type === 'CABALLO') && (
               <div className="form-group">
-                <label className="form-label">Apodo / Nombre</label>
-                <input type="text" name="nickname" className="input-field" value={formData.nickname} onChange={handleChange} />
+                <label className="form-label">Apodo / Nombre {formData.type === 'CABALLO' && <span style={{ color: '#ef4444' }}>*</span>}</label>
+                <input type="text" name="nickname" className="input-field" value={formData.nickname} onChange={handleChange} required={formData.type === 'CABALLO'} />
               </div>
             )}
             <div className="form-group">

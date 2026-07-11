@@ -26,6 +26,9 @@ export class Worker {
   @Column({ type: 'boolean', default: true })
   is_active: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  is_retired: boolean;
+
   @Index()
   @CreateDateColumn()
   created_at: Date;

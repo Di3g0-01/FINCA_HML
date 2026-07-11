@@ -18,6 +18,7 @@ export class AnimalsService implements OnModuleInit {
   async onModuleInit() {
     this.logger.log('Boot Sequence: Corriendo Validaciones Cronológicas...');
     await this.handleCalfGrowth();
+    await this.updatePregnancies();
   }
 
   private autoAdjustTypeByAge(animalData: Partial<Animal>) {
@@ -27,22 +28,25 @@ export class AnimalsService implements OnModuleInit {
     const birth = new Date(animalData.birth_date);
     const now = new Date();
     const ageInDays = (now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24);
+    const ageInMonths = ageInDays / 30.4375;
 
     // Determinar orientación biológica basada en el tipo actual o el sexo enviado
-    let isMale = ['TORO', 'TORETE', 'CHIVO'].includes(animalData.type as string);
-    let isFemale = ['VACA', 'NOVILLA', 'CHIVA'].includes(animalData.type as string);
+    let isMale = ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(animalData.type as string);
+    let isFemale = ['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(animalData.type as string);
 
     if (animalData.sex === 'M') { isMale = true; isFemale = false; }
     if (animalData.sex === 'H') { isMale = false; isFemale = true; }
 
     if (isMale) {
-      if (ageInDays < 365) animalData.type = AnimalType.CHIVO;
-      else if (ageInDays < 547.5) animalData.type = AnimalType.TORETE;
+      if (ageInMonths <= 6.5) animalData.type = AnimalType.CHIVO;
+      else if (ageInMonths < 12) animalData.type = AnimalType.DESMADRE_MACHO;
+      else if (ageInMonths < 24) animalData.type = AnimalType.TORETE;
       else animalData.type = AnimalType.TORO;
       animalData.sex = 'M';
     } else if (isFemale) {
-      if (ageInDays < 547.5) animalData.type = AnimalType.CHIVA;
-      else if (ageInDays < 730) animalData.type = AnimalType.NOVILLA;
+      if (ageInMonths <= 6.5) animalData.type = AnimalType.CHIVA;
+      else if (ageInMonths < 12) animalData.type = AnimalType.DESMADRE_HEMBRA;
+      else if (ageInMonths < 24) animalData.type = AnimalType.NOVILLA;
       else animalData.type = AnimalType.VACA;
       animalData.sex = 'H';
     }
@@ -52,24 +56,32 @@ export class AnimalsService implements OnModuleInit {
   async handleCalfGrowth() {
     this.logger.log('Iniciando rutina de crecimiento cronológica...');
     const now = new Date();
+    const sixHalfMonthsAgo = new Date(now.getTime() - (6.5 * 30.4375 * 24 * 60 * 60 * 1000));
     const oneYearAgo = new Date(now); oneYearAgo.setFullYear(now.getFullYear() - 1);
-    const oneHalfYearsAgo = new Date(now); oneHalfYearsAgo.setTime(now.getTime() - (547.5 * 24 * 60 * 60 * 1000));
     const twoYearsAgo = new Date(now); twoYearsAgo.setFullYear(now.getFullYear() - 2);
 
     try {
       // Machos
-      const cToT = await this.animalsRepository.update(
-        { type: AnimalType.CHIVO, birth_date: LessThanOrEqual(oneYearAgo) },
+      const cToDM = await this.animalsRepository.update(
+        { type: AnimalType.CHIVO, birth_date: LessThanOrEqual(sixHalfMonthsAgo) },
+        { type: AnimalType.DESMADRE_MACHO }
+      );
+      const dmToT = await this.animalsRepository.update(
+        { type: AnimalType.DESMADRE_MACHO, birth_date: LessThanOrEqual(oneYearAgo) },
         { type: AnimalType.TORETE }
       );
-      const tToT = await this.animalsRepository.update(
-        { type: AnimalType.TORETE, birth_date: LessThanOrEqual(oneHalfYearsAgo) },
+      const tToTo = await this.animalsRepository.update(
+        { type: AnimalType.TORETE, birth_date: LessThanOrEqual(twoYearsAgo) },
         { type: AnimalType.TORO }
       );
 
       // Hembras
-      const cToN = await this.animalsRepository.update(
-        { type: AnimalType.CHIVA, birth_date: LessThanOrEqual(oneHalfYearsAgo) },
+      const cToDH = await this.animalsRepository.update(
+        { type: AnimalType.CHIVA, birth_date: LessThanOrEqual(sixHalfMonthsAgo) },
+        { type: AnimalType.DESMADRE_HEMBRA }
+      );
+      const dhToN = await this.animalsRepository.update(
+        { type: AnimalType.DESMADRE_HEMBRA, birth_date: LessThanOrEqual(oneYearAgo) },
         { type: AnimalType.NOVILLA }
       );
       const nToV = await this.animalsRepository.update(
@@ -77,13 +89,63 @@ export class AnimalsService implements OnModuleInit {
         { type: AnimalType.VACA }
       );
 
-      this.logger.log(`Evoluciones: ${cToT.affected || 0} Chivo->Torete, ${tToT.affected || 0} Torete->Toro, ${cToN.affected || 0} Chiva->Novilla, ${nToV.affected || 0} Novilla->Vaca.`);
+      this.logger.log(`Evoluciones: ${cToDM.affected || 0} Chivo->DesmadreM, ${dmToT.affected || 0} DesmadreM->Torete, ${tToTo.affected || 0} Torete->Toro, ${cToDH.affected || 0} Chiva->DesmadreH, ${dhToN.affected || 0} DesmadreH->Novilla, ${nToV.affected || 0} Novilla->Vaca.`);
     } catch (e) {
       this.logger.error('Error durante la rutina de crecimiento cronológica.', e);
     }
   }
 
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async updatePregnancies() {
+    this.logger.log('Iniciando rutina de actualización de preñeces...');
+    try {
+      const pregnantAnimals = await this.animalsRepository.find({
+        where: { is_pregnant: true, status: AnimalStatus.ACTIVO }
+      });
+
+      const now = new Date();
+      for (const animal of pregnantAnimals) {
+        if (animal.pregnancy_start_date) {
+          const start = new Date(animal.pregnancy_start_date);
+          const diffDays = (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+          const months = diffDays / 30.4375;
+          
+          if (months >= 10.0) {
+            animal.pregnancy_months = 10.0;
+          } else {
+            animal.pregnancy_months = Math.round(months * 10) / 10;
+          }
+          await this.animalsRepository.save(animal);
+        }
+      }
+    } catch (e) {
+      this.logger.error('Error actualizando preñeces:', e);
+    }
+  }
+
+  async getAlerts() {
+    const pregnantList = await this.animalsRepository.createQueryBuilder('animal')
+      .where('animal.status = :status', { status: AnimalStatus.ACTIVO })
+      .andWhere('animal.is_pregnant = :isPregnant', { isPregnant: true })
+      .andWhere('animal.pregnancy_months >= :months', { months: 9 })
+      .getMany();
+    
+    return pregnantList.map(a => ({
+      id: a.id,
+      identifier: a.identifier,
+      pregnancy_months: a.pregnancy_months,
+      message: `El animal ${a.identifier} ha alcanzado ${a.pregnancy_months} meses de preñez.`
+    }));
+  }
+
   async create(animalData: Partial<Animal>, username: string = 'SISTEMA') {
+    if (animalData.type === AnimalType.CABALLO) {
+      if (!animalData.nickname) {
+        throw new BadRequestException('El nombre es obligatorio para caballos.');
+      }
+      animalData.identifier = animalData.nickname;
+    }
+
     // 1. Verificación de Duplicados
     if (animalData.identifier) {
       const existing = await this.animalsRepository.findOne({ 
@@ -97,14 +159,25 @@ export class AnimalsService implements OnModuleInit {
     this.autoAdjustTypeByAge(animalData);
 
     // Auto-sex logic
-    if (animalData.type === AnimalType.VACA || animalData.type === AnimalType.CHIVA) {
+    if ([AnimalType.VACA, AnimalType.CHIVA, AnimalType.NOVILLA, AnimalType.DESMADRE_HEMBRA].includes(animalData.type)) {
       animalData.sex = 'H';
-    } else if (animalData.type === AnimalType.TORO || animalData.type === AnimalType.CHIVO) {
+    } else if ([AnimalType.TORO, AnimalType.CHIVO, AnimalType.TORETE, AnimalType.DESMADRE_MACHO].includes(animalData.type)) {
       animalData.sex = 'M';
     }
     // Note: CABALLO sex remains selectable.
-    // Si no es compra y no tiene identificador manual, generamos automáticamente.
-    if (animalData.origin !== AnimalOrigin.COMPRA && !animalData.identifier) {
+
+    // Pregnancy calculations
+    if (animalData.is_pregnant && animalData.pregnancy_months) {
+      const months = Number(animalData.pregnancy_months);
+      const start = new Date();
+      start.setDate(start.getDate() - Math.round(months * 30.4375));
+      animalData.pregnancy_start_date = start;
+    } else {
+      animalData.pregnancy_start_date = null;
+    }
+
+    // Si no es compra y no tiene identificador manual (y no es caballo), generamos automáticamente.
+    if (animalData.type !== AnimalType.CABALLO && animalData.origin !== AnimalOrigin.COMPRA && !animalData.identifier) {
       let yearForId = new Date().getFullYear().toString().slice(-2);
       if (animalData.birth_date) {
         const birthYearFull = new Date(animalData.birth_date).getFullYear();
@@ -198,15 +271,17 @@ export class AnimalsService implements OnModuleInit {
             .orWhere('animal.total_calvings > 0');
         }));
       }
-      query.andWhere('animal.type IN (:...types)', { types: [AnimalType.VACA, AnimalType.NOVILLA, AnimalType.CHIVA] });
+      query.andWhere('animal.type IN (:...types)', { types: [AnimalType.VACA, AnimalType.NOVILLA, AnimalType.DESMADRE_HEMBRA, AnimalType.CHIVA] });
     }
 
     if (search) {
       const exactSearch = search.trim();
       query.andWhere(
         new Brackets(qb => {
-          qb.where('animal.identifier = :exactSearch', { exactSearch })
-            .orWhere('mother.identifier = :exactSearch', { exactSearch });
+          qb.where('animal.identifier ILIKE :search', { search: `%${exactSearch}%` })
+            .orWhere('animal.nickname ILIKE :search', { search: `%${exactSearch}%` })
+            .orWhere('mother.identifier ILIKE :search', { search: `%${exactSearch}%` })
+            .orWhere('animal.mother_id IN (SELECT a.id FROM animals a WHERE a.identifier ILIKE :search OR a.nickname ILIKE :search)', { search: `%${exactSearch}%` });
         })
       );
     }
@@ -254,6 +329,28 @@ export class AnimalsService implements OnModuleInit {
     this.autoAdjustTypeByAge(combined);
     updateData.type = combined.type;
     updateData.sex = combined.sex;
+
+    if (combined.type === AnimalType.CABALLO) {
+      updateData.identifier = updateData.nickname || combined.nickname;
+      if (!updateData.identifier) {
+        throw new BadRequestException('El nombre es obligatorio para caballos.');
+      }
+    }
+
+    if (updateData.is_pregnant !== undefined || updateData.pregnancy_months !== undefined) {
+      const isPregnant = updateData.is_pregnant !== undefined ? updateData.is_pregnant : current.is_pregnant;
+      const months = updateData.pregnancy_months !== undefined ? updateData.pregnancy_months : current.pregnancy_months;
+      
+      if (isPregnant && months) {
+        if (isPregnant !== current.is_pregnant || months !== current.pregnancy_months || !current.pregnancy_start_date) {
+          const start = new Date();
+          start.setDate(start.getDate() - Math.round(Number(months) * 30.4375));
+          updateData.pregnancy_start_date = start;
+        }
+      } else {
+        updateData.pregnancy_start_date = null;
+      }
+    }
 
     if (updateData.mother_id !== undefined && updateData.mother_id !== current.mother_id) {
       changes.push(`Madre cambiada`);

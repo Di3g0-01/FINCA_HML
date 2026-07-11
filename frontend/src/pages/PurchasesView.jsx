@@ -19,7 +19,9 @@ export default function PurchasesView() {
     breed: '',
     lote: 'GENERAL',
     observations: '',
-    sex: 'H'
+    sex: 'H',
+    nickname: '',
+    legal_document_path: ''
   });
 
   const fetchAnimals = async () => {
@@ -45,19 +47,48 @@ export default function PurchasesView() {
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
       if (name === 'type') {
-        if (value === 'VACA') updated.sex = 'H';
-        else if (value === 'TORO') updated.sex = 'M';
-        // Para CABALLO el sexo es libremente seleccionable
+        if (['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(value)) updated.sex = 'H';
+        else if (['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(value)) updated.sex = 'M';
       }
       return updated;
     });
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formDataObj = new FormData();
+    formDataObj.append('file', file);
+    
+    try {
+      const res = await axios.post('http://localhost:3001/animals/upload-document', formDataObj, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setFormData(prev => ({
+        ...prev,
+        legal_document_path: res.data.path
+      }));
+      CustomAlert.success('Cargado', 'Documento PDF cargado con éxito.');
+    } catch (err) {
+      console.error(err);
+      CustomAlert.error('Error', err.response?.data?.message || 'Error al subir el archivo PDF.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
     try {
+      if (formData.type === 'CABALLO') {
+        if (!formData.nickname) {
+          CustomAlert.info("Aviso", 'El nombre es obligatorio para caballos.');
+          return;
+        }
+        formData.identifier = formData.nickname;
+      }
       const payload = { 
         ...formData, 
         origin: 'COMPRA', 
@@ -75,7 +106,7 @@ export default function PurchasesView() {
       setIsModalOpen(false);
       setAnimalToEdit(null);
       setFormData({
-        type: 'VACA', identifier: '', purchase_price: '', seller_name: '', birth_date: '', color: '', breed: '', lote: 'GENERAL', observations: '', sex: 'H'
+        type: 'VACA', identifier: '', purchase_price: '', seller_name: '', birth_date: '', color: '', breed: '', lote: 'GENERAL', observations: '', sex: 'H', nickname: '', legal_document_path: ''
       });
       fetchAnimals();
     } catch (error) {
@@ -98,7 +129,9 @@ export default function PurchasesView() {
       breed: animal.breed || '',
       lote: animal.lote || 'GENERAL',
       observations: animal.observations || '',
-      sex: animal.sex || 'H'
+      sex: animal.sex || 'H',
+      nickname: animal.nickname || '',
+      legal_document_path: animal.legal_document_path || ''
     });
     setIsModalOpen(true);
   };
@@ -139,6 +172,7 @@ export default function PurchasesView() {
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Vendedor</th>
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Precio (Q)</th>
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Fecha Ingreso</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Documento</th>
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Estatus</th>
                   <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', textAlign: 'right' }}>Acciones</th>
                 </tr>
@@ -156,6 +190,20 @@ export default function PurchasesView() {
                       <td style={{ padding: '16px', color: 'white' }}>{animal.seller_name || '-'}</td>
                       <td style={{ padding: '16px', color: '#2196F3', fontWeight: 'bold' }}>{animal.purchase_price !== null ? `Q ${animal.purchase_price}` : '-'}</td>
                       <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{new Date(animal.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '16px' }}>
+                        {animal.legal_document_path ? (
+                          <a 
+                            href={`http://localhost:3001${animal.legal_document_path}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            style={{ color: '#2196F3', textDecoration: 'underline', fontSize: '13px', fontWeight: 'bold' }}
+                          >
+                            Ver PDF
+                          </a>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Ninguno</span>
+                        )}
+                      </td>
                       <td style={{ padding: '16px' }}>
                          <span style={{ 
                            padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
@@ -200,6 +248,8 @@ export default function PurchasesView() {
                       { label: 'Toro', value: 'TORO' },
                       { label: 'Novilla', value: 'NOVILLA' },
                       { label: 'Torete', value: 'TORETE' },
+                      { label: 'Desmadre Hembra', value: 'DESMADRE_HEMBRA' },
+                      { label: 'Desmadre Macho', value: 'DESMADRE_MACHO' },
                       { label: 'Chiva', value: 'CHIVA' },
                       { label: 'Chivo', value: 'CHIVO' },
                       { label: 'Caballo', value: 'CABALLO' }
@@ -222,7 +272,28 @@ export default function PurchasesView() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Identificador de Compra (Chapa)</label>
-                  <input type="text" name="identifier" className="input-field" value={formData.identifier} onChange={handleChange} placeholder="Ej. 704A" required />
+                  <input 
+                    type="text" 
+                    name="identifier" 
+                    className="input-field" 
+                    value={formData.type === 'CABALLO' ? 'No Requerido (Solo Nombre)' : formData.identifier} 
+                    onChange={handleChange} 
+                    placeholder="Ej. 704A" 
+                    disabled={formData.type === 'CABALLO'} 
+                    required={formData.type !== 'CABALLO'} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Apodo / Nombre {formData.type === 'CABALLO' && <span style={{ color: '#ef4444' }}>*</span>}</label>
+                  <input 
+                    type="text" 
+                    name="nickname" 
+                    className="input-field" 
+                    value={formData.nickname || ''} 
+                    onChange={handleChange} 
+                    required={formData.type === 'CABALLO'} 
+                    placeholder="Ej. Relámpago" 
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ color: '#2196F3' }}>Precio de Compra</label>
@@ -253,6 +324,15 @@ export default function PurchasesView() {
                       { label: 'Lote 7', value: 'LOTE7' }
                     ]}
                   />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Documento Legal Compra (PDF)</label>
+                  <input type="file" accept=".pdf" onChange={handleFileUpload} className="input-field" style={{ padding: '8px 12px' }} />
+                  {formData.legal_document_path && (
+                    <span style={{ fontSize: '12px', color: '#10b981', display: 'block', marginTop: '4px' }}>
+                      Archivo PDF cargado con éxito.
+                    </span>
+                  )}
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>

@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, FileText, ShoppingCart, DollarSign, AlertCircle, Users, WalletCards, Menu, X, Activity, ChevronDown, ChevronRight, Briefcase, Beef } from 'lucide-react';
+import { LayoutDashboard, LogOut, FileText, ShoppingCart, DollarSign, AlertCircle, Users, WalletCards, Menu, X, Activity, ChevronDown, ChevronRight, Briefcase, Beef, Bell } from 'lucide-react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
 
 // Lazy load components for better initial performance
 const AnimalsView = lazy(() => import('../components/AnimalsView'));
@@ -17,6 +16,95 @@ const UsersView = lazy(() => import('./UsersView'));
 const LogsView = lazy(() => import('./LogsView'));
 const RequestsAdminView = lazy(() => import('./RequestsAdminView'));
 
+function NotificationBell({ alerts }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ 
+          background: 'rgba(255, 255, 255, 0.05)', 
+          color: 'white', 
+          padding: '10px', 
+          borderRadius: '50%', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          border: '1px solid var(--panel-border)',
+          position: 'relative'
+        }}
+      >
+        <Bell size={20} />
+        {alerts.length > 0 && (
+          <span 
+            style={{ 
+              position: 'absolute', 
+              top: '-4px', 
+              right: '-4px', 
+              background: '#ef4444', 
+              color: 'white', 
+              borderRadius: '50%', 
+              fontSize: '10px', 
+              fontWeight: 'bold', 
+              padding: '2px 6px',
+              border: '2px solid var(--bg-color)'
+            }}
+          >
+            {alerts.length}
+          </span>
+        )}
+      </button>
+      
+      {isOpen && (
+        <>
+          <div 
+            onClick={() => setIsOpen(false)} 
+            style={{ position: 'fixed', inset: 0, zIndex: 998 }} 
+          />
+          <div 
+            className="premium-card" 
+            style={{ 
+              position: 'absolute', 
+              top: '50px', 
+              right: 0, 
+              width: '320px', 
+              maxHeight: '360px', 
+              overflowY: 'auto', 
+              zIndex: 999, 
+              padding: '16px',
+              animation: 'fadeIn 0.2s ease-out'
+            }}
+          >
+            <h4 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '12px', fontSize: '14px', color: 'white' }}>Notificaciones de Parto</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {alerts.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center', padding: '12px 0' }}>No hay alertas de 9 meses</div>
+              ) : (
+                alerts.map(alert => (
+                  <div 
+                    key={alert.id} 
+                    style={{ 
+                      padding: '10px', 
+                      background: 'rgba(255, 152, 0, 0.1)', 
+                      borderLeft: '4px solid #FF9800', 
+                      borderRadius: '8px',
+                      fontSize: '12px' 
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold', marginBottom: '2px', color: '#FF9800' }}>Alerta de Gestación</div>
+                    <div style={{ color: 'var(--text-main)' }}>{alert.message}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,6 +112,39 @@ export default function DashboardPage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user.role === 'ADMIN';
   const [expandedMenus, setExpandedMenus] = useState({ ganaderia: true, administracion: false });
+  const [alerts, setAlerts] = useState([]);
+  const [hasPendingRequests, setHasPendingRequests] = useState(false);
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const res = await axios.get('http://localhost:3001/animals/alerts');
+      setAlerts(res.data || []);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+    }
+  }, []);
+
+  const fetchPendingRequests = useCallback(async () => {
+    if (isAdmin) {
+      try {
+        const res = await axios.get('http://localhost:3001/requests');
+        const pending = res.data.some(r => r.status === 'PENDIENTE');
+        setHasPendingRequests(pending);
+      } catch (error) {
+        console.error('Error fetching requests for badge:', error);
+      }
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    fetchAlerts();
+    fetchPendingRequests();
+    const interval = setInterval(() => {
+      fetchAlerts();
+      fetchPendingRequests();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAlerts, fetchPendingRequests]);
 
   const handleLogout = () => navigate('/login');
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -40,9 +161,12 @@ export default function DashboardPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       {/* Mobile Header */}
-      <div className="mobile-only" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '60px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', display: 'flex', alignItems: 'center', padding: '0 20px', zIndex: 900, borderBottom: '1px solid var(--panel-border)' }}>
-        <button onClick={toggleSidebar} style={{ background: 'transparent', color: 'white' }}><Menu size={24} /></button>
-        <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>Finca HM</span>
+      <div className="mobile-only" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '60px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 900, borderBottom: '1px solid var(--panel-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button onClick={toggleSidebar} style={{ background: 'transparent', color: 'white' }}><Menu size={24} /></button>
+          <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>Finca HM</span>
+        </div>
+        <NotificationBell alerts={alerts} />
       </div>
 
       {isSidebarOpen && <div className="mobile-only" onClick={toggleSidebar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />}
@@ -60,7 +184,37 @@ export default function DashboardPage() {
           {isAdmin ? (
             <>
               {renderNavLink({ to: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Inicio" })}
-              {renderNavLink({ to: "/dashboard/requests", icon: <AlertCircle size={20} />, label: "Solicitudes Pendientes", color: '#E91E63' })}
+              {renderNavLink({ 
+                to: "/dashboard/requests", 
+                icon: (
+                  <div style={{ position: 'relative' }}>
+                    <AlertCircle size={20} />
+                    {hasPendingRequests && (
+                      <span 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '-6px', 
+                          right: '-6px', 
+                          background: '#ef4444', 
+                          color: 'white', 
+                          borderRadius: '50%', 
+                          width: '14px', 
+                          height: '14px', 
+                          fontSize: '10px', 
+                          fontWeight: 'bold', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center'
+                        }}
+                      >
+                        !
+                      </span>
+                    )}
+                  </div>
+                ), 
+                label: "Solicitudes Pendientes", 
+                color: '#E91E63' 
+              })}
 
               <div style={{ marginTop: '8px' }}>
                 <button onClick={() => toggleMenu('ganaderia')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', color: 'white', padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', ':hover': { background: 'rgba(255,255,255,0.05)' } }}>
@@ -111,7 +265,10 @@ export default function DashboardPage() {
         </button>
       </aside>
 
-      <main className="main-content" style={{ flex: 1, padding: '40px', overflowY: 'auto', paddingTop: '80px' }}>
+      <main className="main-content" style={{ flex: 1, padding: '40px', overflowY: 'auto', paddingTop: '80px', position: 'relative' }}>
+        <div className="desktop-only" style={{ position: 'absolute', top: '24px', right: '40px', zIndex: 850 }}>
+          <NotificationBell alerts={alerts} />
+        </div>
         <Suspense fallback={<div style={{ padding: '20px', color: 'var(--text-muted)' }}>Cargando vista...</div>}>
           <Routes>
             <Route path="/" element={<DashboardHome />} />
@@ -158,7 +315,11 @@ function DashboardHome() {
       totalToros: activos.filter(a => a.type === 'TORO').length,
       totalNovillas: activos.filter(a => a.type === 'NOVILLA').length,
       totalToretes: activos.filter(a => a.type === 'TORETE').length,
-      totalChivos: activos.filter(a => ['CHIVA', 'CHIVO'].includes(a.type)).length,
+      totalDesmadresH: activos.filter(a => a.type === 'DESMADRE_HEMBRA').length,
+      totalDesmadresM: activos.filter(a => a.type === 'DESMADRE_MACHO').length,
+      totalChivas: activos.filter(a => a.type === 'CHIVA').length,
+      totalChivos: activos.filter(a => a.type === 'CHIVO').length,
+      totalCaballos: activos.filter(a => a.type === 'CABALLO').length,
       activos
     };
   }, [animals]);
@@ -178,17 +339,28 @@ function DashboardHome() {
   }, [animals]);
 
   const typeData = useMemo(() => {
+    const typeLabels = {
+      'VACA': 'Vacas',
+      'TORO': 'Toros',
+      'NOVILLA': 'Novillas',
+      'TORETE': 'Toretes',
+      'DESMADRE_HEMBRA': 'Desmadres H',
+      'DESMADRE_MACHO': 'Desmadres M',
+      'CHIVA': 'Chivas',
+      'CHIVO': 'Chivos',
+      'CABALLO': 'Caballos'
+    };
     const counts = {};
     stats.activos.forEach(a => {
       counts[a.type] = (counts[a.type] || 0) + 1;
     });
     return Object.keys(counts).map(type => ({
-      name: type,
+      name: typeLabels[type] || type,
       value: counts[type]
     })).filter(l => l.value > 0);
   }, [stats.activos]);
 
-  const COLORS = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#E91E63', '#795548', '#00BCD4'];
+  const COLORS = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#E91E63', '#795548', '#00BCD4', '#009688', '#607D8B'];
 
   return (
     <div className="fade-in">
@@ -197,7 +369,7 @@ function DashboardHome() {
 
       {isLoading ? ( <div style={{ color: 'var(--text-muted)' }}>Cargando estadísticas...</div> ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '40px' }}>
             <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid var(--primary-color)' }}>
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '8px' }}>TOTAL ACTIVOS</h3>
               <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.totalActivos}</div>
@@ -206,21 +378,37 @@ function DashboardHome() {
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>VACAS</h3>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalVacas}</div>
             </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #FF9800' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TOROS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToros}</div>
+            </div>
             <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #E91E63' }}>
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>NOVILLAS</h3>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalNovillas}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #9C27B0' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CHIVAS / CHIVOS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalChivos}</div>
             </div>
             <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #2196F3' }}>
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TORETES</h3>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToretes}</div>
             </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #FF9800' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TOROS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToros}</div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #8E24AA' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>DESMADRES H.</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalDesmadresH}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #ab47bc' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>DESMADRES M.</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalDesmadresM}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #e91e63' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CHIVAS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalChivas}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #9C27B0' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CHIVOS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalChivos}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #00BCD4' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CABALLOS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalCaballos}</div>
             </div>
           </div>
 

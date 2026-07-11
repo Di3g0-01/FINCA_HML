@@ -53,7 +53,7 @@ const AnimalRow = memo(({
         <td style={{ padding: '16px', fontWeight: 'bold' }}>{animal.sex || '-'}</td>
         <td style={{ padding: '16px', color: (isChild || isMother) ? 'rgba(255,255,255,0.2)' : 'var(--text-muted)' }}>{(isChild || isMother) ? '-' : animal.lote}</td>
         <td style={{ padding: '16px', fontWeight: 'bold', color: animal.total_calvings > 0 ? '#FF9800' : 'var(--text-muted)' }}>
-          {['VACA', 'NOVILLA', 'CHIVA'].includes(animal.type) ? animal.total_calvings || 0 : '-'}
+          {['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(animal.type) ? animal.total_calvings || 0 : '-'}
         </td>
         <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
           {viewMode === 'CALVING' 
@@ -103,7 +103,7 @@ const AnimalRow = memo(({
                 <div style={{ background: 'rgba(255, 152, 0, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 152, 0, 0.1)' }}>
                   <h4 style={{ color: '#FF9800', marginBottom: '16px', borderBottom: '1px solid rgba(255, 152, 0, 0.2)', paddingBottom: '8px' }}>Historial Ginecológico y Médico</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {['VACA', 'NOVILLA', 'CHIVA'].includes(animal.type) ? (
+                    {['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(animal.type) ? (
                       <>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Preñez Actual:</span> <span style={{ fontWeight: 'bold', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)' }}>{animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>Cantidad de Partos:</span> <span>{animal.total_calvings || 0}</span></div>

@@ -46,7 +46,7 @@ export default function CalvingControlView() {
 
   const handleExportExcel = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:3001/animals?status=ACTIVO&isControlPartos=true&limit=5000');
+      const res = await axios.get(`http://localhost:3001/animals?status=ACTIVO&isControlPartos=true&limit=5000&isPregnant=${filterPregnant}`);
       const data = res.data.data || res.data;
       const exportData = data.map(a => ({
         'N.VACA': a.identifier,

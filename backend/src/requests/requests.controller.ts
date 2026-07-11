@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, UnauthorizedException, Delete } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -16,6 +16,12 @@ export class RequestsController {
   findAll(@Request() req) {
     if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
     return this.requestsService.findAll();
+  }
+
+  @Delete()
+  clearAll(@Request() req) {
+    if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
+    return this.requestsService.clearAll();
   }
 
   @Put(':id/approve')
