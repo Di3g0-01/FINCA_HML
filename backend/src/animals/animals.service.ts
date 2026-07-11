@@ -159,9 +159,9 @@ export class AnimalsService implements OnModuleInit {
     this.autoAdjustTypeByAge(animalData);
 
     // Auto-sex logic
-    if ([AnimalType.VACA, AnimalType.CHIVA, AnimalType.NOVILLA, AnimalType.DESMADRE_HEMBRA].includes(animalData.type)) {
+    if (animalData.type && [AnimalType.VACA, AnimalType.CHIVA, AnimalType.NOVILLA, AnimalType.DESMADRE_HEMBRA].includes(animalData.type)) {
       animalData.sex = 'H';
-    } else if ([AnimalType.TORO, AnimalType.CHIVO, AnimalType.TORETE, AnimalType.DESMADRE_MACHO].includes(animalData.type)) {
+    } else if (animalData.type && [AnimalType.TORO, AnimalType.CHIVO, AnimalType.TORETE, AnimalType.DESMADRE_MACHO].includes(animalData.type)) {
       animalData.sex = 'M';
     }
     // Note: CABALLO sex remains selectable.
@@ -331,7 +331,7 @@ export class AnimalsService implements OnModuleInit {
     updateData.sex = combined.sex;
 
     if (combined.type === AnimalType.CABALLO) {
-      updateData.identifier = updateData.nickname || combined.nickname;
+      updateData.identifier = updateData.nickname || combined.nickname || undefined;
       if (!updateData.identifier) {
         throw new BadRequestException('El nombre es obligatorio para caballos.');
       }
