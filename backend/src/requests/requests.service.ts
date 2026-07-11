@@ -95,7 +95,7 @@ export class RequestsService {
   }
 
   async clearAll() {
-    await this.requestsRepository.delete({});
+    await this.requestsRepository.clear();
     return { cleared: true };
   }
 }
