@@ -11,8 +11,13 @@ export class LogsController {
   findAll(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('actionType') actionType?: string,
   ) {
-    return this.logsService.findAll({ startDate, endDate });
+    const pageNum = page ? parseInt(page, 10) : undefined;
+    const limitNum = limit ? parseInt(limit, 10) : undefined;
+    return this.logsService.findAll({ startDate, endDate, page: pageNum, limit: limitNum, actionType });
   }
 
   @Delete('cleanup')

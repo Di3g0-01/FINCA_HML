@@ -2,6 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, X, Edit } from 'lucide-react';
+import SystemDatePicker from '../components/SystemDatePicker';
 
 export default function SalesView() {
   const [animals, setAnimals] = useState([]);
@@ -276,7 +277,7 @@ export default function SalesView() {
                 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Fecha de Venta</label>
-                  <input type="date" name="sale_date" className="input-field" value={formData.sale_date} onChange={handleChange} required />
+                  <SystemDatePicker name="sale_date" className="input-field" value={formData.sale_date} onChange={handleChange} required={true} />
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>

@@ -33,7 +33,8 @@ export default function AnimalsView() {
   const fetchAnimals = useCallback(async () => {
     try {
       setIsLoading(true);
-      const query = `?page=${page}&limit=50&status=${filterStatus}${searchTerm ? `&search=${searchTerm}` : ''}`;
+      const currentLimit = searchTerm ? 1000 : 50;
+      const query = `?page=${page}&limit=${currentLimit}&status=${filterStatus}${searchTerm ? `&search=${searchTerm}` : ''}`;
       const res = await axios.get(`http://localhost:3001/animals${query}`);
 
       if (res.data.data) {
@@ -538,7 +539,7 @@ export default function AnimalsView() {
       }
 
       // Si el animal encontrado tiene hijos en la lista, los ponemos DEBAJO etiquetados como HIJO
-      const children = animals.filter(c => c.mother_id === targetAnimal.id);
+      const children = animals.filter(c => c.mother_id == targetAnimal.id || (c.mother && c.mother.id == targetAnimal.id) || (c.mother && (c.mother.identifier || '').toLowerCase().trim() === (targetAnimal.identifier || '').toLowerCase().trim()));
       children.forEach(child => {
         if (!renderedIds.has(child.id)) {
           resultRows.push(renderAnimalRow(child, 'HIJO'));
@@ -547,15 +548,16 @@ export default function AnimalsView() {
       });
 
       // Si el animal encontrado tiene una madre en la lista, la ponemos (si no fue renderizada ya)
-      if (targetAnimal.mother && !renderedIds.has(targetAnimal.mother.id)) {
-        resultRows.push(renderAnimalRow(targetAnimal.mother, 'MADRE'));
-        renderedIds.add(targetAnimal.mother.id);
+      const motherObj = targetAnimal.mother || animals.find(m => m.id == targetAnimal.mother_id);
+      if (motherObj && !renderedIds.has(motherObj.id)) {
+        resultRows.push(renderAnimalRow(motherObj, 'MADRE'));
+        renderedIds.add(motherObj.id);
       }
     });
 
     // 2. Por si el animal exacto no está activo pero sus hijos sí
     if (exactMatches.length === 0) {
-      const orphanChildren = animals.filter(c => c.mother && (c.mother.identifier || '').toLowerCase().trim() === query);
+      const orphanChildren = animals.filter(c => (c.mother && (c.mother.identifier || '').toLowerCase().trim() === query) || (c.motherIdentifier && c.motherIdentifier.toLowerCase().trim() === query));
       orphanChildren.forEach(child => {
         if (!renderedIds.has(child.id)) {
           resultRows.push(renderAnimalRow(child, 'HIJO'));
@@ -563,6 +565,16 @@ export default function AnimalsView() {
         }
       });
     }
+
+    // 3. Renderizar cualquier otro animal que el backend haya retornado (coincidencias parciales u otros)
+    animals.forEach(a => {
+      if (!renderedIds.has(a.id)) {
+        // Podría ser un animal que coincidió parcialmente (ej: 16/14 cuando se busca 6/14)
+        // o un hijo que no se vinculó por ID exacto.
+        resultRows.push(renderAnimalRow(a));
+        renderedIds.add(a.id);
+      }
+    });
 
     return resultRows;
   }, [animals, searchTerm, expandedRowId, onToggleExpand, openForm, handleDelete]);

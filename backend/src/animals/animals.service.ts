@@ -61,35 +61,33 @@ export class AnimalsService implements OnModuleInit {
     const twoYearsAgo = new Date(now); twoYearsAgo.setFullYear(now.getFullYear() - 2);
 
     try {
-      // Machos
-      const cToDM = await this.animalsRepository.update(
-        { type: AnimalType.CHIVO, birth_date: LessThanOrEqual(sixHalfMonthsAgo) },
-        { type: AnimalType.DESMADRE_MACHO }
-      );
-      const dmToT = await this.animalsRepository.update(
-        { type: AnimalType.DESMADRE_MACHO, birth_date: LessThanOrEqual(oneYearAgo) },
-        { type: AnimalType.TORETE }
-      );
-      const tToTo = await this.animalsRepository.update(
-        { type: AnimalType.TORETE, birth_date: LessThanOrEqual(twoYearsAgo) },
-        { type: AnimalType.TORO }
-      );
+      const processEvolutions = async (currentType: AnimalType, newType: AnimalType, dateLimit: Date) => {
+        const animals = await this.animalsRepository.find({
+          where: { type: currentType, birth_date: LessThanOrEqual(dateLimit) }
+        });
+        
+        for (const animal of animals) {
+          animal.type = newType;
+          await this.animalsRepository.save(animal);
+          await this.logsService.createLog({
+            username: 'SISTEMA',
+            action_type: 'EVOLUCION',
+            animal_identifier: animal.identifier,
+            details: `Cambio automático de etapa: de ${currentType} a ${newType}`
+          });
+        }
+        return animals.length;
+      };
 
-      // Hembras
-      const cToDH = await this.animalsRepository.update(
-        { type: AnimalType.CHIVA, birth_date: LessThanOrEqual(sixHalfMonthsAgo) },
-        { type: AnimalType.DESMADRE_HEMBRA }
-      );
-      const dhToN = await this.animalsRepository.update(
-        { type: AnimalType.DESMADRE_HEMBRA, birth_date: LessThanOrEqual(oneYearAgo) },
-        { type: AnimalType.NOVILLA }
-      );
-      const nToV = await this.animalsRepository.update(
-        { type: AnimalType.NOVILLA, birth_date: LessThanOrEqual(twoYearsAgo) },
-        { type: AnimalType.VACA }
-      );
+      const cToDM = await processEvolutions(AnimalType.CHIVO, AnimalType.DESMADRE_MACHO, sixHalfMonthsAgo);
+      const dmToT = await processEvolutions(AnimalType.DESMADRE_MACHO, AnimalType.TORETE, oneYearAgo);
+      const tToTo = await processEvolutions(AnimalType.TORETE, AnimalType.TORO, twoYearsAgo);
 
-      this.logger.log(`Evoluciones: ${cToDM.affected || 0} Chivo->DesmadreM, ${dmToT.affected || 0} DesmadreM->Torete, ${tToTo.affected || 0} Torete->Toro, ${cToDH.affected || 0} Chiva->DesmadreH, ${dhToN.affected || 0} DesmadreH->Novilla, ${nToV.affected || 0} Novilla->Vaca.`);
+      const cToDH = await processEvolutions(AnimalType.CHIVA, AnimalType.DESMADRE_HEMBRA, sixHalfMonthsAgo);
+      const dhToN = await processEvolutions(AnimalType.DESMADRE_HEMBRA, AnimalType.NOVILLA, oneYearAgo);
+      const nToV = await processEvolutions(AnimalType.NOVILLA, AnimalType.VACA, twoYearsAgo);
+
+      this.logger.log(`Evoluciones: ${cToDM} Chivo->DesmadreM, ${dmToT} DesmadreM->Torete, ${tToTo} Torete->Toro, ${cToDH} Chiva->DesmadreH, ${dhToN} DesmadreH->Novilla, ${nToV} Novilla->Vaca.`);
     } catch (e) {
       this.logger.error('Error durante la rutina de crecimiento cronológica.', e);
     }
@@ -278,10 +276,13 @@ export class AnimalsService implements OnModuleInit {
       const exactSearch = search.trim();
       query.andWhere(
         new Brackets(qb => {
-          qb.where('animal.identifier ILIKE :search', { search: `%${exactSearch}%` })
+          qb.where('animal.identifier = :exactSearch', { exactSearch })
             .orWhere('animal.nickname ILIKE :search', { search: `%${exactSearch}%` })
-            .orWhere('mother.identifier ILIKE :search', { search: `%${exactSearch}%` })
-            .orWhere('animal.mother_id IN (SELECT a.id FROM animals a WHERE a.identifier ILIKE :search OR a.nickname ILIKE :search)', { search: `%${exactSearch}%` });
+            .orWhere('mother.identifier = :exactSearch', { exactSearch })
+            // Hijos del animal buscado
+            .orWhere('animal.mother_id IN (SELECT a.id FROM animals a WHERE a.identifier = :exactSearch)', { exactSearch })
+            // Madre del animal buscado
+            .orWhere('animal.id IN (SELECT a.mother_id FROM animals a WHERE a.identifier = :exactSearch AND a.mother_id IS NOT NULL)', { exactSearch });
         })
       );
     }

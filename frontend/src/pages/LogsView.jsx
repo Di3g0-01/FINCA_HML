@@ -5,6 +5,7 @@ import { Search, Download, Calendar, ArrowRight, User as UserIcon, Tag, Eye, Tra
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import CustomSelect from '../components/CustomSelect';
+import SystemDatePicker from '../components/SystemDatePicker';
 
 export default function LogsView() {
   const [logs, setLogs] = useState([]);
@@ -15,18 +16,27 @@ export default function LogsView() {
     endDate: new Date().toLocaleDateString('en-CA')
   });
   const [selectedLog, setSelectedLog] = useState(null);
+  
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [actionFilter, setActionFilter] = useState('TODOS');
 
   const fetchLogs = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get(`http://localhost:3001/logs?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&_t=${new Date().getTime()}`);
-      setLogs(res.data);
+      const res = await axios.get(`http://localhost:3001/logs?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&page=${page}&limit=25&actionType=${actionFilter === 'TODOS' ? '' : actionFilter}&_t=${new Date().getTime()}`);
+      setLogs(res.data.data || res.data);
+      setTotalPages(res.data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching logs:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange]);
+  }, [dateRange, page, actionFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [dateRange, actionFilter, filterType]);
 
   const handleDeleteLog = async (id) => {
     const result = await CustomAlert.confirm("¿Estás seguro de eliminar este registro de actividad permanentemente?");
@@ -86,7 +96,7 @@ export default function LogsView() {
         
         // Consultar todos los logs (limit=5000) para verificar antigüedad
         const res = await axios.get(`http://localhost:3001/logs`);
-        const allLogs = res.data;
+        const allLogs = res.data.data || res.data;
         
         const oldLogs = allLogs.filter(log => new Date(log.created_at) < sixMonthsAgo);
         
@@ -140,7 +150,7 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
         </div>
       </div>
 
-      <div className="premium-card" style={{ padding: '24px', marginBottom: '32px', display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-end' }}>
+      <div className="premium-card" style={{ padding: '24px', marginBottom: '32px', display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-end', position: 'relative', zIndex: 10 }}>
         <div className="form-group" style={{ minWidth: '220px' }}>
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             Tipo de Consulta
@@ -161,15 +171,34 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
           />
         </div>
 
+        <div className="form-group" style={{ minWidth: '220px' }}>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            Acción
+          </label>
+          <CustomSelect 
+            value={actionFilter} 
+            onChange={(e) => setActionFilter(e.target.value)}
+            options={[
+              { label: 'Todos los movimientos', value: 'TODOS' },
+              { label: 'Creación/Nacimiento', value: 'NACIMIENTO' },
+              { label: 'Modificaciones', value: 'MODIFICACION' },
+              { label: 'Compras', value: 'COMPRA' },
+              { label: 'Ventas', value: 'VENTA' },
+              { label: 'Muertes', value: 'MUERTE' },
+              { label: 'Evolución / Cambio de Etapa', value: 'EVOLUCION' }
+            ]}
+          />
+        </div>
+
         {filterType === 'RANGE' && (
           <>
             <div className="form-group" style={{ width: '200px' }}>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={14} /> Fecha Inicio
               </label>
-              <input 
-                type="date" 
-                className="input-field" 
+              <SystemDatePicker 
+                name="startDate"
+                className="input-field"
                 value={dateRange.startDate} 
                 onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
               />
@@ -183,9 +212,9 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={14} /> Fecha Fin
               </label>
-              <input 
-                type="date" 
-                className="input-field" 
+              <SystemDatePicker 
+                name="endDate"
+                className="input-field"
                 value={dateRange.endDate} 
                 onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
               />
@@ -279,6 +308,30 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
                 )}
               </tbody>
             </table>
+
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <button 
+                  disabled={page === 1} 
+                  onClick={() => setPage(p => p - 1)} 
+                  className="btn-secondary"
+                  style={{ opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  Anterior
+                </button>
+                <span style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 'bold' }}>
+                  Página {page} de {totalPages}
+                </span>
+                <button 
+                  disabled={page >= totalPages} 
+                  onClick={() => setPage(p => p + 1)} 
+                  className="btn-secondary"
+                  style={{ opacity: page >= totalPages ? 0.5 : 1, cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

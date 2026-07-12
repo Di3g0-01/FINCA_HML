@@ -24,23 +24,36 @@ export class LogsService {
     return this.logsRepository.save(log);
   }
 
-  async findAll(query: { startDate?: string; endDate?: string }) {
+  async findAll(query: { startDate?: string; endDate?: string; page?: number; limit?: number; actionType?: string }) {
     console.log('Querying logs with:', query);
     const qb = this.logsRepository.createQueryBuilder('log')
       .orderBy('log.created_at', 'DESC');
 
     if (query.startDate && query.endDate) {
-      qb.andWhere("DATE(log.created_at AT TIME ZONE 'America/Guatemala') >= :startDate AND DATE(log.created_at AT TIME ZONE 'America/Guatemala') <= :endDate", { 
+      qb.andWhere("DATE(log.created_at) >= :startDate AND DATE(log.created_at) <= :endDate", { 
         startDate: query.startDate, 
         endDate: query.endDate 
       });
     } else if (query.startDate) {
-      qb.andWhere("DATE(log.created_at AT TIME ZONE 'America/Guatemala') = :startDate", { startDate: query.startDate });
+      qb.andWhere("DATE(log.created_at) = :startDate", { startDate: query.startDate });
     }
 
-    const results = await qb.getMany();
-    console.log(`Found ${results.length} results.`);
-    return results;
+    if (query.actionType) {
+      qb.andWhere("log.action_type = :actionType", { actionType: query.actionType });
+    }
+
+    if (query.page && query.limit) {
+      const skip = (query.page - 1) * query.limit;
+      const total = await qb.getCount();
+      qb.offset(skip).limit(query.limit);
+
+      const data = await qb.getMany();
+      return { data, total, page: query.page, totalPages: Math.ceil(total / query.limit) };
+    }
+
+    const data = await qb.getMany();
+    console.log(`Found ${data.length} results.`);
+    return { data, total: data.length, page: 1, totalPages: 1 };
   }
 
   async remove(id: number) {

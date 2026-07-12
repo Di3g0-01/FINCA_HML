@@ -2,6 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, X, Edit } from 'lucide-react';
+import SystemDatePicker from '../components/SystemDatePicker';
 
 export default function DeathsView() {
   const [animals, setAnimals] = useState([]);
@@ -204,7 +205,7 @@ export default function DeathsView() {
               )}
               <div className="form-group">
                 <label className="form-label">Fecha del Deceso</label>
-                <input type="date" name="death_date" className="input-field" value={formData.death_date} onChange={handleChange} required />
+                <SystemDatePicker name="death_date" className="input-field" value={formData.death_date} onChange={handleChange} required={true} />
               </div>
               <div className="form-group">
                 <label className="form-label">Causa o Razón de Muerte (Opcional)</label>

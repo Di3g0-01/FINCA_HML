@@ -1,8 +1,9 @@
 import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import axios from 'axios';
 import CustomSelect from './CustomSelect';
+import SystemDatePicker from './SystemDatePicker';
 
 export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit, cows }) {
   const [formData, setFormData] = useState({
@@ -230,7 +231,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
             </div>
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label className="form-label">Fecha de Nacimiento</label>
-              <input type="date" name="birth_date" className="input-field" value={formData.birth_date} onChange={handleChange} />
+              <SystemDatePicker name="birth_date" className="input-field" value={formData.birth_date} onChange={handleChange} />
             </div>
             <div className="form-group" style={{ gridColumn: '1 / -1', background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '12px' }}>
               <label className="form-label">ID de la Madre</label>
@@ -238,9 +239,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
             </div>
             {formData.type === 'VACA' && (
               <>
-                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px' }}>
-                  <input type="checkbox" name="is_pregnant" checked={formData.is_pregnant} onChange={handleChange} />
-                  <label>¿Está Preñada?</label>
+                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px' }}>
+                  <input type="checkbox" name="is_pregnant" checked={formData.is_pregnant} onChange={handleChange} style={{ width: '20px', height: '20px', margin: 0, cursor: 'pointer' }} />
+                  <label style={{ margin: 0, cursor: 'pointer' }} onClick={() => setFormData({...formData, is_pregnant: !formData.is_pregnant})}>¿Está Preñada?</label>
                 </div>
                 {formData.is_pregnant && (
                   <div className="form-group" style={{ gridColumn: '1 / -1', background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px' }}>
@@ -249,8 +250,8 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
                   </div>
                 )}
                 <div className="form-group"><label className="form-label">Total Partos</label><input type="number" name="total_calvings" className="input-field" value={formData.total_calvings} onChange={handleChange} /></div>
-                <div className="form-group"><label className="form-label">Último Parto</label><input type="date" name="last_calving_date" className="input-field" value={formData.last_calving_date} onChange={handleChange} /></div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Penúltimo Parto</label><input type="date" name="second_last_calving_date" className="input-field" value={formData.second_last_calving_date} onChange={handleChange} /></div>
+                <div className="form-group"><label className="form-label">Último Parto</label><SystemDatePicker name="last_calving_date" className="input-field" value={formData.last_calving_date} onChange={handleChange} /></div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Penúltimo Parto</label><SystemDatePicker name="second_last_calving_date" className="input-field" value={formData.second_last_calving_date} onChange={handleChange} /></div>
               </>
             )}
           </div>

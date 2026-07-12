@@ -305,19 +305,4 @@ select option {
   }
 }
 
-/* Custom Date Input Styling to match system design */
-input[type="date"] {
-  color-scheme: dark;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
 
