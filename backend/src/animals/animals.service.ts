@@ -122,18 +122,32 @@ export class AnimalsService implements OnModuleInit {
   }
 
   async getAlerts() {
-    const pregnantList = await this.animalsRepository.createQueryBuilder('animal')
-      .where('animal.status = :status', { status: AnimalStatus.ACTIVO })
-      .andWhere('animal.is_pregnant = :isPregnant', { isPregnant: true })
-      .andWhere('animal.pregnancy_months >= :months', { months: 9 })
-      .getMany();
+    const pregnantList = await this.animalsRepository.find({
+      where: { status: AnimalStatus.ACTIVO, is_pregnant: true }
+    });
     
-    return pregnantList.map(a => ({
-      id: a.id,
-      identifier: a.identifier,
-      pregnancy_months: a.pregnancy_months,
-      message: `El animal ${a.identifier} ha alcanzado ${a.pregnancy_months} meses de preñez.`
-    }));
+    const now = new Date();
+    const alerts = [];
+
+    for (const a of pregnantList) {
+      if (a.pregnancy_start_date) {
+        const start = new Date(a.pregnancy_start_date);
+        const diffDays = (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        let months = diffDays / 30.4375;
+        months = Math.round(months * 10) / 10;
+        
+        if (months >= 9.0) {
+          const finalMonths = months > 10.0 ? 10.0 : months;
+          alerts.push({
+            id: a.id,
+            identifier: a.identifier,
+            pregnancy_months: finalMonths,
+            message: `El animal ${a.identifier} ha alcanzado ${finalMonths} meses de preñez.`
+          });
+        }
+      }
+    }
+    return alerts;
   }
 
   async create(animalData: Partial<Animal>, username: string = 'SISTEMA') {

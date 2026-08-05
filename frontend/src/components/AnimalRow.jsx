@@ -63,12 +63,22 @@ const AnimalRow = memo(({
         {viewMode === 'CALVING' ? (
           <>
             <td style={{ padding: '16px', color: animal.is_pregnant ? '#FF9800' : 'var(--text-muted)', fontWeight: 'bold' }}>
-              {animal.is_pregnant ? `Sí (${animal.pregnancy_months} m)` : 'No'}
+              {animal.is_pregnant ? (() => {
+                 const start = animal.pregnancy_start_date ? new Date(animal.pregnancy_start_date) : new Date();
+                 const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+                 let months = diffDays / 30.4375;
+                 if (months > 10.0) months = 10.0;
+                 months = Math.round(months * 10) / 10;
+                 return `Sí (${months} m)`;
+              })() : 'No'}
             </td>
             <td style={{ padding: '16px', color: animal.is_pregnant ? '#10B981' : 'var(--text-muted)', fontWeight: 'bold' }}>
               {animal.is_pregnant ? (() => {
-                 const monthsLeft = 9 - (animal.pregnancy_months || 0);
-                 const daysLeft = Math.round(monthsLeft * 30.44);
+                 const start = animal.pregnancy_start_date ? new Date(animal.pregnancy_start_date) : new Date();
+                 const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+                 let months = diffDays / 30.4375;
+                 const monthsLeft = 9 - months;
+                 const daysLeft = Math.round(monthsLeft * 30.4375);
                  const d = new Date(); d.setDate(d.getDate() + daysLeft);
                  return d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
               })() : '-'}
