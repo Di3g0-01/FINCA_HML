@@ -57,8 +57,23 @@ export default function DashboardLayout() {
         <NotificationBell />
       </div>
 
-      {/* Desktop Notification Bell */}
-      <div className="desktop-only" style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 990 }}>
+      {/* Desktop Header */}
+      <div className="desktop-only" style={{ 
+        position: 'fixed', 
+        top: 0, 
+        right: 0, 
+        left: isSidebarOpen ? '260px' : '80px',
+        height: '70px', 
+        background: 'var(--glass-bg)', 
+        backdropFilter: 'var(--glass-blur)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'flex-end',
+        padding: '0 30px', 
+        zIndex: 900, 
+        borderBottom: '1px solid var(--panel-border)',
+        transition: 'left 0.3s ease'
+      }}>
         <NotificationBell />
       </div>
 
@@ -76,7 +91,7 @@ export default function DashboardLayout() {
         flex: 1, 
         padding: '40px', 
         overflowY: 'auto', 
-        paddingTop: window.innerWidth <= 768 ? '80px' : '40px',
+        paddingTop: '80px',
         transition: 'all 0.3s ease'
       }}>
         <Suspense fallback={<div style={{ padding: '20px', color: 'var(--text-muted)' }}>Cargando vista...</div>}>

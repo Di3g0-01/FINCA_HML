@@ -19,14 +19,6 @@ export default function DashboardHome() {
     const activos = animals.filter(a => a.status === 'ACTIVO');
     return {
       totalActivos: activos.length,
-      totalVacas: activos.filter(a => a.type === 'VACA').length,
-      totalToros: activos.filter(a => a.type === 'TORO').length,
-      totalNovillas: activos.filter(a => a.type === 'NOVILLA').length,
-      totalToretes: activos.filter(a => a.type === 'TORETE').length,
-      totalChivos: activos.filter(a => ['CHIVA', 'CHIVO'].includes(a.type)).length,
-      totalTerneros: activos.filter(a => a.type === 'TERNERO').length,
-      totalTerneras: activos.filter(a => a.type === 'TERNERA').length,
-      totalCaballos: activos.filter(a => a.type === 'CABALLO').length,
       activos
     };
   }, [animals]);
@@ -72,38 +64,14 @@ export default function DashboardHome() {
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '8px' }}>TOTAL ACTIVOS</h3>
               <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.totalActivos}</div>
             </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #4CAF50' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>VACAS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalVacas}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #E91E63' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>NOVILLAS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalNovillas}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #9C27B0' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CHIVAS / CHIVOS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalChivos}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #2196F3' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TORETES</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToretes}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #FF9800' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TOROS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToros}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #00BCD4' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TERNEROS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalTerneros}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #F44336' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TERNERAS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalTerneras}</div>
-            </div>
-            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #795548' }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CABALLOS</h3>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalCaballos}</div>
-            </div>
+            {typeData.map((data, index) => (
+              <div key={data.name} className="premium-card" style={{ padding: '20px', borderTop: `4px solid ${COLORS[index % COLORS.length]}` }}>
+                <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase' }}>
+                  {data.name.replace('_', ' ')}
+                </h3>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{data.value}</div>
+              </div>
+            ))}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '24px' }}>
@@ -141,11 +109,11 @@ export default function DashboardHome() {
 
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Distribución por Tipo</h2>
-              <div className="premium-card" style={{ height: '350px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="premium-card" style={{ height: '420px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {typeData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      <Pie data={typeData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                         {typeData.map((entry, index) => ( <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
