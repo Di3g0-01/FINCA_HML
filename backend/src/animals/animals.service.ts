@@ -127,7 +127,7 @@ export class AnimalsService implements OnModuleInit {
     });
     
     const now = new Date();
-    const alerts = [];
+    const alerts: any[] = [];
 
     for (const a of pregnantList) {
       if (a.pregnancy_start_date) {
