@@ -24,6 +24,9 @@ export default function DashboardHome() {
       totalNovillas: activos.filter(a => a.type === 'NOVILLA').length,
       totalToretes: activos.filter(a => a.type === 'TORETE').length,
       totalChivos: activos.filter(a => ['CHIVA', 'CHIVO'].includes(a.type)).length,
+      totalTerneros: activos.filter(a => a.type === 'TERNERO').length,
+      totalTerneras: activos.filter(a => a.type === 'TERNERA').length,
+      totalCaballos: activos.filter(a => a.type === 'CABALLO').length,
       activos
     };
   }, [animals]);
@@ -88,6 +91,18 @@ export default function DashboardHome() {
             <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #FF9800' }}>
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TOROS</h3>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalToros}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #00BCD4' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TERNEROS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalTerneros}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #F44336' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>TERNERAS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalTerneras}</div>
+            </div>
+            <div className="premium-card" style={{ padding: '20px', borderTop: '4px solid #795548' }}>
+              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px' }}>CABALLOS</h3>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.totalCaballos}</div>
             </div>
           </div>
 
