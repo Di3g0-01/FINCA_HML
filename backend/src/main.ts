@@ -1,18 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as express from 'express';
-import { join } from 'path';
-import * as fs from 'fs';
+import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+import * as cookieParser from 'cookie-parser';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  if (!fs.existsSync('./uploads')) {
-    fs.mkdirSync('./uploads');
-  }
-
   const app = await NestFactory.create(AppModule);
-  app.enableCors(); // Otorga acceso a localhost frontend
+  
+  // Security middlewares
+  app.use(helmet());
+  app.use(cookieParser());
+  
+  // CORS configuration
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true, // Allow cookies
+  });
 
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+  // Global Validation
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+
+  // Global Exception Filter
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port, '0.0.0.0');

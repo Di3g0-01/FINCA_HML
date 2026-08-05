@@ -1,0 +1,32 @@
+.sidebar {
+  transition: width 0.3s ease;
+  overflow-x: hidden;
+}
+
+.sidebar-collapsed .sidebar-label {
+  display: none;
+}
+
+.sidebar-collapsed {
+  width: 80px !important;
+  align-items: center;
+}
+
+.sidebar-collapsed a {
+  justify-content: center;
+  padding: 10px !important;
+}
+
+.sidebar-collapsed button {
+  justify-content: center;
+  padding: 10px !important;
+}
+
+.sidebar-collapsed .logout-btn {
+  justify-content: center;
+}
+
+/* Ensure icons stay centered when collapsed */
+.sidebar-collapsed svg {
+  margin: 0 !important;
+}
