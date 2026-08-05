@@ -21,6 +21,6 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
-    return { user: payload };
+    return { access_token, user: payload };
   }
 }

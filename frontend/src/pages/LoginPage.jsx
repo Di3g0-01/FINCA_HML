@@ -17,7 +17,7 @@ export default function LoginPage() {
     setErrorMsg('');
     try {
       if (username && password) {
-        const res = await axios.post('http://localhost:3001/auth/login', { username, password });
+        const res = await axios.post('http://127.0.0.1:3001/auth/login', { username, password });
         localStorage.setItem('token', res.data.access_token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
         // Setup initial default header just in case before reload
