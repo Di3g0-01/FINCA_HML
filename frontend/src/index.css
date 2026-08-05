@@ -236,7 +236,7 @@ select option {
     transform: translateX(-100%);
     width: 260px !important;
   }
-  .sidebar.sidebar-visible {
+  .sidebar.sidebar-expanded {
     transform: translateX(0);
   }
   

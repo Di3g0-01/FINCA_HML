@@ -48,11 +48,12 @@ export default function DashboardLayout() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       {/* Mobile Header */}
-      <div className="mobile-only" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '60px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 900, borderBottom: '1px solid var(--panel-border)' }}>
+      <div className="mobile-only" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '60px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', display: 'flex', alignItems: 'center', padding: '0 20px', zIndex: 900, borderBottom: '1px solid var(--panel-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <button onClick={toggleSidebar} aria-label="Abrir menú" style={{ background: 'transparent', color: 'white' }}><Menu size={24} /></button>
+          <button onClick={toggleSidebar} aria-label="Abrir menú" style={{ background: 'transparent', color: 'white', border: 'none', padding: 0 }}><Menu size={24} /></button>
           <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>Finca HM</span>
         </div>
+        <div style={{ flex: 1 }} />
         <NotificationBell />
       </div>
 
