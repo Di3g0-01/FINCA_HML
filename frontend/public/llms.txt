@@ -1,0 +1,4 @@
+# Finca HM
+> Sistema de control de inventario ganadero.
+
+Esta aplicación permite gestionar el inventario de ganado de la finca.

@@ -32,7 +32,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div
+    <main
       className="auth-container"
       style={{
         display: 'flex',
@@ -148,6 +148,7 @@ export default function LoginPage() {
               />
               <button
                 type="button"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
@@ -191,6 +192,6 @@ export default function LoginPage() {
           Tip: Pass: AdministradorHM
         </div>
       </div>
-    </div>
+    </main>
   );
 }
