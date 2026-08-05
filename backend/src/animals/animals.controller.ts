@@ -1,15 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { AnimalsService } from './animals.service';
 import { Animal } from './entities/animal.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRole } from '../users/entities/user.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('animals')
 export class AnimalsController {
   constructor(private readonly animalsService: AnimalsService) {}
+
+  // --- STANDARD CRUD ---
 
   @Post()
   create(@Body() createData: Partial<Animal>, @Request() req) {
@@ -31,8 +50,37 @@ export class AnimalsController {
     const calvingsBool = String(withCalvings) === 'true';
     const controlPartosBool = String(isControlPartos) === 'true';
     const pregnantBool = String(isPregnant) === 'true';
-    return this.animalsService.findAll(pageNum, limitNum, status, search, calvingsBool, controlPartosBool, pregnantBool);
+    return this.animalsService.findAll(
+      pageNum,
+      limitNum,
+      status,
+      search,
+      calvingsBool,
+      controlPartosBool,
+      pregnantBool,
+    );
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.animalsService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateData: Partial<Animal>,
+    @Request() req,
+  ) {
+    return this.animalsService.update(+id, updateData, req.user?.username);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.animalsService.remove(+id, req.user?.username);
+  }
+
+  // --- CUSTOM ACTIONS ---
 
   @Get('alerts')
   getAlerts() {
@@ -45,7 +93,8 @@ export class AnimalsController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
@@ -65,22 +114,9 @@ export class AnimalsController {
     return { path: `/uploads/${file.filename}` };
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.animalsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateData: Partial<Animal>, @Request() req) {
-    return this.animalsService.update(+id, updateData, req.user?.username);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string, @Request() req) {
-    return this.animalsService.remove(+id, req.user?.username);
-  }
-
   @Delete()
+  @Roles(UserRole.SUPERUSER)
+  @UseGuards(RolesGuard)
   removeAll(@Request() req) {
     return this.animalsService.removeAll(req.user?.username);
   }

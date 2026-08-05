@@ -7,12 +7,12 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByUsername(username);
-    if (user && await bcrypt.compare(pass, user.password_hash)) {
+    if (user && (await bcrypt.compare(pass, user.password_hash))) {
       const { password_hash, ...result } = user;
       return result;
     }
@@ -23,7 +23,7 @@ export class AuthService {
     const payload = { username: user.username, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
-      user: payload
+      user: payload,
     };
   }
 }

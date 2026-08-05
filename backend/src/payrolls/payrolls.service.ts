@@ -12,6 +12,8 @@ export class PayrollsService {
     private logsService: LogsService,
   ) {}
 
+  // --- STANDARD CRUD ---
+
   async create(data: Partial<Payroll>, username: string = 'SISTEMA') {
     const payroll = this.payrollsRepository.create(data);
     const saved = await this.payrollsRepository.save(payroll);
@@ -20,7 +22,7 @@ export class PayrollsService {
       username,
       action_type: 'PAGO_PLANILLA',
       amount: undefined,
-      details: `Pago de planilla registrado para el periodo ${saved.period_name}.`
+      details: `Pago de planilla registrado para el periodo ${saved.period_name}.`,
     });
 
     return saved;
@@ -43,7 +45,7 @@ export class PayrollsService {
     await this.logsService.createLog({
       username,
       action_type: 'PAGO_ELIMINADO',
-      details: `Registro de pago ID ${id} eliminado del historial.`
+      details: `Registro de pago ID ${id} eliminado del historial.`,
     });
 
     return { deleted: true };

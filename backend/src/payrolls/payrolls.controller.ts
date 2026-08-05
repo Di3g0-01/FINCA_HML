@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { PayrollsService } from './payrolls.service';
 import { Payroll } from './entities/payroll.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,6 +16,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('payrolls')
 export class PayrollsController {
   constructor(private readonly payrollsService: PayrollsService) {}
+
+  // --- STANDARD CRUD ---
 
   @Post()
   create(@Body() data: Partial<Payroll>, @Request() req) {

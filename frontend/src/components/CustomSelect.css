@@ -23,13 +23,13 @@
 }
 
 .custom-select-trigger.open {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .custom-select-trigger:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #4caf50;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
@@ -61,7 +61,9 @@
   padding: 10px 16px;
   cursor: pointer;
   color: white;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .custom-select-option:hover {
@@ -71,7 +73,7 @@
 
 .custom-select-option.selected {
   background: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
+  color: #4caf50;
   font-weight: 500;
 }
 

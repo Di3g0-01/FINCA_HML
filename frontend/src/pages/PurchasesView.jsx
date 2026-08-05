@@ -21,7 +21,7 @@ export default function PurchasesView() {
     observations: '',
     sex: 'H',
     nickname: '',
-    legal_document_path: ''
+    legal_document_path: '',
   });
 
   const fetchAnimals = async () => {
@@ -30,7 +30,7 @@ export default function PurchasesView() {
       const res = await axios.get('http://localhost:3001/animals?limit=5000');
       const data = res.data.data || res.data;
       // Mostramos todo lo que tenga origin COMPRA
-      setAnimals(data.filter(a => a.origin === 'COMPRA'));
+      setAnimals(data.filter((a) => a.origin === 'COMPRA'));
     } catch (error) {
       console.error('Error fetching animals:', error);
     } finally {
@@ -44,11 +44,13 @@ export default function PurchasesView() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => {
+    setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === 'type') {
-        if (['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(value)) updated.sex = 'H';
-        else if (['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(value)) updated.sex = 'M';
+        if (['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(value))
+          updated.sex = 'H';
+        else if (['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(value))
+          updated.sex = 'M';
       }
       return updated;
     });
@@ -57,24 +59,31 @@ export default function PurchasesView() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const formDataObj = new FormData();
     formDataObj.append('file', file);
-    
+
     try {
-      const res = await axios.post('http://localhost:3001/animals/upload-document', formDataObj, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setFormData(prev => ({
+      const res = await axios.post(
+        'http://localhost:3001/animals/upload-document',
+        formDataObj,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      setFormData((prev) => ({
         ...prev,
-        legal_document_path: res.data.path
+        legal_document_path: res.data.path,
       }));
       CustomAlert.success('Cargado', 'Documento PDF cargado con éxito.');
     } catch (err) {
       console.error(err);
-      CustomAlert.error('Error', err.response?.data?.message || 'Error al subir el archivo PDF.');
+      CustomAlert.error(
+        'Error',
+        err.response?.data?.message || 'Error al subir el archivo PDF.',
+      );
     }
   };
 
@@ -84,34 +93,49 @@ export default function PurchasesView() {
     try {
       if (formData.type === 'CABALLO') {
         if (!formData.nickname) {
-          CustomAlert.info("Aviso", 'El nombre es obligatorio para caballos.');
+          CustomAlert.info('Aviso', 'El nombre es obligatorio para caballos.');
           return;
         }
         formData.identifier = formData.nickname;
       }
-      const payload = { 
-        ...formData, 
-        origin: 'COMPRA', 
-        status: (animalToEdit && animalToEdit.status) ? animalToEdit.status : 'ACTIVO',
+      const payload = {
+        ...formData,
+        origin: 'COMPRA',
+        status:
+          animalToEdit && animalToEdit.status ? animalToEdit.status : 'ACTIVO',
         purchase_price: parseFloat(formData.purchase_price) || null,
-        birth_date: formData.birth_date || null
+        birth_date: formData.birth_date || null,
       };
 
       if (animalToEdit) {
-        await axios.patch(`http://localhost:3001/animals/${animalToEdit.id}`, payload);
+        await axios.patch(
+          `http://localhost:3001/animals/${animalToEdit.id}`,
+          payload,
+        );
       } else {
         await axios.post('http://localhost:3001/animals', payload);
       }
-      
+
       setIsModalOpen(false);
       setAnimalToEdit(null);
       setFormData({
-        type: 'VACA', identifier: '', purchase_price: '', seller_name: '', birth_date: '', color: '', breed: '', lote: 'GENERAL', observations: '', sex: 'H', nickname: '', legal_document_path: ''
+        type: 'VACA',
+        identifier: '',
+        purchase_price: '',
+        seller_name: '',
+        birth_date: '',
+        color: '',
+        breed: '',
+        lote: 'GENERAL',
+        observations: '',
+        sex: 'H',
+        nickname: '',
+        legal_document_path: '',
       });
       fetchAnimals();
     } catch (error) {
       console.error(error);
-      CustomAlert.info("Aviso", 'Error guardando/editando la compra.');
+      CustomAlert.info('Aviso', 'Error guardando/editando la compra.');
     }
   };
 
@@ -131,92 +155,290 @@ export default function PurchasesView() {
       observations: animal.observations || '',
       sex: animal.sex || 'H',
       nickname: animal.nickname || '',
-      legal_document_path: animal.legal_document_path || ''
+      legal_document_path: animal.legal_document_path || '',
     });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if ((await CustomAlert.confirm('¿Deseas ELIMINAR este registro de compra? Esto eliminará al animal del sistema permanentemente.')).isConfirmed) {
+    if (
+      (
+        await CustomAlert.confirm(
+          '¿Deseas ELIMINAR este registro de compra? Esto eliminará al animal del sistema permanentemente.',
+        )
+      ).isConfirmed
+    ) {
       try {
         await axios.delete(`http://localhost:3001/animals/${id}`);
         fetchAnimals();
       } catch (err) {
-        CustomAlert.info("Aviso", 'Error al eliminar compra.');
+        CustomAlert.info('Aviso', 'Error al eliminar compra.');
       }
     }
   };
 
   return (
     <div className="fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '32px',
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '8px', color: '#2196F3' }}>Historial de Compras</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Registra y monitorea todo el ganado adquirido externamente.</p>
+          <h1
+            style={{ fontSize: '2rem', marginBottom: '8px', color: '#2196F3' }}
+          >
+            Historial de Compras
+          </h1>
+          <p style={{ color: 'var(--text-muted)' }}>
+            Registra y monitorea todo el ganado adquirido externamente.
+          </p>
         </div>
-        <button className="btn-primary" style={{ background: '#2196F3', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setIsModalOpen(true)}>
+        <button
+          className="btn-primary"
+          style={{
+            background: '#2196F3',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          onClick={() => setIsModalOpen(true)}
+        >
           <Plus size={20} /> Registrar Compra
         </button>
       </div>
 
       <div className="premium-card">
         {isLoading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando registros...</div>
+          <div
+            style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Cargando registros...
+          </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                textAlign: 'left',
+              }}
+            >
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--panel-border)' }}>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Identificador</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Tipo</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Vendedor</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Precio (Q)</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Fecha Ingreso</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Documento</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Estatus</th>
-                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', textAlign: 'right' }}>Acciones</th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Identificador
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Tipo
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Vendedor
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Precio (Q)
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Fecha Ingreso
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Documento
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Estatus
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
+                      textAlign: 'right',
+                    }}
+                  >
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {animals.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>No hay compras registradas en el módulo.</td>
+                    <td
+                      colSpan="6"
+                      style={{
+                        padding: '24px',
+                        textAlign: 'center',
+                        color: 'var(--text-muted)',
+                      }}
+                    >
+                      No hay compras registradas en el módulo.
+                    </td>
                   </tr>
                 ) : (
-                  animals.map(animal => (
-                    <tr key={animal.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '16px', fontWeight: 'bold' }}>{animal.identifier || '-'}</td>
+                  animals.map((animal) => (
+                    <tr
+                      key={animal.id}
+                      style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <td style={{ padding: '16px', fontWeight: 'bold' }}>
+                        {animal.identifier || '-'}
+                      </td>
                       <td style={{ padding: '16px' }}>{animal.type}</td>
-                      <td style={{ padding: '16px', color: 'white' }}>{animal.seller_name || '-'}</td>
-                      <td style={{ padding: '16px', color: '#2196F3', fontWeight: 'bold' }}>{animal.purchase_price !== null ? `Q ${animal.purchase_price}` : '-'}</td>
-                      <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{new Date(animal.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '16px', color: 'white' }}>
+                        {animal.seller_name || '-'}
+                      </td>
+                      <td
+                        style={{
+                          padding: '16px',
+                          color: '#2196F3',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {animal.purchase_price !== null
+                          ? `Q ${animal.purchase_price}`
+                          : '-'}
+                      </td>
+                      <td
+                        style={{ padding: '16px', color: 'var(--text-muted)' }}
+                      >
+                        {new Date(animal.created_at).toLocaleDateString()}
+                      </td>
                       <td style={{ padding: '16px' }}>
                         {animal.legal_document_path ? (
-                          <a 
-                            href={`http://localhost:3001${animal.legal_document_path}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            style={{ color: '#2196F3', textDecoration: 'underline', fontSize: '13px', fontWeight: 'bold' }}
+                          <a
+                            href={`http://localhost:3001${animal.legal_document_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#2196F3',
+                              textDecoration: 'underline',
+                              fontSize: '13px',
+                              fontWeight: 'bold',
+                            }}
                           >
                             Ver PDF
                           </a>
                         ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Ninguno</span>
+                          <span
+                            style={{
+                              color: 'var(--text-muted)',
+                              fontSize: '13px',
+                            }}
+                          >
+                            Ninguno
+                          </span>
                         )}
                       </td>
                       <td style={{ padding: '16px' }}>
-                         <span style={{ 
-                           padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
-                           background: animal.status === 'ACTIVO' ? 'rgba(76,175,80,0.1)' : (animal.status === 'VENDIDO' ? 'rgba(33,150,243,0.1)' : 'rgba(255,152,0,0.1)'),
-                           color: animal.status === 'ACTIVO' ? '#4CAF50' : (animal.status==='VENDIDO' ? '#2196F3' : '#ff9800')
-                         }}>
-                           {animal.status}
-                         </span>
+                        <span
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            background:
+                              animal.status === 'ACTIVO'
+                                ? 'rgba(76,175,80,0.1)'
+                                : animal.status === 'VENDIDO'
+                                  ? 'rgba(33,150,243,0.1)'
+                                  : 'rgba(255,152,0,0.1)',
+                            color:
+                              animal.status === 'ACTIVO'
+                                ? '#4CAF50'
+                                : animal.status === 'VENDIDO'
+                                  ? '#2196F3'
+                                  : '#ff9800',
+                          }}
+                        >
+                          {animal.status}
+                        </span>
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                          <button onClick={() => handleEdit(animal)} style={{ background: 'rgba(33,150,243,0.1)', color: '#2196F3', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer' }}><Edit size={16} /></button>
-                          <button onClick={() => handleDelete(animal.id)} style={{ background: 'rgba(244,67,54,0.1)', color: '#F44336', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '8px',
+                          }}
+                        >
+                          <button
+                            onClick={() => handleEdit(animal)}
+                            style={{
+                              background: 'rgba(33,150,243,0.1)',
+                              color: '#2196F3',
+                              border: 'none',
+                              padding: '6px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(animal.id)}
+                            style={{
+                              background: 'rgba(244,67,54,0.1)',
+                              color: '#F44336',
+                              border: 'none',
+                              padding: '6px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -230,18 +452,46 @@ export default function PurchasesView() {
 
       {isModalOpen && (
         <div className="modal-overlay fade-in">
-          <div className="premium-card modal-content" style={{ position: 'relative' }}>
-            <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', color: 'white' }}><X size={24} /></button>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#2196F3' }}>{animalToEdit ? 'Editar Registro de Compra' : 'Registrar Nueva Compra Externa'}</h2>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>{animalToEdit ? `Modificando los detalles originales de la chapa: ${animalToEdit.identifier}` : 'Este animal pasará de inmediato a formar parte de tu Inventario Activo (Dashboard).'}</p>
+          <div
+            className="premium-card modal-content"
+            style={{ position: 'relative' }}
+          >
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '24px',
+                right: '24px',
+                background: 'transparent',
+                color: 'white',
+              }}
+            >
+              <X size={24} />
+            </button>
+            <h2
+              style={{
+                fontSize: '1.5rem',
+                marginBottom: '8px',
+                color: '#2196F3',
+              }}
+            >
+              {animalToEdit
+                ? 'Editar Registro de Compra'
+                : 'Registrar Nueva Compra Externa'}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+              {animalToEdit
+                ? `Modificando los detalles originales de la chapa: ${animalToEdit.identifier}`
+                : 'Este animal pasará de inmediato a formar parte de tu Inventario Activo (Dashboard).'}
+            </p>
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">Tipo de Animal Comprado</label>
-                  <CustomSelect 
-                    name="type" 
-                    value={formData.type} 
-                    onChange={handleChange} 
+                  <CustomSelect
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
                     required
                     options={[
                       { label: 'Vaca', value: 'VACA' },
@@ -252,92 +502,182 @@ export default function PurchasesView() {
                       { label: 'Desmadre Macho', value: 'DESMADRE_MACHO' },
                       { label: 'Chiva', value: 'CHIVA' },
                       { label: 'Chivo', value: 'CHIVO' },
-                      { label: 'Caballo', value: 'CABALLO' }
+                      { label: 'Caballo', value: 'CABALLO' },
                     ]}
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Sexo</label>
-                  <CustomSelect 
-                    name="sex" 
-                    value={formData.sex} 
-                    onChange={handleChange} 
-                    required 
-                    disabled={formData.type !== 'CABALLO' && formData.type !== 'CHIVA' && formData.type !== 'CHIVO' && formData.type !== 'VACA' && formData.type !== 'TORO'}
+                  <CustomSelect
+                    name="sex"
+                    value={formData.sex}
+                    onChange={handleChange}
+                    required
+                    disabled={
+                      formData.type !== 'CABALLO' &&
+                      formData.type !== 'CHIVA' &&
+                      formData.type !== 'CHIVO' &&
+                      formData.type !== 'VACA' &&
+                      formData.type !== 'TORO'
+                    }
                     options={[
                       { label: 'Hembra (H)', value: 'H' },
-                      { label: 'Macho (M)', value: 'M' }
+                      { label: 'Macho (M)', value: 'M' },
                     ]}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Identificador de Compra (Chapa)</label>
-                  <input 
-                    type="text" 
-                    name="identifier" 
-                    className="input-field" 
-                    value={formData.type === 'CABALLO' ? 'No Requerido (Solo Nombre)' : formData.identifier} 
-                    onChange={handleChange} 
-                    placeholder="Ej. 704A" 
-                    disabled={formData.type === 'CABALLO'} 
-                    required={formData.type !== 'CABALLO'} 
+                  <label className="form-label">
+                    Identificador de Compra (Chapa)
+                  </label>
+                  <input
+                    type="text"
+                    name="identifier"
+                    className="input-field"
+                    value={
+                      formData.type === 'CABALLO'
+                        ? 'No Requerido (Solo Nombre)'
+                        : formData.identifier
+                    }
+                    onChange={handleChange}
+                    placeholder="Ej. 704A"
+                    disabled={formData.type === 'CABALLO'}
+                    required={formData.type !== 'CABALLO'}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Apodo / Nombre {formData.type === 'CABALLO' && <span style={{ color: '#ef4444' }}>*</span>}</label>
-                  <input 
-                    type="text" 
-                    name="nickname" 
-                    className="input-field" 
-                    value={formData.nickname || ''} 
-                    onChange={handleChange} 
-                    required={formData.type === 'CABALLO'} 
-                    placeholder="Ej. Relámpago" 
+                  <label className="form-label">
+                    Apodo / Nombre{' '}
+                    {formData.type === 'CABALLO' && (
+                      <span style={{ color: '#ef4444' }}>*</span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    name="nickname"
+                    className="input-field"
+                    value={formData.nickname || ''}
+                    onChange={handleChange}
+                    required={formData.type === 'CABALLO'}
+                    placeholder="Ej. Relámpago"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" style={{ color: '#2196F3' }}>Precio de Compra</label>
-                  <input type="number" step="0.01" name="purchase_price" className="input-field" value={formData.purchase_price} onChange={handleChange} required />
+                  <label className="form-label" style={{ color: '#2196F3' }}>
+                    Precio de Compra
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="purchase_price"
+                    className="input-field"
+                    value={formData.purchase_price}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" style={{ color: '#2196F3' }}>Vendedor</label>
-                  <input type="text" name="seller_name" className="input-field" value={formData.seller_name} onChange={handleChange} required />
+                  <label className="form-label" style={{ color: '#2196F3' }}>
+                    Vendedor
+                  </label>
+                  <input
+                    type="text"
+                    name="seller_name"
+                    className="input-field"
+                    value={formData.seller_name}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Color o Capa</label>
-                  <input type="text" name="color" className="input-field" value={formData.color} onChange={handleChange} />
+                  <input
+                    type="text"
+                    name="color"
+                    className="input-field"
+                    value={formData.color}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Raza (Opcional)</label>
-                  <input type="text" name="breed" className="input-field" value={formData.breed} onChange={handleChange} placeholder="Ej. Brahman, Holstein" />
+                  <input
+                    type="text"
+                    name="breed"
+                    className="input-field"
+                    value={formData.breed}
+                    onChange={handleChange}
+                    placeholder="Ej. Brahman, Holstein"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Lote Destino</label>
-                  <CustomSelect 
-                    name="lote" 
-                    value={formData.lote} 
-                    onChange={handleChange} 
+                  <CustomSelect
+                    name="lote"
+                    value={formData.lote}
+                    onChange={handleChange}
                     required
                     options={[
                       { label: 'General', value: 'GENERAL' },
                       { label: 'Desmadre', value: 'DESMADRE' },
-                      { label: 'Lote 7', value: 'LOTE7' }
+                      { label: 'Lote 7', value: 'LOTE7' },
                     ]}
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Documento Legal Compra (PDF)</label>
-                  <input type="file" accept=".pdf" onChange={handleFileUpload} className="input-field" style={{ padding: '8px 12px' }} />
+                  <label className="form-label">
+                    Documento Legal Compra (PDF)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                    className="input-field"
+                    style={{ padding: '8px 12px' }}
+                  />
                   {formData.legal_document_path && (
-                    <span style={{ fontSize: '12px', color: '#10b981', display: 'block', marginTop: '4px' }}>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: '#10b981',
+                        display: 'block',
+                        marginTop: '4px',
+                      }}
+                    >
                       Archivo PDF cargado con éxito.
                     </span>
                   )}
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '12px 24px', background: 'transparent', color: 'white', border: '1px solid var(--panel-border)' }}>Cancelar</button>
-                <button type="submit" className="btn-primary" style={{ background: '#2196F3', color: '#fff' }}>{animalToEdit ? 'Guardar Cambios' : 'Guardar e Ingresar a Inventario'}</button>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '16px',
+                  marginTop: '32px',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  style={{
+                    padding: '12px 24px',
+                    background: 'transparent',
+                    color: 'white',
+                    border: '1px solid var(--panel-border)',
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ background: '#2196F3', color: '#fff' }}
+                >
+                  {animalToEdit
+                    ? 'Guardar Cambios'
+                    : 'Guardar e Ingresar a Inventario'}
+                </button>
               </div>
             </form>
           </div>

@@ -6,10 +6,7 @@ import { AnimalsController } from './animals.controller';
 import { LogsModule } from '../logs/logs.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Animal]),
-    LogsModule
-  ],
+  imports: [TypeOrmModule.forFeature([Animal]), LogsModule],
   controllers: [AnimalsController],
   providers: [AnimalsService],
   exports: [TypeOrmModule, AnimalsService],

@@ -5,18 +5,38 @@ import axios from 'axios';
 import CustomSelect from './CustomSelect';
 import SystemDatePicker from './SystemDatePicker';
 
-export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit, cows }) {
+export default function AnimalFormModal({
+  isOpen,
+  onClose,
+  onSaved,
+  animalToEdit,
+  cows,
+}) {
+  // --- STATE & HOOKS ---
   const [formData, setFormData] = useState({
-    type: 'VACA', lote: 'GENERAL', birth_date: '', color: '', observations: '',
-    is_pregnant: false, pregnancy_months: '', total_calvings: 0,
-    last_calving_date: '', second_last_calving_date: '', motherIdentifier: '',
-    nickname: '', breed: '', sex: 'H', grado: '', purchase_date: '', birth_weight: ''
+    type: 'VACA',
+    lote: 'GENERAL',
+    birth_date: '',
+    color: '',
+    observations: '',
+    is_pregnant: false,
+    pregnancy_months: '',
+    total_calvings: 0,
+    last_calving_date: '',
+    second_last_calving_date: '',
+    motherIdentifier: '',
+    nickname: '',
+    breed: '',
+    sex: 'H',
+    grado: '',
+    purchase_date: '',
+    birth_weight: '',
   });
 
   const cowMap = useMemo(() => {
     const map = new Map();
     if (Array.isArray(cows)) {
-      cows.forEach(c => {
+      cows.forEach((c) => {
         if (c && c.id) map.set(c.id, c.identifier || 'S/N');
       });
     }
@@ -26,7 +46,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
   const cowIdByIdentifier = useMemo(() => {
     const map = new Map();
     if (Array.isArray(cows)) {
-      cows.forEach(c => {
+      cows.forEach((c) => {
         if (c && c.identifier) {
           map.set(c.identifier.toString().trim().toUpperCase(), c.id);
         }
@@ -35,44 +55,74 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
     return map;
   }, [cows]);
 
+  // --- EFFECTS ---
   useEffect(() => {
     if (animalToEdit) {
       setFormData({
         type: animalToEdit.type || 'CHIVA',
         lote: animalToEdit.lote || 'GENERAL',
-        birth_date: animalToEdit.birth_date ? animalToEdit.birth_date.split('T')[0] : '',
+        birth_date: animalToEdit.birth_date
+          ? animalToEdit.birth_date.split('T')[0]
+          : '',
         color: animalToEdit.color || '',
         observations: animalToEdit.observations || '',
         is_pregnant: animalToEdit.is_pregnant || false,
         pregnancy_months: animalToEdit.pregnancy_months || '',
         total_calvings: animalToEdit.total_calvings || 0,
-        last_calving_date: animalToEdit.last_calving_date ? animalToEdit.last_calving_date.split('T')[0] : '',
-        second_last_calving_date: animalToEdit.second_last_calving_date ? animalToEdit.second_last_calving_date.split('T')[0] : '',
-        motherIdentifier: animalToEdit.mother_id ? (cowMap.get(animalToEdit.mother_id) || '') : '',
+        last_calving_date: animalToEdit.last_calving_date
+          ? animalToEdit.last_calving_date.split('T')[0]
+          : '',
+        second_last_calving_date: animalToEdit.second_last_calving_date
+          ? animalToEdit.second_last_calving_date.split('T')[0]
+          : '',
+        motherIdentifier: animalToEdit.mother_id
+          ? cowMap.get(animalToEdit.mother_id) || ''
+          : '',
         nickname: animalToEdit.nickname || '',
         breed: animalToEdit.breed || '',
         sex: animalToEdit.sex || 'H',
         grado: animalToEdit.grado || '',
-        purchase_date: animalToEdit.purchase_date ? animalToEdit.purchase_date.split('T')[0] : '',
-        birth_weight: animalToEdit.birth_weight || ''
+        purchase_date: animalToEdit.purchase_date
+          ? animalToEdit.purchase_date.split('T')[0]
+          : '',
+        birth_weight: animalToEdit.birth_weight || '',
       });
     } else {
       setFormData({
-        type: 'CHIVA', lote: 'GENERAL', birth_date: '', color: '', observations: '',
-        is_pregnant: false, pregnancy_months: '', total_calvings: 0,
-        last_calving_date: '', second_last_calving_date: '', motherIdentifier: '',
-        nickname: '', breed: '', sex: 'H', grado: '', purchase_date: '', birth_weight: ''
+        type: 'CHIVA',
+        lote: 'GENERAL',
+        birth_date: '',
+        color: '',
+        observations: '',
+        is_pregnant: false,
+        pregnancy_months: '',
+        total_calvings: 0,
+        last_calving_date: '',
+        second_last_calving_date: '',
+        motherIdentifier: '',
+        nickname: '',
+        breed: '',
+        sex: 'H',
+        grado: '',
+        purchase_date: '',
+        birth_weight: '',
       });
     }
   }, [animalToEdit, isOpen, cowMap]);
 
+  // --- HANDLERS & LOGIC ---
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => {
-      const updated = { ...prev, [name]: type === 'checkbox' ? checked : value };
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
       if (name === 'type') {
-        if (['VACA', 'CHIVA', 'NOVILLA', 'DESMADRE_HEMBRA'].includes(value)) updated.sex = 'H';
-        else if (['TORO', 'CHIVO', 'TORETE', 'DESMADRE_MACHO'].includes(value)) updated.sex = 'M';
+        if (['VACA', 'CHIVA', 'NOVILLA', 'DESMADRE_HEMBRA'].includes(value))
+          updated.sex = 'H';
+        else if (['TORO', 'CHIVO', 'TORETE', 'DESMADRE_MACHO'].includes(value))
+          updated.sex = 'M';
       }
       return updated;
     });
@@ -87,10 +137,12 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
       const diffDays = (new Date() - birthDate) / (1000 * 60 * 60 * 24);
       const ageYears = (diffDays / 365.25).toFixed(1);
       const ageInMonths = diffDays / 30.4375;
-      
+
       let suggestedType = formData.type;
-      const isMale = formData.sex === 'M' || ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(formData.type);
-      
+      const isMale =
+        formData.sex === 'M' ||
+        ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(formData.type);
+
       if (isMale) {
         if (ageInMonths <= 6.5) suggestedType = 'CHIVO';
         else if (ageInMonths < 12) suggestedType = 'DESMADRE_MACHO';
@@ -114,55 +166,105 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
     try {
       const payload = { ...formData, type: finalType };
       if (payload.motherIdentifier) {
-        const mId = cowIdByIdentifier.get(payload.motherIdentifier.trim().toUpperCase());
+        const mId = cowIdByIdentifier.get(
+          payload.motherIdentifier.trim().toUpperCase(),
+        );
         if (mId) payload.mother_id = mId;
-        else { CustomAlert.info("Aviso", 'El identificador de la madre no existe.'); return; }
+        else {
+          CustomAlert.info('Aviso', 'El identificador de la madre no existe.');
+          return;
+        }
       } else payload.mother_id = null;
-      
+
       delete payload.motherIdentifier;
-      ['birth_date', 'last_calving_date', 'second_last_calving_date', 'purchase_date'].forEach(f => { if(!payload[f]) payload[f] = null; });
-      if (!payload.is_pregnant || !payload.pregnancy_months) payload.pregnancy_months = null;
-      ['color', 'nickname', 'breed', 'sex'].forEach(f => { if(!payload[f]) payload[f] = null; });
-      
+      [
+        'birth_date',
+        'last_calving_date',
+        'second_last_calving_date',
+        'purchase_date',
+      ].forEach((f) => {
+        if (!payload[f]) payload[f] = null;
+      });
+      if (!payload.is_pregnant || !payload.pregnancy_months)
+        payload.pregnancy_months = null;
+      ['color', 'nickname', 'breed', 'sex'].forEach((f) => {
+        if (!payload[f]) payload[f] = null;
+      });
+
       payload.grado = payload.grado ? parseFloat(payload.grado) : null;
-      payload.birth_weight = payload.birth_weight ? parseFloat(payload.birth_weight) : null;
+      payload.birth_weight = payload.birth_weight
+        ? parseFloat(payload.birth_weight)
+        : null;
 
       if (!animalToEdit) payload.origin = 'NACIMIENTO';
       else delete payload.origin;
 
-      if (animalToEdit) await axios.patch(`http://localhost:3001/animals/${animalToEdit.id}`, payload);
+      if (animalToEdit)
+        await axios.patch(
+          `http://localhost:3001/animals/${animalToEdit.id}`,
+          payload,
+        );
       else {
         // If user is OPERADOR, send to requests instead of directly to animals
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.role === 'OPERADOR') {
-          await axios.post('http://localhost:3001/requests', { type: 'NACIMIENTO', payload });
-          CustomAlert.success('Solicitud Enviada', 'Tu solicitud de nacimiento ha sido enviada al administrador para su revisión.');
+          await axios.post('http://localhost:3001/requests', {
+            type: 'NACIMIENTO',
+            payload,
+          });
+          CustomAlert.success(
+            'Solicitud Enviada',
+            'Tu solicitud de nacimiento ha sido enviada al administrador para su revisión.',
+          );
         } else {
           await axios.post('http://localhost:3001/animals', payload);
         }
       }
 
-      onSaved(); onClose();
-    } catch (error) { CustomAlert.info("Aviso", 'Error al guardar. Verifica los datos.'); }
+      onSaved();
+      onClose();
+    } catch (error) {
+      CustomAlert.info('Aviso', 'Error al guardar. Verifica los datos.');
+    }
   };
 
+  // --- RENDER HELPERS ---
   if (!isOpen) return null;
 
+  // --- MAIN RENDER ---
   return (
     <div className="modal-overlay fade-in">
-      <div className="premium-card modal-content" style={{ position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', color: 'white' }}><X size={24} /></button>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>{animalToEdit ? 'Editar Registro' : 'Nuevo Nacimiento'}</h2>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Gestión de registro local</p>
+      <div
+        className="premium-card modal-content"
+        style={{ position: 'relative' }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '24px',
+            right: '24px',
+            background: 'transparent',
+            color: 'white',
+          }}
+        >
+          <X size={24} />
+        </button>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>
+          {animalToEdit ? 'Editar Registro' : 'Nuevo Nacimiento'}
+        </h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+          Gestión de registro local
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">Tipo de Animal</label>
-              <CustomSelect 
-                name="type" 
-                value={formData.type} 
-                onChange={handleChange} 
+              <CustomSelect
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
                 required
                 options={[
                   { label: 'Crias (0 a 6.5 meses)', isGroup: true },
@@ -176,92 +278,251 @@ export default function AnimalFormModal({ isOpen, onClose, onSaved, animalToEdit
                   { label: 'Vaca', value: 'VACA' },
                   { label: 'Toro', value: 'TORO' },
                   { label: 'Novilla', value: 'NOVILLA' },
-                  { label: 'Torete', value: 'TORETE' }
+                  { label: 'Torete', value: 'TORETE' },
                 ]}
               />
             </div>
             <div className="form-group">
               <label className="form-label">Sexo</label>
-              <CustomSelect 
-                name="sex" 
-                value={formData.sex} 
-                onChange={handleChange} 
-                required 
+              <CustomSelect
+                name="sex"
+                value={formData.sex}
+                onChange={handleChange}
+                required
                 disabled={formData.type !== 'CABALLO'}
                 options={[
                   { label: 'Hembra (H)', value: 'H' },
-                  { label: 'Macho (M)', value: 'M' }
+                  { label: 'Macho (M)', value: 'M' },
                 ]}
               />
             </div>
             <div className="form-group">
               <label className="form-label">Identificador</label>
-              <input type="text" className="input-field" value={animalToEdit ? animalToEdit.identifier : (formData.type === 'CABALLO' ? 'No Requerido (Solo Nombre)' : 'Autogenerado...')} disabled style={{ background: 'rgba(255,255,255,0.01)', color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                className="input-field"
+                value={
+                  animalToEdit
+                    ? animalToEdit.identifier
+                    : formData.type === 'CABALLO'
+                      ? 'No Requerido (Solo Nombre)'
+                      : 'Autogenerado...'
+                }
+                disabled
+                style={{
+                  background: 'rgba(255,255,255,0.01)',
+                  color: 'var(--text-muted)',
+                }}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Color / Capa</label>
-              <input type="text" name="color" className="input-field" value={formData.color} onChange={handleChange} placeholder="Ej. Pinto" />
+              <input
+                type="text"
+                name="color"
+                className="input-field"
+                value={formData.color}
+                onChange={handleChange}
+                placeholder="Ej. Pinto"
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Grado (Genética)</label>
-              <input type="number" step="0.01" name="grado" className="input-field" value={formData.grado} onChange={handleChange} />
+              <input
+                type="number"
+                step="0.01"
+                name="grado"
+                className="input-field"
+                value={formData.grado}
+                onChange={handleChange}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Peso Inicial (lbs)</label>
-              <input type="number" step="0.01" name="birth_weight" className="input-field" value={formData.birth_weight} onChange={handleChange} />
+              <input
+                type="number"
+                step="0.01"
+                name="birth_weight"
+                className="input-field"
+                value={formData.birth_weight}
+                onChange={handleChange}
+              />
             </div>
             {(formData.type === 'TORO' || formData.type === 'CABALLO') && (
               <div className="form-group">
-                <label className="form-label">Apodo / Nombre {formData.type === 'CABALLO' && <span style={{ color: '#ef4444' }}>*</span>}</label>
-                <input type="text" name="nickname" className="input-field" value={formData.nickname} onChange={handleChange} required={formData.type === 'CABALLO'} />
+                <label className="form-label">
+                  Apodo / Nombre{' '}
+                  {formData.type === 'CABALLO' && (
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  name="nickname"
+                  className="input-field"
+                  value={formData.nickname}
+                  onChange={handleChange}
+                  required={formData.type === 'CABALLO'}
+                />
               </div>
             )}
             <div className="form-group">
               <label className="form-label">Lote</label>
-              <CustomSelect 
-                name="lote" 
-                value={formData.lote} 
-                onChange={handleChange} 
+              <CustomSelect
+                name="lote"
+                value={formData.lote}
+                onChange={handleChange}
                 required
                 options={[
                   { label: 'General', value: 'GENERAL' },
-                  { label: 'Novilla', value: 'NOVILLA' }
+                  { label: 'Novilla', value: 'NOVILLA' },
                 ]}
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label className="form-label">Fecha de Nacimiento</label>
-              <SystemDatePicker name="birth_date" className="input-field" value={formData.birth_date} onChange={handleChange} />
+              <SystemDatePicker
+                name="birth_date"
+                className="input-field"
+                value={formData.birth_date}
+                onChange={handleChange}
+              />
             </div>
-            <div className="form-group" style={{ gridColumn: '1 / -1', background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '12px' }}>
+            <div
+              className="form-group"
+              style={{
+                gridColumn: '1 / -1',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '16px',
+                borderRadius: '12px',
+              }}
+            >
               <label className="form-label">ID de la Madre</label>
-              <input type="text" name="motherIdentifier" className="input-field" style={{ marginBottom: 0 }} value={formData.motherIdentifier} onChange={handleChange} placeholder="Ej. 1/21" />
+              <input
+                type="text"
+                name="motherIdentifier"
+                className="input-field"
+                style={{ marginBottom: 0 }}
+                value={formData.motherIdentifier}
+                onChange={handleChange}
+                placeholder="Ej. 1/21"
+              />
             </div>
             {formData.type === 'VACA' && (
               <>
-                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px' }}>
-                  <input type="checkbox" name="is_pregnant" checked={formData.is_pregnant} onChange={handleChange} style={{ width: '20px', height: '20px', margin: 0, cursor: 'pointer' }} />
-                  <label style={{ margin: 0, cursor: 'pointer' }} onClick={() => setFormData({...formData, is_pregnant: !formData.is_pregnant})}>¿Está Preñada?</label>
+                <div
+                  className="form-group"
+                  style={{
+                    gridColumn: '1 / -1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    gap: '12px',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    name="is_pregnant"
+                    checked={formData.is_pregnant}
+                    onChange={handleChange}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      margin: 0,
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <label
+                    style={{ margin: 0, cursor: 'pointer' }}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        is_pregnant: !formData.is_pregnant,
+                      })
+                    }
+                  >
+                    ¿Está Preñada?
+                  </label>
                 </div>
                 {formData.is_pregnant && (
-                  <div className="form-group" style={{ gridColumn: '1 / -1', background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px' }}>
+                  <div
+                    className="form-group"
+                    style={{
+                      gridColumn: '1 / -1',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      padding: '16px',
+                      borderRadius: '12px',
+                    }}
+                  >
                     <label className="form-label">Meses de preñez</label>
-                    <input type="number" name="pregnancy_months" className="input-field" value={formData.pregnancy_months} onChange={handleChange} min="1" max="10" step="0.5" required />
+                    <input
+                      type="number"
+                      name="pregnancy_months"
+                      className="input-field"
+                      value={formData.pregnancy_months}
+                      onChange={handleChange}
+                      min="1"
+                      max="10"
+                      step="0.5"
+                      required
+                    />
                   </div>
                 )}
-                <div className="form-group"><label className="form-label">Total Partos</label><input type="number" name="total_calvings" className="input-field" value={formData.total_calvings} onChange={handleChange} /></div>
-                <div className="form-group"><label className="form-label">Último Parto</label><SystemDatePicker name="last_calving_date" className="input-field" value={formData.last_calving_date} onChange={handleChange} /></div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Penúltimo Parto</label><SystemDatePicker name="second_last_calving_date" className="input-field" value={formData.second_last_calving_date} onChange={handleChange} /></div>
+                <div className="form-group">
+                  <label className="form-label">Total Partos</label>
+                  <input
+                    type="number"
+                    name="total_calvings"
+                    className="input-field"
+                    value={formData.total_calvings}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Último Parto</label>
+                  <SystemDatePicker
+                    name="last_calving_date"
+                    className="input-field"
+                    value={formData.last_calving_date}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Penúltimo Parto</label>
+                  <SystemDatePicker
+                    name="second_last_calving_date"
+                    className="input-field"
+                    value={formData.second_last_calving_date}
+                    onChange={handleChange}
+                  />
+                </div>
               </>
             )}
           </div>
           <div className="form-group" style={{ marginTop: '16px' }}>
             <label className="form-label">Observaciones</label>
-            <textarea name="observations" className="input-field" rows="3" value={formData.observations} onChange={handleChange}></textarea>
+            <textarea
+              name="observations"
+              className="input-field"
+              rows="3"
+              value={formData.observations}
+              onChange={handleChange}
+            ></textarea>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>
-            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-            <button type="submit" className="btn-primary">Guardar</button>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '16px',
+              marginTop: '32px',
+            }}
+          >
+            <button type="button" onClick={onClose} className="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" className="btn-primary">
+              Guardar
+            </button>
           </div>
         </form>
       </div>

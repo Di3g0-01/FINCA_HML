@@ -9,6 +9,6 @@ import { LogsModule } from '../logs/logs.module';
 @Module({
   imports: [TypeOrmModule.forFeature([Payroll]), LogsModule],
   controllers: [PayrollsController],
-  providers: [PayrollsService]
+  providers: [PayrollsService],
 })
 export class PayrollsModule {}

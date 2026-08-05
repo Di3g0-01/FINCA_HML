@@ -7,7 +7,11 @@ import { AnimalsModule } from '../animals/animals.module';
 import { LogsModule } from '../logs/logs.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RequestEntity]), AnimalsModule, LogsModule],
+  imports: [
+    TypeOrmModule.forFeature([RequestEntity]),
+    AnimalsModule,
+    LogsModule,
+  ],
   controllers: [RequestsController],
   providers: [RequestsService],
 })

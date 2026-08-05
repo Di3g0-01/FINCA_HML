@@ -11,8 +11,8 @@ const baseConfig = {
     confirmButton: 'btn-primary',
     cancelButton: 'btn-secondary',
     title: 'swal-title',
-    htmlContainer: 'swal-text'
-  }
+    htmlContainer: 'swal-text',
+  },
 };
 
 export const CustomAlert = {
@@ -22,17 +22,17 @@ export const CustomAlert = {
       icon: 'success',
       title,
       text,
-      confirmButtonText: 'Aceptar'
+      confirmButtonText: 'Aceptar',
     });
   },
-  
+
   error: (title, text = '') => {
     return Swal.fire({
       ...baseConfig,
       icon: 'error',
       title,
       text,
-      confirmButtonText: 'Entendido'
+      confirmButtonText: 'Entendido',
     });
   },
 
@@ -42,7 +42,7 @@ export const CustomAlert = {
       icon: 'warning',
       title,
       text,
-      confirmButtonText: 'Aceptar'
+      confirmButtonText: 'Aceptar',
     });
   },
 
@@ -55,17 +55,17 @@ export const CustomAlert = {
       showCancelButton: true,
       confirmButtonText: 'Sí, continuar',
       cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      reverseButtons: true,
     });
   },
-  
+
   info: (title, text = '') => {
     return Swal.fire({
       ...baseConfig,
       icon: 'info',
       title,
       text,
-      confirmButtonText: 'Aceptar'
+      confirmButtonText: 'Aceptar',
     });
-  }
+  },
 };

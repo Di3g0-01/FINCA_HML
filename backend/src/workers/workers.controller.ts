@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { WorkersService } from './workers.service';
 import { Worker } from './entities/worker.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,6 +17,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('workers')
 export class WorkersController {
   constructor(private readonly workersService: WorkersService) {}
+
+  // --- STANDARD CRUD ---
 
   @Post()
   create(@Body() createWorkerDto: Partial<Worker>, @Request() req) {
@@ -24,7 +36,11 @@ export class WorkersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWorkerDto: Partial<Worker>, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() updateWorkerDto: Partial<Worker>,
+    @Request() req,
+  ) {
     return this.workersService.update(+id, updateWorkerDto, req.user?.username);
   }
 

@@ -2,12 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import './CustomSelect.css';
 
-export default function CustomSelect({ options, value, onChange, placeholder = 'Seleccionar...', className = '', disabled = false, required = false, name }) {
+export default function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder = 'Seleccionar...',
+  className = '',
+  disabled = false,
+  required = false,
+  name,
+}) {
+  // --- STATE & HOOKS ---
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const selectedOption = options.find(opt => opt.value === value || opt.value === String(value));
+  const selectedOption = options.find(
+    (opt) => opt.value === value || opt.value === String(value),
+  );
 
+  // --- EFFECTS ---
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -18,45 +31,58 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // --- HANDLERS ---
   const handleSelect = (optionValue) => {
     onChange({ target: { name, value: optionValue } });
     setIsOpen(false);
   };
 
+  // --- MAIN RENDER ---
   return (
-    <div className={`custom-select-container ${className} ${disabled ? 'disabled' : ''}`} ref={dropdownRef}>
-      <div 
-        className={`custom-select-trigger ${isOpen ? 'open' : ''}`} 
+    <div
+      className={`custom-select-container ${className} ${disabled ? 'disabled' : ''}`}
+      ref={dropdownRef}
+    >
+      <div
+        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         tabIndex={disabled ? -1 : 0}
       >
         <span className="custom-select-value">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <ChevronDown size={18} className={`custom-select-icon ${isOpen ? 'open' : ''}`} />
+        <ChevronDown
+          size={18}
+          className={`custom-select-icon ${isOpen ? 'open' : ''}`}
+        />
       </div>
 
       {isOpen && !disabled && (
         <div className="custom-select-dropdown">
-          {options.map((opt, index) => (
+          {options.map((opt, index) =>
             opt.isGroup ? (
               <div key={`group-${index}`} className="custom-select-group-label">
                 {opt.label}
               </div>
             ) : (
-              <div 
-                key={opt.value} 
+              <div
+                key={opt.value}
                 className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
                 onClick={() => handleSelect(opt.value)}
               >
                 {opt.label}
               </div>
-            )
-          ))}
+            ),
+          )}
         </div>
       )}
       {/* Hidden input to support native form validation if required */}
-      <input type="hidden" name={name} value={value || ''} required={required} />
+      <input
+        type="hidden"
+        name={name}
+        value={value || ''}
+        required={required}
+      />
     </div>
   );
 }

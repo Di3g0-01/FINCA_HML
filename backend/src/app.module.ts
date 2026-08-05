@@ -14,6 +14,8 @@ import { LogsModule } from './logs/logs.module';
 import { ActivityLog } from './logs/entities/log.entity';
 import { RequestsModule } from './requests/requests.module';
 import { RequestEntity } from './requests/entities/request.entity';
+import { ExternalExpensesModule } from './external-expenses/external-expenses.module';
+import { ExternalExpense } from './external-expenses/entities/external-expense.entity';
 
 @Module({
   imports: [
@@ -22,7 +24,15 @@ import { RequestEntity } from './requests/entities/request.entity';
         ? {
             type: 'postgres',
             url: process.env.DATABASE_URL,
-            entities: [Animal, User, Worker, Payroll, ActivityLog, RequestEntity],
+            entities: [
+              Animal,
+              User,
+              Worker,
+              Payroll,
+              ActivityLog,
+              RequestEntity,
+              ExternalExpense,
+            ],
             synchronize: true, // Activa la sincronización automática de tablas para desarrollo
           }
         : {
@@ -32,9 +42,17 @@ import { RequestEntity } from './requests/entities/request.entity';
             username: process.env.DB_USERNAME || 'admin',
             password: process.env.DB_PASSWORD || 'admin_password',
             database: process.env.DB_DATABASE || 'finca_hml',
-            entities: [Animal, User, Worker, Payroll, ActivityLog, RequestEntity],
+            entities: [
+              Animal,
+              User,
+              Worker,
+              Payroll,
+              ActivityLog,
+              RequestEntity,
+              ExternalExpense,
+            ],
             synchronize: true, // Activa la sincronización automática de tablas para desarrollo
-          }
+          },
     ),
     UsersModule,
     AnimalsModule,
@@ -43,6 +61,7 @@ import { RequestEntity } from './requests/entities/request.entity';
     PayrollsModule,
     LogsModule,
     RequestsModule,
+    ExternalExpensesModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [],

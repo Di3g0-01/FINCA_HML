@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 
 export enum AnimalType {
   VACA = 'VACA',
@@ -108,7 +117,11 @@ export class Animal {
   @Column({ type: 'enum', enum: AnimalStatus, default: AnimalStatus.ACTIVO })
   status: AnimalStatus;
 
-  @Column({ type: 'enum', enum: AnimalOrigin, default: AnimalOrigin.NACIMIENTO })
+  @Column({
+    type: 'enum',
+    enum: AnimalOrigin,
+    default: AnimalOrigin.NACIMIENTO,
+  })
   origin: AnimalOrigin;
 
   // COMPRAS

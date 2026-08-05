@@ -10,6 +10,8 @@ export class LogsService {
     private logsRepository: Repository<ActivityLog>,
   ) {}
 
+  // --- STANDARD CRUD ---
+
   async createLog(data: {
     username: string;
     action_type: string;
@@ -24,22 +26,42 @@ export class LogsService {
     return this.logsRepository.save(log);
   }
 
-  async findAll(query: { startDate?: string; endDate?: string; page?: number; limit?: number; actionType?: string }) {
+  async findAll(query: {
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+    actionType?: string;
+  }, requesterRole?: string) {
     console.log('Querying logs with:', query);
-    const qb = this.logsRepository.createQueryBuilder('log')
+    const qb = this.logsRepository
+      .createQueryBuilder('log')
       .orderBy('log.created_at', 'DESC');
 
+    if (requesterRole !== 'SUPERUSER') {
+      qb.andWhere(
+        `log.username NOT IN (SELECT username FROM users WHERE role = 'SUPERUSER')`
+      );
+    }
+
     if (query.startDate && query.endDate) {
-      qb.andWhere("DATE(log.created_at) >= :startDate AND DATE(log.created_at) <= :endDate", { 
-        startDate: query.startDate, 
-        endDate: query.endDate 
-      });
+      qb.andWhere(
+        'DATE(log.created_at) >= :startDate AND DATE(log.created_at) <= :endDate',
+        {
+          startDate: query.startDate,
+          endDate: query.endDate,
+        },
+      );
     } else if (query.startDate) {
-      qb.andWhere("DATE(log.created_at) = :startDate", { startDate: query.startDate });
+      qb.andWhere('DATE(log.created_at) = :startDate', {
+        startDate: query.startDate,
+      });
     }
 
     if (query.actionType) {
-      qb.andWhere("log.action_type = :actionType", { actionType: query.actionType });
+      qb.andWhere('log.action_type = :actionType', {
+        actionType: query.actionType,
+      });
     }
 
     if (query.page && query.limit) {
@@ -48,7 +70,12 @@ export class LogsService {
       qb.offset(skip).limit(query.limit);
 
       const data = await qb.getMany();
-      return { data, total, page: query.page, totalPages: Math.ceil(total / query.limit) };
+      return {
+        data,
+        total,
+        page: query.page,
+        totalPages: Math.ceil(total / query.limit),
+      };
     }
 
     const data = await qb.getMany();
@@ -60,11 +87,14 @@ export class LogsService {
     return this.logsRepository.delete(id);
   }
 
+  // --- CUSTOM ACTIONS ---
+
   async cleanupOldLogs() {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const logsToDelete = await this.logsRepository.createQueryBuilder('log')
+    const logsToDelete = await this.logsRepository
+      .createQueryBuilder('log')
       .where('log.created_at < :sixMonthsAgo', { sixMonthsAgo })
       .getMany();
 

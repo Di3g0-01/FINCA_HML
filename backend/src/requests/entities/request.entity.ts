@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum RequestType {
@@ -20,7 +28,11 @@ export class RequestEntity {
   @Column({ type: 'enum', enum: RequestType })
   type: RequestType;
 
-  @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDIENTE })
+  @Column({
+    type: 'enum',
+    enum: RequestStatus,
+    default: RequestStatus.PENDIENTE,
+  })
   status: RequestStatus;
 
   @Column('json')

@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, UnauthorizedException, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  UseGuards,
+  Request,
+  UnauthorizedException,
+  Delete,
+} from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -7,6 +18,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
+  // --- STANDARD CRUD ---
+
   @Post()
   create(@Body() createRequestDto: any, @Request() req) {
     return this.requestsService.create(createRequestDto, req.user.id);
@@ -14,25 +27,31 @@ export class RequestsController {
 
   @Get()
   findAll(@Request() req) {
-    if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN')
+      throw new UnauthorizedException('Solo administradores');
     return this.requestsService.findAll();
   }
 
   @Delete()
   clearAll(@Request() req) {
-    if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN')
+      throw new UnauthorizedException('Solo administradores');
     return this.requestsService.clearAll();
   }
 
+  // --- CUSTOM ACTIONS ---
+
   @Put(':id/approve')
   approve(@Param('id') id: string, @Request() req) {
-    if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN')
+      throw new UnauthorizedException('Solo administradores');
     return this.requestsService.approve(+id, req.user);
   }
 
   @Put(':id/reject')
   reject(@Param('id') id: string, @Request() req) {
-    if (req.user.role !== 'ADMIN') throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN')
+      throw new UnauthorizedException('Solo administradores');
     return this.requestsService.reject(+id, req.user.id);
   }
 }
