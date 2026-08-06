@@ -1,6 +1,7 @@
 import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { createPortal } from 'react-dom';
 import {
   Search,
   Download,
@@ -607,7 +608,7 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
         )}
       </div>
 
-      {selectedLog && (
+      {selectedLog && createPortal(
         <div
           className="modal-overlay fade-in"
           onClick={() => setSelectedLog(null)}
@@ -734,7 +735,8 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

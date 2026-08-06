@@ -1,6 +1,7 @@
 import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { createPortal } from 'react-dom';
 import { Plus, X, Edit } from 'lucide-react';
 import SystemDatePicker from '../components/SystemDatePicker';
 
@@ -318,7 +319,7 @@ export default function DeathsView() {
         )}
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div className="modal-overlay fade-in">
           <div
             className="premium-card modal-content"
@@ -467,7 +468,8 @@ export default function DeathsView() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

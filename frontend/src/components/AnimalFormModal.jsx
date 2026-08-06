@@ -1,5 +1,6 @@
 import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search } from 'lucide-react';
 import axios from 'axios';
 import CustomSelect from './CustomSelect';
@@ -232,7 +233,7 @@ export default function AnimalFormModal({
   if (!isOpen) return null;
 
   // --- MAIN RENDER ---
-  return (
+  return createPortal(
     <div className="modal-overlay fade-in">
       <div
         className="premium-card modal-content"
@@ -526,6 +527,7 @@ export default function AnimalFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

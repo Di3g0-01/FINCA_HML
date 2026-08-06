@@ -1,5 +1,6 @@
 import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import axios from 'axios';
 import CustomSelect from './CustomSelect';
@@ -77,7 +78,7 @@ export default function WorkerFormModal({
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay fade-in">
       <div
         className="premium-card modal-content"
@@ -237,6 +238,7 @@ export default function WorkerFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

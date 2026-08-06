@@ -1,6 +1,7 @@
 import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { createPortal } from 'react-dom';
 import { Plus, Edit, Trash2, Users, Key } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
@@ -323,7 +324,7 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay fade-in">
       <div className="premium-card modal-content" style={{ maxWidth: '500px' }}>
         <h2
@@ -424,6 +425,7 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

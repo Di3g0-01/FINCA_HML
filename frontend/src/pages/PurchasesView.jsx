@@ -1,6 +1,7 @@
 import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { createPortal } from 'react-dom';
 import { Plus, X, Edit, Trash2 } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
@@ -450,7 +451,7 @@ export default function PurchasesView() {
         )}
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div className="modal-overlay fade-in">
           <div
             className="premium-card modal-content"
@@ -681,7 +682,8 @@ export default function PurchasesView() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
