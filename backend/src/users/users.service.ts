@@ -16,19 +16,37 @@ export class UsersService implements OnModuleInit {
   // --- LIFECYCLE ---
 
   async onModuleInit() {
-    const adminCount = await this.usersRepository.count();
-    
+    // Seed admin
+    const adminCount = await this.usersRepository.count({ where: { username: 'admin' } });
     if (adminCount === 0) {
       const password_hash = await bcrypt.hash('AdministradorHML', 10);
-      
       const admin = this.usersRepository.create({
         username: 'admin',
         password_hash,
         role: UserRole.ADMIN,
       });
-      
       await this.usersRepository.save(admin);
       console.log('✅ Default root admin user (admin) seeded securely.');
+    }
+
+    // Seed superuser
+    const superuserCount = await this.usersRepository.count({ where: { username: 'superuser' } });
+    if (superuserCount === 0) {
+      const password_hash = await bcrypt.hash('SistemasFincaHM2024!', 10);
+      const superuser = this.usersRepository.create({
+        username: 'superuser',
+        password_hash,
+        role: UserRole.SUPERUSER,
+      });
+      await this.usersRepository.save(superuser);
+      console.log('✅ Default superuser seeded securely.');
+    } else {
+      // Si el superuser ya existe, aseguremonos que tiene el rol SUPERUSER.
+      const su = await this.usersRepository.findOne({ where: { username: 'superuser' } });
+      if (su && su.role !== UserRole.SUPERUSER) {
+        su.role = UserRole.SUPERUSER;
+        await this.usersRepository.save(su);
+      }
     }
   }
 
