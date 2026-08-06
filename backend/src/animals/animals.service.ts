@@ -165,7 +165,7 @@ export class AnimalsService implements OnModuleInit {
       });
 
       const now = new Date();
-      const animalsToSave = [];
+      const animalsToSave: Animal[] = [];
       for (const animal of pregnantAnimals) {
         if (animal.pregnancy_start_date) {
           const start = new Date(animal.pregnancy_start_date);
