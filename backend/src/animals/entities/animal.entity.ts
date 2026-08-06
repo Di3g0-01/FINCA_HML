@@ -43,6 +43,8 @@ export enum SaleModality {
 }
 
 @Entity('animals')
+@Index(['status', 'type'])
+@Index(['status', 'birth_date'])
 export class Animal {
   @PrimaryGeneratedColumn()
   id: number;

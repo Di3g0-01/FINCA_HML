@@ -95,16 +95,21 @@ export class AnimalsService implements OnModuleInit {
           where: { type: currentType, birth_date: LessThanOrEqual(dateLimit) },
         });
 
-        for (const animal of animals) {
-          animal.type = newType;
-          await this.animalsRepository.save(animal);
-          await this.logsService.createLog({
+        if (animals.length === 0) return 0;
+
+        const animalIds = animals.map(a => a.id);
+        await this.animalsRepository.update(animalIds, { type: newType });
+
+        const logPromises = animals.map(animal => 
+          this.logsService.createLog({
             username: 'SISTEMA',
             action_type: 'EVOLUCION',
             animal_identifier: animal.identifier,
             details: `Cambio automático de etapa: de ${currentType} a ${newType}`,
-          });
-        }
+          })
+        );
+        await Promise.all(logPromises);
+
         return animals.length;
       };
 
@@ -160,6 +165,7 @@ export class AnimalsService implements OnModuleInit {
       });
 
       const now = new Date();
+      const animalsToSave = [];
       for (const animal of pregnantAnimals) {
         if (animal.pregnancy_start_date) {
           const start = new Date(animal.pregnancy_start_date);
@@ -167,13 +173,16 @@ export class AnimalsService implements OnModuleInit {
             (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
           const months = diffDays / 30.4375;
 
-          if (months >= 10.0) {
-            animal.pregnancy_months = 10.0;
-          } else {
-            animal.pregnancy_months = Math.round(months * 10) / 10;
+          const newMonths = months >= 10.0 ? 10.0 : Math.round(months * 10) / 10;
+          if (animal.pregnancy_months !== newMonths) {
+            animal.pregnancy_months = newMonths;
+            animalsToSave.push(animal);
           }
-          await this.animalsRepository.save(animal);
         }
+      }
+
+      if (animalsToSave.length > 0) {
+        await this.animalsRepository.save(animalsToSave);
       }
     } catch (e) {
       this.logger.error('Error actualizando preñeces:', e);
