@@ -27,6 +27,7 @@ export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user.role === 'ADMIN' || user.role === 'SUPERUSER';
+  const isSuperuser = user.role === 'SUPERUSER';
 
   useEffect(() => {
     const handleResize = () => {
@@ -130,6 +131,7 @@ export default function DashboardLayout() {
         isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
         isAdmin={isAdmin}
+        isSuperuser={isSuperuser}
         location={location}
         handleLogout={handleLogout}
       />

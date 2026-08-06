@@ -21,6 +21,7 @@ export default function Sidebar({
   isSidebarOpen,
   toggleSidebar,
   isAdmin,
+  isSuperuser,
   location,
   handleLogout,
 }) {
@@ -348,7 +349,7 @@ export default function Sidebar({
                     },
                     true,
                   )}
-                  {renderNavLink(
+                  {isSuperuser && renderNavLink(
                     {
                       to: '/dashboard/users',
                       icon: <Users size={16} />,
