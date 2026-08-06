@@ -19,12 +19,12 @@ export class LogsController {
 
   @Get()
   findAll(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('actionType') actionType?: string,
-    @Request() req,
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
