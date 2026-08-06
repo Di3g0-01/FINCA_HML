@@ -61,6 +61,13 @@ export class AnimalsController {
     );
   }
 
+  // --- CUSTOM ACTIONS ---
+
+  @Get('alerts')
+  getAlerts() {
+    return this.animalsService.getAlerts();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.animalsService.findOne(+id);
@@ -78,13 +85,6 @@ export class AnimalsController {
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.animalsService.remove(+id, req.user?.username);
-  }
-
-  // --- CUSTOM ACTIONS ---
-
-  @Get('alerts')
-  getAlerts() {
-    return this.animalsService.getAlerts();
   }
 
   @Post('upload-document')

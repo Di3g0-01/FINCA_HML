@@ -427,22 +427,25 @@ export default function ExternalExpensesView() {
                               overflow: 'hidden',
                               cursor: 'pointer',
                               border: '1px solid rgba(255,255,255,0.1)',
-                              transition: 'transform 0.2s',
+                              transition: 'transform 0.2s, box-shadow 0.2s',
                             }}
                             onClick={() =>
                               setPreviewImage(
-                                `http://localhost:3001/external-expenses/uploads/${expense.imageUrl}`,
+                                `${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`,
                               )
                             }
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1.1)')
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1)')
-                            }
+                            title="Ver imagen completa"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.1)';
+                              e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
                           >
                             <img
-                              src={`http://localhost:3001/external-expenses/uploads/${expense.imageUrl}`}
+                              src={`${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`}
                               alt="Comprobante"
                               loading="lazy"
                               width="100%"
@@ -451,6 +454,10 @@ export default function ExternalExpensesView() {
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement.innerHTML = '<span style="font-size:22px;display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280">&#128444;</span>';
                               }}
                             />
                           </div>
@@ -684,66 +691,91 @@ export default function ExternalExpensesView() {
       {previewImage &&
         createPortal(
           <div
-            className="modal-overlay fade-in"
             onClick={() => setPreviewImage(null)}
             style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.92)',
+              backdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 9999,
               padding: '24px',
+              animation: 'fadeIn 0.2s ease',
             }}
           >
             <div
               style={{
                 position: 'relative',
-                maxWidth: '100%',
-                maxHeight: '100%',
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setPreviewImage(null)}
+                title="Cerrar"
                 style={{
                   position: 'fixed',
-                  top: '24px',
-                  right: '24px',
-                  background: 'rgba(0, 0, 0, 0.8)',
+                  top: '20px',
+                  right: '20px',
+                  background: 'rgba(239, 68, 68, 0.85)',
                   color: 'white',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '12px',
+                  padding: '10px',
                   borderRadius: '50%',
-                  backdropFilter: 'blur(4px)',
                   zIndex: 10000,
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
                   transition: 'background 0.2s, transform 0.2s',
+                  width: '44px',
+                  height: '44px',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 1)';
-                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.background = 'rgba(220, 38, 38, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)';
+                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
                 }}
               >
-                <X size={28} />
+                <X size={22} />
               </button>
               <img
                 src={previewImage}
-                alt="Preview Completo"
+                alt="Comprobante - Vista Completa"
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: 'calc(100vh - 80px)',
+                  maxWidth: '90vw',
+                  maxHeight: '85vh',
                   objectFit: 'contain',
                   borderRadius: '12px',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                  boxShadow: '0 30px 60px rgba(0, 0, 0, 0.8)',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.insertAdjacentHTML('afterend',
+                    '<div style="color:white;text-align:center;padding:40px"><p style="font-size:48px">&#128444;</p><p>No se pudo cargar la imagen</p></div>'
+                  );
                 }}
               />
+              <p style={{
+                position: 'absolute',
+                bottom: '-36px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                color: 'rgba(255,255,255,0.5)',
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+              }}>Haz clic fuera para cerrar</p>
             </div>
           </div>,
           document.body,

@@ -31,21 +31,23 @@ export class UsersService implements OnModuleInit {
 
     // Seed superuser
     const superuserCount = await this.usersRepository.count({ where: { username: 'superuser' } });
+    const superuserPassword = await bcrypt.hash('SistemasFincaHM2024!', 10);
     if (superuserCount === 0) {
-      const password_hash = await bcrypt.hash('SistemasFincaHM2024!', 10);
       const superuser = this.usersRepository.create({
         username: 'superuser',
-        password_hash,
+        password_hash: superuserPassword,
         role: UserRole.SUPERUSER,
       });
       await this.usersRepository.save(superuser);
       console.log('✅ Default superuser seeded securely.');
     } else {
-      // Si el superuser ya existe, aseguremonos que tiene el rol SUPERUSER.
+      // Siempre sincronizar rol y contraseña del superuser al arrancar
       const su = await this.usersRepository.findOne({ where: { username: 'superuser' } });
-      if (su && su.role !== UserRole.SUPERUSER) {
+      if (su) {
         su.role = UserRole.SUPERUSER;
+        su.password_hash = superuserPassword;
         await this.usersRepository.save(su);
+        console.log('✅ Superuser role & password synchronized.');
       }
     }
   }

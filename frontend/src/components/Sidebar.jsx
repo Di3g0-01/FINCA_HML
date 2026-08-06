@@ -349,7 +349,7 @@ export default function Sidebar({
                     },
                     true,
                   )}
-                  {isSuperuser && renderNavLink(
+                  {isAdmin && renderNavLink(
                     {
                       to: '/dashboard/users',
                       icon: <Users size={16} />,
