@@ -27,15 +27,15 @@ export class RequestsController {
 
   @Get()
   findAll(@Request() req) {
-    if (req.user.role !== 'ADMIN')
-      throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERUSER')
+      throw new UnauthorizedException('Solo administradores o superusuarios');
     return this.requestsService.findAll();
   }
 
   @Delete()
   clearAll(@Request() req) {
-    if (req.user.role !== 'ADMIN')
-      throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERUSER')
+      throw new UnauthorizedException('Solo administradores o superusuarios');
     return this.requestsService.clearAll();
   }
 
@@ -43,15 +43,15 @@ export class RequestsController {
 
   @Put(':id/approve')
   approve(@Param('id') id: string, @Request() req) {
-    if (req.user.role !== 'ADMIN')
-      throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERUSER')
+      throw new UnauthorizedException('Solo administradores o superusuarios');
     return this.requestsService.approve(+id, req.user);
   }
 
   @Put(':id/reject')
   reject(@Param('id') id: string, @Request() req) {
-    if (req.user.role !== 'ADMIN')
-      throw new UnauthorizedException('Solo administradores');
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERUSER')
+      throw new UnauthorizedException('Solo administradores o superusuarios');
     return this.requestsService.reject(+id, req.user.id);
   }
 }
