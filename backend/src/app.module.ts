@@ -33,7 +33,7 @@ import { ExternalExpense } from './external-expenses/entities/external-expense.e
               RequestEntity,
               ExternalExpense,
             ],
-            synchronize: true, // Activa la sincronización automática de tablas para desarrollo
+            synchronize: false, // Desactivado en producción para evitar errores de schema
           }
         : {
             type: 'postgres',
