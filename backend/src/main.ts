@@ -23,7 +23,9 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://localhost:5174',
       'https://finca-hml.vercel.app',
-    ].filter(Boolean) as string[],
+      'https://finca-om0nc4s0p-di3g0-01s-projects.vercel.app', // Custom Vercel domain
+      /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
+    ].filter(Boolean) as (string | RegExp)[],
     credentials: true, // Allow cookies
   });
 
