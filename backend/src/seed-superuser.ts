@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole } from './src/users/entities/user.entity';
+import { User, UserRole } from './users/entities/user.entity';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
@@ -37,7 +37,7 @@ async function run() {
       console.log('El usuario ya existía, rol actualizado a SUPERUSER y contraseña reiniciada:');
     }
     
-    console.log(`Usuario: ${user.username}`);
+    console.log(`Usuario: ${user!.username}`);
     console.log(`Contraseña: super123`);
 
     await AppDataSource.destroy();
