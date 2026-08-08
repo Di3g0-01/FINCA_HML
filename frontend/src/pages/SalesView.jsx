@@ -11,13 +11,19 @@ export default function SalesView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj.getTime());
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     animal_id: '',
     sale_modality: 'LIBRA',
     sale_price: '',
     sale_weight: '',
     sale_price_per_pound: '',
-    sale_date: new Date().toISOString().split('T')[0],
+    sale_date: getLocalYMD(new Date()),
     buyer_name: '',
   });
 
@@ -119,7 +125,7 @@ export default function SalesView() {
         sale_price: '',
         sale_weight: '',
         sale_price_per_pound: '',
-        sale_date: new Date().toISOString().split('T')[0],
+        sale_date: getLocalYMD(new Date()),
         buyer_name: '',
       });
       setAnimalSearchTerm('');

@@ -4,6 +4,10 @@ import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
+import * as pg from 'pg';
+
+// Parse date columns as exact strings instead of Date objects in local time
+pg.types.setTypeParser(pg.types.builtins.DATE, (val: string) => val);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

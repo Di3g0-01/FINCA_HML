@@ -11,10 +11,16 @@ export default function DeathsView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj.getTime());
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     animal_identifier_search: '',
     animal_id: '',
-    death_date: new Date().toISOString().split('T')[0],
+    death_date: getLocalYMD(new Date()),
     death_reason: '',
   });
 
@@ -84,7 +90,7 @@ export default function DeathsView() {
       setFormData({
         animal_identifier_search: '',
         animal_id: '',
-        death_date: new Date().toISOString().split('T')[0],
+        death_date: getLocalYMD(new Date()),
         death_reason: '',
       });
       fetchData();

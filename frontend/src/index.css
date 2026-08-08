@@ -193,6 +193,10 @@ select option {
   overflow-y: auto;
 }
 
+.swal2-container {
+  z-index: 99999 !important;
+}
+
 .modal-content {
   width: 100%;
   max-width: 650px;

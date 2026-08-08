@@ -24,10 +24,7 @@ import * as fs from 'fs';
 const storage = diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = join(
-      __dirname,
-      '..',
-      '..',
-      '..',
+      process.cwd(),
       'uploads',
       'external-expenses',
     );
@@ -95,10 +92,7 @@ export class ExternalExpensesController {
   @Get('uploads/:filename')
   getUploadedFile(@Param('filename') filename: string, @Res() res: Response) {
     const filePath = join(
-      __dirname,
-      '..',
-      '..',
-      '..',
+      process.cwd(),
       'uploads',
       'external-expenses',
       filename,

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { CustomAlert } from '../utils/alerts';
 import { Plus, X, Trash2, Download } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
+import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
 
 export default function ExternalExpensesView() {
@@ -17,14 +18,17 @@ export default function ExternalExpensesView() {
   const isSuperUser = user?.role === 'SUPERUSER';
 
 
+  // Utilidad para obtener YYYY-MM-DD en la zona horaria local
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj.getTime());
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
   // Filtros por defecto (mes actual)
   const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
-    .toISOString()
-    .split('T')[0];
-  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-    .toISOString()
-    .split('T')[0];
+  const firstDay = getLocalYMD(new Date(today.getFullYear(), today.getMonth(), 1));
+  const lastDay = getLocalYMD(new Date(today.getFullYear(), today.getMonth() + 1, 0));
 
   const [dateFilter, setDateFilter] = useState({
     startDate: firstDay,
@@ -35,7 +39,7 @@ export default function ExternalExpensesView() {
     category: 'Gasolina',
     description: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalYMD(new Date()),
   });
 
   const [imageFile, setImageFile] = useState(null);
@@ -96,7 +100,7 @@ export default function ExternalExpensesView() {
         category: 'Gasolina',
         description: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalYMD(new Date()),
       });
       setImageFile(null);
       CustomAlert.success(
@@ -136,7 +140,7 @@ export default function ExternalExpensesView() {
 
     const exportData = expenses.map((exp) => ({
       ID: exp.id,
-      Fecha: new Date(exp.date).toLocaleDateString(),
+      Fecha: exp.date.split('T')[0].split('-').reverse().join('/'),
       Categoría: exp.category,
       Descripción: exp.description,
       'Monto (Q)': exp.amount,
@@ -265,8 +269,8 @@ export default function ExternalExpensesView() {
               style={{ margin: 0, flex: 1, minWidth: '150px' }}
             >
               <label className="form-label">Desde</label>
-              <input
-                type="date"
+              <SystemDatePicker
+                name="startDate"
                 className="input-field"
                 value={dateFilter.startDate}
                 onChange={(e) =>
@@ -282,8 +286,8 @@ export default function ExternalExpensesView() {
               style={{ margin: 0, flex: 1, minWidth: '150px' }}
             >
               <label className="form-label">Hasta</label>
-              <input
-                type="date"
+              <SystemDatePicker
+                name="endDate"
                 className="input-field"
                 value={dateFilter.endDate}
                 onChange={(e) =>
@@ -400,7 +404,7 @@ export default function ExternalExpensesView() {
                       }}
                     >
                       <td style={{ padding: '16px' }}>
-                        {new Date(expense.date).toLocaleDateString()}
+                        {expense.date.split('T')[0].split('-').reverse().join('/')}
                       </td>
                       <td style={{ padding: '16px', fontWeight: 'bold' }}>
                         {expense.category}
@@ -595,8 +599,7 @@ export default function ExternalExpensesView() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Fecha del Gasto</label>
-                    <input
-                      type="date"
+                    <SystemDatePicker
                       name="date"
                       className="input-field"
                       value={formData.date}

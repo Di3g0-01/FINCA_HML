@@ -18,12 +18,18 @@ import CustomSelect from '../components/CustomSelect';
 import SystemDatePicker from '../components/SystemDatePicker';
 
 export default function LogsView() {
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj.getTime());
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterType, setFilterType] = useState('TODAY');
   const [dateRange, setDateRange] = useState({
-    startDate: new Date().toLocaleDateString('en-CA'),
-    endDate: new Date().toLocaleDateString('en-CA'),
+    startDate: getLocalYMD(new Date()),
+    endDate: getLocalYMD(new Date()),
   });
   const [selectedLog, setSelectedLog] = useState(null);
 
@@ -109,7 +115,7 @@ export default function LogsView() {
       headStyles: { fillColor: [44, 62, 80] },
     });
 
-    doc.save(`Bitacora_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Bitacora_${getLocalYMD(new Date())}.pdf`);
   };
 
   const checkAndCleanupOldLogs = useCallback(async () => {

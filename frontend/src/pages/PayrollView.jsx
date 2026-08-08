@@ -8,6 +8,12 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 
 export default function PayrollView() {
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj.getTime());
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
   const [fijos, setFijos] = useState([]);
   const [temporales, setTemporales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,7 +97,7 @@ export default function PayrollView() {
       await axios.post('http://localhost:3001/payrolls', {
         period_name: payrollName,
         details,
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: getLocalYMD(new Date()),
       });
       CustomAlert.info(
         'Aviso',

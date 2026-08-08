@@ -21,12 +21,16 @@ export class ExternalExpensesService {
     file?: any,
     userRole: UserRole = UserRole.ADMIN,
   ): Promise<ExternalExpense> {
-    const existingCategory = await this.externalExpenseRepository.findOne({
-      where: { category: createDto.category }
-    });
+    const defaultCategories = ['Gasolina', 'Sal', 'Insumos', 'Otros'];
 
-    if (!existingCategory && userRole !== UserRole.SUPERUSER) {
-      throw new ForbiddenException('Solo el SUPERUSER puede agregar nuevas categorías de gastos.');
+    if (!defaultCategories.includes(createDto.category)) {
+      const existingCategory = await this.externalExpenseRepository.findOne({
+        where: { category: createDto.category }
+      });
+
+      if (!existingCategory && userRole !== UserRole.SUPERUSER) {
+        throw new ForbiddenException('Solo el SUPERUSER puede agregar nuevas categorías de gastos.');
+      }
     }
 
     const expense = this.externalExpenseRepository.create({
@@ -63,10 +67,7 @@ export class ExternalExpensesService {
 
     if (expense.imageUrl) {
       const filePath = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
+        process.cwd(),
         'uploads',
         'external-expenses',
         expense.imageUrl,
