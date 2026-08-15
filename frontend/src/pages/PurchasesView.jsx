@@ -69,7 +69,7 @@ export default function PurchasesView() {
 
     try {
       const res = await axios.post(
-        'http://localhost:3001/animals/upload-document',
+        '/animals/upload-document',
         formDataObj,
         {
           headers: {
@@ -113,11 +113,11 @@ export default function PurchasesView() {
 
       if (animalToEdit) {
         await axios.patch(
-          `http://localhost:3001/animals/${animalToEdit.id}`,
+          `/animals/${animalToEdit.id}`,
           payload,
         );
       } else {
-        await axios.post('http://localhost:3001/animals', payload);
+        await axios.post('/animals', payload);
       }
 
       setIsModalOpen(false);
@@ -360,19 +360,78 @@ export default function PurchasesView() {
                       </td>
                       <td style={{ padding: '16px' }}>
                         {animal.legal_document_path ? (
-                          <a
-                            href={`http://localhost:3001${animal.legal_document_path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <div
                             style={{
-                              color: '#2196F3',
-                              textDecoration: 'underline',
-                              fontSize: '13px',
-                              fontWeight: 'bold',
+                              width: '50px',
+                              height: '50px',
                             }}
                           >
-                            Ver Documento
-                          </a>
+                            {animal.legal_document_path.toLowerCase().endsWith('.pdf') ? (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}${animal.legal_document_path.startsWith('/') ? '' : '/'}${animal.legal_document_path}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                title="Ver PDF"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(33,150,243,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <span style={{ fontSize: '28px' }}>📄</span>
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}${animal.legal_document_path.startsWith('/') ? '' : '/'}${animal.legal_document_path}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                title="Ver Imagen"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(33,150,243,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <img
+                                  src={`${axios.defaults.baseURL}${animal.legal_document_path.startsWith('/') ? '' : '/'}${animal.legal_document_path}`}
+                                  alt="Documento"
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span
                             style={{

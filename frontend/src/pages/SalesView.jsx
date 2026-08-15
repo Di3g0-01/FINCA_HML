@@ -33,8 +33,7 @@ export default function SalesView() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      // Fetch all to ensure we have data for filters/selectors
-      const res = await axios.get('http://localhost:3001/animals?limit=5000');
+      const res = await axios.get('/animals?limit=5000');
       const data = res.data.data || res.data;
       setAnimals(data.filter((a) => a.status === 'VENDIDO'));
       setActiveInventory(data.filter((a) => a.status === 'ACTIVO'));
@@ -101,7 +100,7 @@ export default function SalesView() {
       try {
         const fileData = new FormData();
         fileData.append('file', receiptFile);
-        const res = await axios.post('http://localhost:3001/animals/upload-document', fileData, {
+        const res = await axios.post('/animals/upload-document', fileData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         uploadedPath = res.data.path;
@@ -129,12 +128,12 @@ export default function SalesView() {
 
       if (animalToEdit) {
         await axios.patch(
-          `http://localhost:3001/animals/${animalToEdit.id}`,
+          `/animals/${animalToEdit.id}`,
           payload,
         );
       } else {
         await axios.patch(
-          `http://localhost:3001/animals/${targetAnimalId}`,
+          `/animals/${targetAnimalId}`,
           payload,
         );
       }
@@ -389,14 +388,78 @@ export default function SalesView() {
                       </td>
                       <td style={{ padding: '16px' }}>
                         {animal.sale_receipt_path ? (
-                          <a
-                            href={`http://localhost:3001${animal.sale_receipt_path}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ color: '#2196F3', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          <div
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                            }}
                           >
-                            <Eye size={16} /> Ver
-                          </a>
+                            {animal.sale_receipt_path.toLowerCase().endsWith('.pdf') ? (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}${animal.sale_receipt_path.startsWith('/') ? '' : '/'}${animal.sale_receipt_path}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                title="Ver PDF"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(33,150,243,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <span style={{ fontSize: '28px' }}>📄</span>
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}${animal.sale_receipt_path.startsWith('/') ? '' : '/'}${animal.sale_receipt_path}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                title="Ver Imagen"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(33,150,243,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <img
+                                  src={`${axios.defaults.baseURL}${animal.sale_receipt_path.startsWith('/') ? '' : '/'}${animal.sale_receipt_path}`}
+                                  alt="Comprobante"
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>-</span>
                         )}

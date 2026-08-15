@@ -54,9 +54,9 @@ export class ExternalExpensesController {
       storage,
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
       fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|pdf)$/)) {
           return cb(
-            new Error('Solo se permiten imágenes (jpg, jpeg, png, gif)'),
+            new Error('Solo se permiten imágenes y PDFs (jpg, jpeg, png, gif, pdf)'),
             false,
           );
         }

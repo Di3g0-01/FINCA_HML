@@ -427,43 +427,80 @@ export default function ExternalExpensesView() {
                             style={{
                               width: '50px',
                               height: '50px',
-                              borderRadius: '8px',
-                              overflow: 'hidden',
-                              cursor: 'pointer',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              transition: 'transform 0.2s, box-shadow 0.2s',
-                            }}
-                            onClick={() =>
-                              setPreviewImage(
-                                `${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`,
-                              )
-                            }
-                            title="Ver imagen completa"
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'scale(1.1)';
-                              e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'scale(1)';
-                              e.currentTarget.style.boxShadow = 'none';
                             }}
                           >
-                            <img
-                              src={`${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`}
-                              alt="Comprobante"
-                              loading="lazy"
-                              width="100%"
-                              height="100%"
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement.innerHTML = '<span style="font-size:22px;display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280">&#128444;</span>';
-                              }}
-                            />
+                            {expense.imageUrl.toLowerCase().endsWith('.pdf') ? (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`;
+                                  window.open(url, '_blank', 'noopener,noreferrer');
+                                }}
+                                title="Ver PDF"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <span style={{ fontSize: '28px' }}>📄</span>
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  height: '100%',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onClick={() => {
+                                  const url = `${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`;
+                                  setPreviewImage(url);
+                                }}
+                                title="Ver imagen completa"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                <img
+                                  src={`${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`}
+                                  alt="Comprobante"
+                                  loading="lazy"
+                                  width="100%"
+                                  height="100%"
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement.innerHTML = '<span style="font-size:22px;display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280">&#128444;</span>';
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span
@@ -636,11 +673,11 @@ export default function ExternalExpensesView() {
                   </div>
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label className="form-label">
-                      Comprobante (Imagen: JPG, PNG)
+                      Comprobante (PDF o Imagen)
                     </label>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept=".pdf, image/jpeg, image/png, image/gif"
                       onChange={handleFileChange}
                       className="input-field"
                       style={{ padding: '8px 12px' }}
