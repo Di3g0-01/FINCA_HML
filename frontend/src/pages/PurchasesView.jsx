@@ -44,7 +44,10 @@ export default function PurchasesView() {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    if (type === 'number' && value !== '' && parseFloat(value) < 0) {
+      return;
+    }
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === 'type') {
@@ -569,6 +572,7 @@ export default function PurchasesView() {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     step="0.01"
                     name="purchase_price"
                     className="input-field"

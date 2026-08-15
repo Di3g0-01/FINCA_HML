@@ -50,7 +50,10 @@ export default function SalesView() {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    if (type === 'number' && value !== '' && parseFloat(value) < 0) {
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -559,6 +562,7 @@ export default function SalesView() {
                       <label className="form-label">Libras Pesadas</label>
                       <input
                         type="number"
+                        min="0"
                         step="0.01"
                         name="sale_weight"
                         className="input-field"
@@ -572,6 +576,7 @@ export default function SalesView() {
                       <label className="form-label">Precio por Libra (Q)</label>
                       <input
                         type="number"
+                        min="0"
                         step="0.01"
                         name="sale_price_per_pound"
                         className="input-field"
@@ -611,6 +616,7 @@ export default function SalesView() {
                     </label>
                     <input
                       type="number"
+                      min="0"
                       step="0.01"
                       name="sale_price"
                       className="input-field"
