@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import * as pg from 'pg';
+import * as express from 'express';
+import { join } from 'path';
 
 // Parse date columns as exact strings instead of Date objects in local time
 pg.types.setTypeParser(pg.types.builtins.DATE, (val: string) => val);
@@ -19,6 +21,9 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
+
+  // Serve static files from the uploads directory
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // CORS configuration
   app.enableCors({

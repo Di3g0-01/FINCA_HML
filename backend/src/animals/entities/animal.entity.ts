@@ -152,6 +152,9 @@ export class Animal {
   @Column({ type: 'varchar', length: 255, nullable: true })
   buyer_name: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  sale_receipt_path: string | null;
+
   // MUERTES
   @Column({ type: 'date', nullable: true })
   death_date: Date | null;

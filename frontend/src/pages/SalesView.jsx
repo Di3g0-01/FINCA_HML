@@ -2,7 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { Plus, X, Edit } from 'lucide-react';
+import { Plus, X, Edit, Upload, Eye } from 'lucide-react';
 import SystemDatePicker from '../components/SystemDatePicker';
 
 export default function SalesView() {
@@ -10,6 +10,7 @@ export default function SalesView() {
   const [activeInventory, setActiveInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [receiptFile, setReceiptFile] = useState(null);
 
   const getLocalYMD = (dateObj) => {
     const d = new Date(dateObj.getTime());
@@ -92,6 +93,22 @@ export default function SalesView() {
 
     const finalTotal = calculateTotal();
 
+    let uploadedPath = null;
+    if (receiptFile) {
+      try {
+        const fileData = new FormData();
+        fileData.append('file', receiptFile);
+        const res = await axios.post('http://localhost:3001/animals/upload-document', fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadedPath = res.data.path;
+      } catch (err) {
+        console.error('Error al subir el comprobante', err);
+        CustomAlert.info('Aviso', 'Error al subir el comprobante. La venta no se guardó.');
+        return;
+      }
+    }
+
     try {
       const payload = {
         status: 'VENDIDO',
@@ -104,6 +121,8 @@ export default function SalesView() {
         sale_date: formData.sale_date || null,
         buyer_name: formData.buyer_name || null,
       };
+
+      if (uploadedPath) payload.sale_receipt_path = uploadedPath;
 
       if (animalToEdit) {
         await axios.patch(
@@ -119,6 +138,7 @@ export default function SalesView() {
 
       setIsModalOpen(false);
       setAnimalToEdit(null);
+      setReceiptFile(null);
       setFormData({
         animal_id: '',
         sale_modality: 'LIBRA',
@@ -295,6 +315,15 @@ export default function SalesView() {
                       padding: '16px',
                       color: 'var(--text-muted)',
                       fontWeight: '500',
+                    }}
+                  >
+                    Comprobante
+                  </th>
+                  <th
+                    style={{
+                      padding: '16px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '500',
                       textAlign: 'right',
                     }}
                   >
@@ -306,7 +335,7 @@ export default function SalesView() {
                 {animals.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="8"
                       style={{
                         padding: '40px',
                         textAlign: 'center',
@@ -354,6 +383,20 @@ export default function SalesView() {
                         {animal.sale_price !== null
                           ? `Q ${animal.sale_price.toLocaleString()}`
                           : '-'}
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        {animal.sale_receipt_path ? (
+                          <a
+                            href={`http://localhost:3001${animal.sale_receipt_path}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: '#2196F3', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Eye size={16} /> Ver
+                          </a>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
                         <div
@@ -603,6 +646,36 @@ export default function SalesView() {
                     onChange={handleChange}
                     required={true}
                   />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Comprobante de Venta (Opcional, PDF o Imagen)</label>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px',
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px dashed rgba(255,255,255,0.1)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)'
+                    }}
+                  >
+                    <Upload size={20} />
+                    {receiptFile ? receiptFile.name : 'Subir archivo...'}
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.gif"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setReceiptFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
               <div

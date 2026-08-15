@@ -99,10 +99,13 @@ export class AnimalsController {
         },
       }),
       fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/pdf') {
+        if (
+          file.mimetype === 'application/pdf' ||
+          file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)
+        ) {
           cb(null, true);
         } else {
-          cb(new Error('Solo se permiten archivos PDF.'), false);
+          cb(new Error('Solo se permiten archivos PDF o imágenes (jpg, jpeg, png, gif).'), false);
         }
       },
     }),

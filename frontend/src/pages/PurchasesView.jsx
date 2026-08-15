@@ -78,12 +78,12 @@ export default function PurchasesView() {
         ...prev,
         legal_document_path: res.data.path,
       }));
-      CustomAlert.success('Cargado', 'Documento PDF cargado con éxito.');
+      CustomAlert.success('Cargado', 'Documento/Imagen cargado con éxito.');
     } catch (err) {
       console.error(err);
       CustomAlert.error(
         'Error',
-        err.response?.data?.message || 'Error al subir el archivo PDF.',
+        err.response?.data?.message || 'Error al subir el archivo.',
       );
     }
   };
@@ -368,7 +368,7 @@ export default function PurchasesView() {
                               fontWeight: 'bold',
                             }}
                           >
-                            Ver PDF
+                            Ver Documento
                           </a>
                         ) : (
                           <span
@@ -627,11 +627,11 @@ export default function PurchasesView() {
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">
-                    Documento Legal Compra (PDF)
+                    Documento Legal de Compra (PDF o Imagen)
                   </label>
                   <input
                     type="file"
-                    accept=".pdf"
+                    accept=".pdf, image/jpeg, image/png, image/gif"
                     onChange={handleFileUpload}
                     className="input-field"
                     style={{ padding: '8px 12px' }}
@@ -645,7 +645,7 @@ export default function PurchasesView() {
                         marginTop: '4px',
                       }}
                     >
-                      Archivo PDF cargado con éxito.
+                      Archivo cargado con éxito.
                     </span>
                   )}
                 </div>
