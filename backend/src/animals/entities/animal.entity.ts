@@ -35,6 +35,7 @@ export enum AnimalStatus {
 export enum AnimalOrigin {
   NACIMIENTO = 'NACIMIENTO',
   COMPRA = 'COMPRA',
+  HISTORICO = 'HISTORICO',
 }
 
 export enum SaleModality {

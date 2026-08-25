@@ -25,7 +25,7 @@ export default function PayrollView() {
     const fetchWorkers = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get('http://localhost:3001/workers');
+        const res = await axios.get('/workers');
         const active = res.data.filter((w) => w.is_active);
 
         setFijos(active.filter((w) => w.contract_type === 'FIJO'));
@@ -94,7 +94,7 @@ export default function PayrollView() {
         })),
       };
 
-      await axios.post('http://localhost:3001/payrolls', {
+      await axios.post('/payrolls', {
         period_name: payrollName,
         details,
         start_date: getLocalYMD(new Date()),
@@ -289,9 +289,7 @@ export default function PayrollView() {
               gap: '12px',
             }}
           >
-            <DollarSign size={32} />
-            Módulo Pago de Planilla
-          </h1>
+            <span className="mobile-only"><DollarSign size={32} /></span> <span className="desktop-only">Módulo Pago de Planilla</span></h1>
           <p style={{ color: 'var(--text-muted)' }}>
             Generador de nómina y aplicación de descuentos.
           </p>
@@ -310,8 +308,7 @@ export default function PayrollView() {
             onClick={exportExcel}
             title="Exportar a Microsoft Excel"
           >
-            <FileSpreadsheet size={20} /> Excel
-          </button>
+            <span className="mobile-only"><FileSpreadsheet size={20} /></span> <span className="desktop-only">Excel</span></button>
           <button
             className="btn-primary"
             style={{
@@ -324,8 +321,7 @@ export default function PayrollView() {
             }}
             onClick={exportPDF}
           >
-            <Download size={20} /> PDF
-          </button>
+            <span className="mobile-only"><Download size={20} /></span> <span className="desktop-only">PDF</span></button>
         </div>
       </div>
 

@@ -21,7 +21,7 @@ export default function CalvingControlView() {
     try {
       setIsLoading(true);
       const query = `?page=${page}&limit=50&status=ACTIVO&isControlPartos=true&isPregnant=${filterPregnant}&_t=${new Date().getTime()}${searchTerm ? `&search=${searchTerm}` : ''}`;
-      const res = await axios.get(`http://localhost:3001/animals${query}`);
+      const res = await axios.get(`/animals${query}`);
 
       if (res.data.data) {
         setAnimals(res.data.data);
@@ -50,7 +50,7 @@ export default function CalvingControlView() {
   const handleExportExcel = useCallback(async () => {
     try {
       const res = await axios.get(
-        `http://localhost:3001/animals?status=ACTIVO&isControlPartos=true&limit=5000&isPregnant=${filterPregnant}`,
+        `/animals?status=ACTIVO&isControlPartos=true&limit=5000&isPregnant=${filterPregnant}`,
       );
       const data = res.data.data || res.data;
       const exportData = data.map((a) => ({
@@ -176,8 +176,7 @@ export default function CalvingControlView() {
             style={{ color: '#4CAF50' }}
             onClick={handleExportExcel}
           >
-            <Download size={18} /> Exportar Reporte
-          </button>
+            <span className="mobile-only"><Download size={18} /></span> <span className="desktop-only">Exportar Reporte</span></button>
         </div>
       </div>
 

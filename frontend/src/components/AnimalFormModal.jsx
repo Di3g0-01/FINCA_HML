@@ -202,14 +202,14 @@ export default function AnimalFormModal({
 
       if (animalToEdit)
         await axios.patch(
-          `http://localhost:3001/animals/${animalToEdit.id}`,
+          `/animals/${animalToEdit.id}`,
           payload,
         );
       else {
         // If user is OPERADOR, send to requests instead of directly to animals
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.role === 'OPERADOR') {
-          await axios.post('http://localhost:3001/requests', {
+          await axios.post('/requests', {
             type: 'NACIMIENTO',
             payload,
           });
@@ -218,7 +218,7 @@ export default function AnimalFormModal({
             'Tu solicitud de nacimiento ha sido enviada al administrador para su revisión.',
           );
         } else {
-          await axios.post('http://localhost:3001/animals', payload);
+          await axios.post('/animals', payload);
         }
       }
 

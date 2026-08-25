@@ -44,7 +44,7 @@ export default function AnimalsView() {
       setIsLoading(true);
       const currentLimit = searchTerm ? 1000 : 50;
       const query = `?page=${page}&limit=${currentLimit}&status=${filterStatus}${searchTerm ? `&search=${searchTerm}` : ''}`;
-      const res = await axios.get(`http://localhost:3001/animals${query}`);
+      const res = await axios.get(`/animals${query}`);
 
       if (res.data.data) {
         setAnimals(res.data.data);
@@ -72,7 +72,7 @@ export default function AnimalsView() {
 
   useEffect(() => {
     axios
-      .get('http://localhost:3001/animals?status=ACTIVO&limit=5000')
+      .get('/animals?status=ACTIVO&limit=5000')
       .then((res) => {
         const data = res.data.data || res.data;
         setAllCows(data.filter((a) => a.type === 'VACA'));
@@ -90,7 +90,7 @@ export default function AnimalsView() {
     setDeleteConfirm({ isOpen: false, id: null, identifier: null });
     if (!id) return;
     try {
-      await axios.delete(`http://localhost:3001/animals/${id}`);
+      await axios.delete(`/animals/${id}`);
       await fetchAnimals();
     } catch (error) {
       console.error('Error al eliminar:', error);
@@ -115,7 +115,7 @@ export default function AnimalsView() {
         );
         return;
       }
-      const res = await axios.get(`http://localhost:3001/animals?limit=5000`);
+      const res = await axios.get(`/animals?limit=5000`);
       const data = res.data.data || res.data;
       const found = data.find(
         (a) =>
@@ -170,7 +170,7 @@ export default function AnimalsView() {
   const handleExportExcel = useCallback(async () => {
     try {
       const res = await axios.get(
-        `http://localhost:3001/animals?status=${filterStatus}&limit=5000`,
+        `/animals?status=${filterStatus}&limit=5000`,
       );
       const data = res.data.data || res.data;
       const exportData = data.map((a) => {
@@ -253,7 +253,7 @@ export default function AnimalsView() {
   const handleExportPDF = useCallback(async () => {
     try {
       const res = await axios.get(
-        `http://localhost:3001/animals?status=${filterStatus}&limit=5000`,
+        `/animals?status=${filterStatus}&limit=5000`,
       );
       const data = res.data.data || res.data;
       const doc = new jsPDF('landscape', 'pt', 'a4');
@@ -406,7 +406,7 @@ export default function AnimalsView() {
           const existingMap = new Map();
           try {
             const dbDataRes = await axios.get(
-              'http://localhost:3001/animals?limit=10000',
+              '/animals?limit=10000',
             );
             const animalsList = dbDataRes.data.data || dbDataRes.data;
             if (Array.isArray(animalsList)) {
@@ -422,13 +422,17 @@ export default function AnimalsView() {
           }
 
           const getVal = (row, keys) => {
+            const normalizedRow = {};
+            for (const k in row) {
+              normalizedRow[String(k).toUpperCase().replace(/\s+/g, '')] = row[k];
+            }
             for (const key of keys) {
               if (
-                row[key] !== undefined &&
-                row[key] !== null &&
-                String(row[key]).trim() !== ''
+                normalizedRow[key] !== undefined &&
+                normalizedRow[key] !== null &&
+                String(normalizedRow[key]).trim() !== ''
               )
-                return row[key];
+                return normalizedRow[key];
             }
             return null;
           };
@@ -714,12 +718,12 @@ export default function AnimalsView() {
               let response;
               if (existingMap.has(cleanId)) {
                 response = await axios.patch(
-                  `http://localhost:3001/animals/${existingMap.get(cleanId)}`,
+                  `/animals/${existingMap.get(cleanId)}`,
                   payload,
                 );
               } else {
                 response = await axios.post(
-                  'http://localhost:3001/animals',
+                  '/animals',
                   payload,
                 );
                 existingMap.set(cleanId, response.data.id);
@@ -762,7 +766,7 @@ export default function AnimalsView() {
           if (pendingRelations.length > 0) {
             try {
               const dbDataRes = await axios.get(
-                'http://localhost:3001/animals?limit=5000',
+                '/animals?limit=5000',
               );
               const animalsList = dbDataRes.data.data || dbDataRes.data;
               animalsList.forEach((a) => {
@@ -774,7 +778,7 @@ export default function AnimalsView() {
                 if (!motherId) {
                   try {
                     const mRes = await axios.post(
-                      'http://localhost:3001/animals',
+                      '/animals',
                       {
                         identifier: rel.motherStr,
                         type: 'VACA',
@@ -790,7 +794,7 @@ export default function AnimalsView() {
                 }
                 if (motherId)
                   await axios
-                    .patch(`http://localhost:3001/animals/${rel.childId}`, {
+                    .patch(`/animals/${rel.childId}`, {
                       mother_id: motherId,
                     })
                     .catch(() => {});
@@ -838,7 +842,7 @@ export default function AnimalsView() {
     setResetConfirm(false);
     try {
       setIsLoading(true);
-      await axios.delete('http://localhost:3001/animals');
+      await axios.delete('/animals');
       CustomAlert.info(
         'Aviso',
         'Base de datos de animales limpiada exitosamente.',
@@ -990,15 +994,13 @@ export default function AnimalsView() {
                       className="btn-secondary"
                       onClick={() => fileInputRef.current.click()}
                     >
-                      <Upload size={18} /> Importar Datos
-                    </button>
+                      <span className="mobile-only"><Upload size={18} /></span> <span className="desktop-only">Importar Datos</span></button>
                     <button
                       className="btn-secondary"
                       style={{ color: '#E1BEE7' }}
                       onClick={() => setResetConfirm(true)}
                     >
-                      <Trash2 size={18} /> Reiniciar BD
-                    </button>
+                      <span className="mobile-only"><Trash2 size={18} /></span> <span className="desktop-only">Reiniciar BD</span></button>
                   </>
                 )}
                 <button
@@ -1006,8 +1008,7 @@ export default function AnimalsView() {
                   style={{ color: '#4CAF50' }}
                   onClick={handleExportExcel}
                 >
-                  <Download size={18} /> Excel
-                </button>
+                  <span className="mobile-only"><Download size={18} /></span> <span className="desktop-only">Excel</span></button>
               </>
             );
           })()}
@@ -1016,8 +1017,7 @@ export default function AnimalsView() {
             style={{ color: '#F44336' }}
             onClick={handleExportPDF}
           >
-            <Download size={18} /> PDF
-          </button>
+            <span className="mobile-only"><Download size={18} /></span> <span className="desktop-only">PDF</span></button>
         </div>
       </div>
 
@@ -1088,18 +1088,15 @@ export default function AnimalsView() {
             style={{ color: '#2196F3' }}
             onClick={() => setActionDialog({ isOpen: true, mode: 'EDIT' })}
           >
-            <Edit size={20} /> Editar
-          </button>
+            <span className="mobile-only"><Edit size={20} /></span> <span className="desktop-only">Editar</span></button>
           <button
             className="btn-secondary"
             style={{ color: '#F44336' }}
             onClick={() => setActionDialog({ isOpen: true, mode: 'DELETE' })}
           >
-            <Trash2 size={20} /> Eliminar
-          </button>
+            <span className="mobile-only"><Trash2 size={20} /></span> <span className="desktop-only">Eliminar</span></button>
           <button className="btn-primary" onClick={() => openForm(null)}>
-            <Plus size={20} /> Ingresar Nacimiento
-          </button>
+            <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Ingresar Nacimiento</span></button>
         </div>
       </div>
 

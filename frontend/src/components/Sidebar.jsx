@@ -361,7 +361,7 @@ export default function Sidebar({
                     {
                       to: '/dashboard/external-expenses',
                       icon: <DollarSign size={16} />,
-                      label: 'Gastos Externos',
+                      label: 'Gastos Generales',
                       color: '#ef4444',
                     },
                     true,

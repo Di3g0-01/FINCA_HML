@@ -14,7 +14,7 @@ export class PayrollsService {
 
   // --- STANDARD CRUD ---
 
-  async create(data: Partial<Payroll>, username: string = 'SISTEMA') {
+  async create(data: Partial<Payroll>, username: string = 'SYSTEM') {
     const payroll = this.payrollsRepository.create(data);
     const saved = await this.payrollsRepository.save(payroll);
 
@@ -38,7 +38,7 @@ export class PayrollsService {
     return payroll;
   }
 
-  async remove(id: number, username: string = 'SISTEMA') {
+  async remove(id: number, username: string = 'SYSTEM') {
     const payroll = await this.findOne(id);
     await this.payrollsRepository.delete(id);
 

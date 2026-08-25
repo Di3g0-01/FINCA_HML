@@ -14,7 +14,7 @@ export class WorkersService {
 
   // --- STANDARD CRUD ---
 
-  async create(createWorkerDto: Partial<Worker>, username: string = 'SISTEMA') {
+  async create(createWorkerDto: Partial<Worker>, username: string = 'SYSTEM') {
     const worker = this.workersRepository.create(createWorkerDto);
     const saved = await this.workersRepository.save(worker);
 
@@ -46,7 +46,7 @@ export class WorkersService {
   async update(
     id: number,
     updateWorkerDto: Partial<Worker>,
-    username: string = 'SISTEMA',
+    username: string = 'SYSTEM',
   ) {
     const current = await this.findOne(id);
     const changes: string[] = [];
@@ -78,7 +78,7 @@ export class WorkersService {
     return updated;
   }
 
-  async remove(id: number, username: string = 'SISTEMA') {
+  async remove(id: number, username: string = 'SYSTEM') {
     const worker = await this.findOne(id);
     
     await this.workersRepository.delete(id);

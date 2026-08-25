@@ -10,7 +10,7 @@ export default function RequestsAdminView() {
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:3001/requests');
+      const res = await axios.get('/requests');
       setRequests(res.data);
     } catch (e) {
       console.error(e);
@@ -31,7 +31,7 @@ export default function RequestsAdminView() {
     );
     if (confirm.isConfirmed) {
       try {
-        await axios.put(`http://localhost:3001/requests/${id}/approve`);
+        await axios.put(`/requests/${id}/approve`);
         CustomAlert.success(
           'Aprobada',
           'La solicitud ha sido procesada en el inventario.',
@@ -50,7 +50,7 @@ export default function RequestsAdminView() {
     );
     if (confirm.isConfirmed) {
       try {
-        await axios.put(`http://localhost:3001/requests/${id}/reject`);
+        await axios.put(`/requests/${id}/reject`);
         CustomAlert.success('Rechazada', 'La solicitud ha sido rechazada.');
         fetchRequests();
       } catch (e) {
@@ -66,7 +66,7 @@ export default function RequestsAdminView() {
     );
     if (confirm.isConfirmed) {
       try {
-        await axios.delete('http://localhost:3001/requests');
+        await axios.delete('/requests');
         CustomAlert.success(
           'Limpiado',
           'Todo el historial de solicitudes ha sido eliminado.',
@@ -99,9 +99,7 @@ export default function RequestsAdminView() {
               gap: '12px',
             }}
           >
-            <Clock size={32} />
-            Solicitudes Pendientes
-          </h1>
+            <span className="mobile-only"><Clock size={32} /></span> <span className="desktop-only">Solicitudes Pendientes</span></h1>
           <p style={{ color: 'var(--text-muted)' }}>
             Aprueba o rechaza los reportes de nacimiento y muerte generados por
             los operadores.

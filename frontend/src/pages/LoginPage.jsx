@@ -15,7 +15,7 @@ export default function LoginPage() {
     setErrorMsg('');
     try {
       if (username && password) {
-        const res = await axios.post('http://127.0.0.1:3001/auth/login', {
+        const res = await axios.post('/auth/login', {
           username,
           password,
         });
@@ -176,9 +176,7 @@ export default function LoginPage() {
               gap: '10px',
             }}
           >
-            <LogIn size={20} />
-            Ingresar al Sistema
-          </button>
+            <span className="mobile-only"><LogIn size={20} /></span> <span className="desktop-only">Ingresar al Sistema</span></button>
         </form>
 
         <div

@@ -11,6 +11,8 @@ import {
   Query,
   Res,
   Request,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ExternalExpensesService } from './external-expenses.service';
 import { CreateExternalExpenseDto } from './dto/create-external-expense.dto';
@@ -69,7 +71,7 @@ export class ExternalExpensesController {
     @UploadedFile() file: any,
     @Request() req: any,
   ) {
-    return this.externalExpensesService.create(createExternalExpenseDto, file, req.user?.role);
+    return this.externalExpensesService.create(createExternalExpenseDto, file, req.user?.role, req.user?.username);
   }
 
   @Get()
@@ -81,13 +83,57 @@ export class ExternalExpensesController {
     return this.externalExpensesService.findAll(startDate, endDate);
   }
 
+  @Delete('bulk/all')
+  @UseGuards(JwtAuthGuard)
+  removeAll(@Request() req: any) {
+    if (req.user?.role !== 'SUPERUSER') {
+      throw new ForbiddenException('Solo el SUPERUSER puede eliminar masivamente los gastos generales.');
+    }
+    return this.externalExpensesService.removeAll(req.user?.username);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.externalExpensesService.remove(id);
+  remove(@Param('id') id: string, @Request() req: any) {
+    if (req.user?.role !== 'SUPERUSER') {
+      throw new ForbiddenException('Solo el SUPERUSER puede eliminar gastos generales.');
+    }
+    return this.externalExpensesService.remove(id, req.user?.username);
   }
 
   // --- CUSTOM ACTIONS ---
+
+  @Post('upload-zip')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('zipFile', {
+      storage,
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+      fileFilter: (req, file, cb) => {
+        const ext = extname(file.originalname).toLowerCase();
+        if (
+          file.mimetype !== 'application/zip' && 
+          file.mimetype !== 'application/x-zip-compressed' && 
+          ext !== '.zip'
+        ) {
+          return cb(
+            new BadRequestException('Solo se permiten archivos ZIP'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadZip(
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No se recibió ningún archivo ZIP');
+    }
+    return this.externalExpensesService.processZipFile(file, req.user?.username);
+  }
 
   @Get('uploads/:filename')
   getUploadedFile(@Param('filename') filename: string, @Res() res: Response) {

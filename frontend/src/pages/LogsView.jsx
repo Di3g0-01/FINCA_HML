@@ -41,7 +41,7 @@ export default function LogsView() {
     try {
       setIsLoading(true);
       const res = await axios.get(
-        `http://localhost:3001/logs?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&page=${page}&limit=25&actionType=${actionFilter === 'TODOS' ? '' : actionFilter}&_t=${new Date().getTime()}`,
+        `/logs?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&page=${page}&limit=25&actionType=${actionFilter === 'TODOS' ? '' : actionFilter}&_t=${new Date().getTime()}`,
       );
       setLogs(res.data.data || res.data);
       setTotalPages(res.data.totalPages || 1);
@@ -62,7 +62,7 @@ export default function LogsView() {
     );
     if (!result.isConfirmed) return;
     try {
-      await axios.delete(`http://localhost:3001/logs/${id}`);
+      await axios.delete(`/logs/${id}`);
       fetchLogs();
     } catch (e) {
       CustomAlert.info('Aviso', 'Error al eliminar el registro.');
@@ -76,7 +76,7 @@ export default function LogsView() {
     );
     if (!result.isConfirmed) return;
     try {
-      await axios.delete(`http://localhost:3001/logs`);
+      await axios.delete(`/logs`);
       fetchLogs();
       CustomAlert.info('Aviso', 'Bitácora limpiada exitosamente.');
     } catch (e) {
@@ -125,7 +125,7 @@ export default function LogsView() {
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
       // Consultar todos los logs (limit=5000) para verificar antigüedad
-      const res = await axios.get(`http://localhost:3001/logs`);
+      const res = await axios.get(`/logs`);
       const allLogs = res.data.data || res.data;
 
       const oldLogs = allLogs.filter(
@@ -141,7 +141,7 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
 
         handleExportPDF(oldLogs);
 
-        await axios.delete('http://localhost:3001/logs/cleanup');
+        await axios.delete('/logs/cleanup');
         fetchLogs();
       }
     } catch (error) {
@@ -197,15 +197,13 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
             style={{ color: '#ef4444', borderColor: '#ef444433' }}
             onClick={handleClearAllLogs}
           >
-            <Trash2 size={18} /> Limpiar Historial
-          </button>
+            <span className="mobile-only"><Trash2 size={18} /></span> <span className="desktop-only">Limpiar Historial</span></button>
           <button
             className="btn-secondary"
             style={{ color: '#F44336' }}
             onClick={() => handleExportPDF()}
           >
-            <Download size={18} /> Exportar PDF
-          </button>
+            <span className="mobile-only"><Download size={18} /></span> <span className="desktop-only">Exportar PDF</span></button>
         </div>
       </div>
 
@@ -274,8 +272,7 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
                 className="form-label"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                <Calendar size={14} /> Fecha Inicio
-              </label>
+                <span className="mobile-only"><Calendar size={14} /></span> <span className="desktop-only">Fecha Inicio</span></label>
               <SystemDatePicker
                 name="startDate"
                 className="input-field"
@@ -305,8 +302,7 @@ Se procederá a descargar un respaldo automático en PDF y limpiar la base de da
                 className="form-label"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                <Calendar size={14} /> Fecha Fin
-              </label>
+                <span className="mobile-only"><Calendar size={14} /></span> <span className="desktop-only">Fecha Fin</span></label>
               <SystemDatePicker
                 name="endDate"
                 className="input-field"

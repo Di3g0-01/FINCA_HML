@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { Animal } from './animals/entities/animal.entity';
 import { User } from './users/entities/user.entity';
 import { UsersModule } from './users/users.module';
@@ -19,6 +20,7 @@ import { ExternalExpense } from './external-expenses/entities/external-expense.e
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(
       process.env.DATABASE_URL
         ? {

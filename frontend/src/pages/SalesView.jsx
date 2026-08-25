@@ -2,8 +2,10 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { Plus, X, Edit, Upload, Eye } from 'lucide-react';
+import { Plus, X, Edit, Upload, Eye, FileSpreadsheet } from 'lucide-react';
 import SystemDatePicker from '../components/SystemDatePicker';
+import * as XLSX from 'xlsx';
+import { useRef } from 'react';
 
 export default function SalesView() {
   const [animals, setAnimals] = useState([]);
@@ -11,12 +13,23 @@ export default function SalesView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   const getLocalYMD = (dateObj) => {
     const d = new Date(dateObj.getTime());
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().split('T')[0];
   };
+
+  // Filtros por defecto (mes actual)
+  const today = new Date();
+  const firstDay = getLocalYMD(new Date(today.getFullYear(), today.getMonth(), 1));
+  const lastDay = getLocalYMD(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+
+  const [dateFilter, setDateFilter] = useState({
+    startDate: firstDay,
+    endDate: lastDay,
+  });
 
   const [formData, setFormData] = useState({
     animal_id: '',
@@ -29,6 +42,15 @@ export default function SalesView() {
   });
 
   const [animalSearchTerm, setAnimalSearchTerm] = useState('');
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isSuperUser = user?.role === 'SUPERUSER';
+
+  const filteredAnimals = animals.filter((animal) => {
+    if (!animal.sale_date) return false;
+    const sDate = animal.sale_date.split('T')[0];
+    return sDate >= dateFilter.startDate && sDate <= dateFilter.endDate;
+  });
 
   const fetchData = async () => {
     try {
@@ -186,7 +208,7 @@ export default function SalesView() {
       ).isConfirmed
     ) {
       try {
-        await axios.patch(`http://localhost:3001/animals/${id}`, {
+        await axios.patch(`/animals/${id}`, {
           status: 'ACTIVO',
           sale_date: null,
           sale_price: null,
@@ -197,6 +219,338 @@ export default function SalesView() {
         fetchData();
       } catch (err) {
         CustomAlert.info('Aviso', 'Error al anular venta.');
+      }
+    }
+  };
+
+  const handleImportExcel = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+
+        const sheetArray = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        let headerRowIndex = 0;
+
+        for (let i = 0; i < sheetArray.length; i++) {
+          const rowCells = sheetArray[i];
+          if (!rowCells || rowCells.length === 0) continue;
+
+          const hasIdentifier = rowCells.some((cell) => {
+            const val = String(cell || '')
+              .trim()
+              .toUpperCase();
+            return [
+              'ANIMA',
+              'ANIMAL',
+              'IDENTIFICADOR',
+              'ID',
+              'CHAPA',
+              'N.VACA',
+              'N. VACA',
+              'NOVACA',
+              'N VACA',
+            ].some((k) => val.includes(k));
+          });
+
+          if (hasIdentifier) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+
+        const data = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex });
+
+        if (!data || data.length === 0) {
+          CustomAlert.info(
+            'Aviso',
+            'El archivo Excel parece estar vacío o no tiene el formato correcto.',
+          );
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+
+        setIsLoading(true);
+        let successCount = 0;
+        let failCount = 0;
+        let errors = [];
+
+        const existingMap = new Map();
+        try {
+          const dbDataRes = await axios.get('/animals?limit=10000');
+          const animalsList = dbDataRes.data.data || dbDataRes.data;
+          if (Array.isArray(animalsList)) {
+            animalsList.forEach((a) =>
+              existingMap.set(
+                String(a.identifier).trim().toLowerCase(),
+                a.id,
+              ),
+            );
+          }
+        } catch (e) {
+          console.error('Error pre-fetching animals for import:', e);
+        }
+
+        const getVal = (row, keys) => {
+          const normalizedRow = {};
+          for (const k in row) {
+            normalizedRow[String(k).toUpperCase().replace(/\s+/g, '')] = row[k];
+          }
+          for (const key of keys) {
+            if (
+              normalizedRow[key] !== undefined &&
+              normalizedRow[key] !== null &&
+              String(normalizedRow[key]).trim() !== ''
+            )
+              return normalizedRow[key];
+          }
+          return null;
+        };
+
+        const parseP = (val) => {
+          if (!val) return null;
+          const cleanStr = String(val).replace(/[^0-9\.\,]/g, '').replace(/,/g, '');
+          return parseFloat(cleanStr) || null;
+        };
+
+        const parseDate = (val) => {
+          if (!val) return null;
+          let year, month, day;
+          if (typeof val === 'number') {
+            if (val < 4000) {
+              year = val;
+              month = 0;
+              day = 1;
+            } else {
+              const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+              const d = new Date(
+                excelEpoch.getTime() + Math.round(val * 86400000),
+              );
+              year = d.getUTCFullYear();
+              month = d.getUTCMonth();
+              day = d.getUTCDate();
+            }
+          } else {
+            const strVal = String(val).trim();
+            if (strVal.match(/^\d{4}-\d{2}-\d{2}/)) {
+              return strVal.substring(0, 10);
+            }
+            const sVal = strVal.split('T')[0].split(' ')[0]; // Remove timestamp if any
+            const parts = sVal.match(
+              /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/,
+            );
+            if (parts) {
+              year = parseInt(parts[3]);
+              if (year < 100) year += 2000;
+              let p1 = parseInt(parts[1]);
+              let p2 = parseInt(parts[2]);
+              if (p2 > 12) {
+                month = p1 - 1;
+                day = p2;
+              } else if (p1 > 12) {
+                month = p2 - 1;
+                day = p1;
+              } else {
+                month = p2 - 1;
+                day = p1;
+              }
+            } else {
+              const partsYYYYMMDD = sVal.match(
+                /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/,
+              );
+              if (partsYYYYMMDD) {
+                year = parseInt(partsYYYYMMDD[1]);
+                month = parseInt(partsYYYYMMDD[2]) - 1;
+                day = parseInt(partsYYYYMMDD[3]);
+              } else {
+                const d = new Date(strVal);
+                if (!isNaN(d.getTime())) {
+                  if (strVal.includes('Z') || strVal.includes('+')) {
+                    year = d.getUTCFullYear();
+                    month = d.getUTCMonth();
+                    day = d.getUTCDate();
+                  } else {
+                    year = d.getFullYear();
+                    month = d.getMonth();
+                    day = d.getDate();
+                  }
+                } else return null;
+              }
+            }
+          }
+          if (year && month !== undefined && day) {
+            const m = String(month + 1).padStart(2, '0');
+            const d = String(day).padStart(2, '0');
+            return `${year}-${m}-${d}`;
+          }
+          return null;
+        };
+
+        for (const rawRow of data) {
+          await new Promise((r) => setTimeout(r, 40));
+          const row = {};
+          Object.keys(rawRow).forEach((k) => {
+            const cleanKey = k
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^A-Z0-9]/gi, '')
+              .toUpperCase();
+            row[cleanKey] = rawRow[k];
+          });
+
+          try {
+            const identifier = String(
+              getVal(row, [
+                'ANIMA',
+                'ANIM',
+                'ANIMAL',
+                'NVACA',
+                'NOVACA',
+                'NVACAANIMAL',
+                'NOVACAANIMAL',
+                'IDENTIFICADOR',
+                'ID',
+                'IDENTIFICACIN',
+                'CHAPA',
+                'NUMERO',
+                'NO',
+              ]) || '',
+            ).trim();
+
+            if (
+              !identifier ||
+              [
+                'ANIMAL',
+                'IDENTIFICADOR',
+                'CHAPA',
+                'ID',
+                'N. VACA',
+                'N.VACA',
+                'NO.',
+                'IDENTIFICACIN',
+                'ANIMA',
+              ].includes(identifier.toUpperCase())
+            ) {
+              continue;
+            }
+
+            const cleanId = identifier.toLowerCase();
+            let animalId = existingMap.get(cleanId);
+            if (!animalId) {
+               try {
+                 const newAnimalRes = await axios.post('/animals', {
+                   identifier: identifier.toUpperCase(),
+                   gender: 'H',
+                   status: 'VENDIDO',
+                   type: 'VACA',
+                   origin: 'HISTORICO'
+                 });
+                 animalId = newAnimalRes.data.id || newAnimalRes.data.data?.id;
+                 existingMap.set(cleanId, animalId);
+               } catch (createErr) {
+                 failCount++;
+                 errors.push(`${identifier}: Error creando histórico - ${createErr.response?.data?.message || createErr.message}`);
+                 continue;
+               }
+            }
+
+            const rawPeso = String(getVal(row, ['PESO', 'LIBRAS', 'PESOVENTA', 'LIBRASVENTA']) || '').trim().toUpperCase();
+            let modality = String(getVal(row, ['MODALIDAD', 'TIPOVENTA', 'TIPODEVENTA', 'MODALIDADDEVENTA']) || '').toUpperCase();
+            
+            if (rawPeso === 'N/A' || modality.includes('RAZERO') || modality.includes('LOTE') || modality.includes('CABEZA')) {
+              modality = 'RAZERO';
+            } else {
+              modality = 'LIBRA';
+            }
+
+            const saleWeight = parseP(rawPeso);
+            const precioLib = parseP(getVal(row, ['PRECIOLIB', 'PRECIOPORLIBRA', 'PRECIOLIB.', 'PRECIO_LIB']));
+            let salePrice = parseP(getVal(row, ['PRECIO', 'PRECIOVENTA', 'TOTAL', 'MONTOTRANSDACCION', 'MONTO', 'VENTA', 'VALOR']));
+
+            if (modality === 'LIBRA' && saleWeight !== null && precioLib !== null) {
+              salePrice = saleWeight * precioLib;
+            }
+            const buyerName = getVal(row, ['COMPRADOR', 'CLIENTE', 'AQUIENSEVENDIO', 'NOMBRECOMPRADOR']);
+            const saleDate = parseDate(getVal(row, ['FECHADEVENTA', 'FECHAVENTA', 'VENTA', 'FECHA']));
+
+            const payload = {
+              status: 'VENDIDO',
+              sale_modality: modality,
+              sale_weight: modality === 'LIBRA' ? saleWeight : null,
+              sale_price: salePrice,
+              buyer_name: buyerName || null,
+              sale_date: saleDate || getLocalYMD(new Date())
+            };
+
+            await axios.patch(`/animals/${animalId}`, payload);
+            successCount++;
+          } catch (err) {
+            failCount++;
+            errors.push(
+              `${getVal(rawRow, ['NVACA', 'ANIMAL', 'IDENTIFICADOR']) || 'Fila'}: ${err.message}`,
+            );
+          }
+        }
+
+        CustomAlert.success(
+          'Importación Completada',
+          `Éxito: ${successCount} | Fallos: ${failCount}`,
+        );
+
+        if (errors.length > 0) {
+          console.warn('Errores de importación:', errors);
+          CustomAlert.info(
+            'Detalle de Fallos',
+            'Revisa la consola para más detalles sobre los registros que fallaron.',
+          );
+        }
+
+      } catch (err) {
+        console.error(err);
+        CustomAlert.info('Aviso', 'Error al procesar el archivo Excel.');
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        fetchData();
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleClearAllSales = async () => {
+    if (animals.length === 0) {
+      CustomAlert.info('Aviso', 'No hay ventas para borrar.');
+      return;
+    }
+    if (
+      (
+        await CustomAlert.confirm(
+          '¿Estás seguro de que deseas ELIMINAR todas las ventas? Todos los animales volverán al Inventario Activo.',
+        )
+      ).isConfirmed
+    ) {
+      try {
+        setIsLoading(true);
+        const promises = animals.map((a) =>
+          axios.patch(`/animals/${a.id}`, {
+            status: 'ACTIVO',
+            sale_date: null,
+            sale_price: null,
+            sale_weight: null,
+            sale_modality: null,
+            buyer_name: null,
+            sale_receipt_path: null,
+          })
+        );
+        await Promise.all(promises);
+        CustomAlert.success('Éxito', 'Todas las ventas han sido borradas.');
+        fetchData();
+      } catch (err) {
+        CustomAlert.info('Aviso', 'Error al borrar ventas.');
+        setIsLoading(false);
       }
     }
   };
@@ -221,19 +575,167 @@ export default function SalesView() {
             Módulo para dar de baja animales por venta y registrar ingresos.
           </p>
         </div>
-        <button
-          className="btn-primary"
+        <div style={{ display: 'flex', gap: '16px' }}>
+          {isSuperUser && animals.length > 0 && (
+            <button
+              className="btn-danger"
+              style={{
+                background: '#f44336',
+                color: 'white',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: 'bold',
+                gap: '8px'
+              }}
+              onClick={handleClearAllSales}
+            >
+              <span className="mobile-only"><X size={20} /></span>
+              <span className="desktop-only">Borrar Todo</span>
+            </button>
+          )}
+          <button
+            className="btn-primary"
+            style={{
+              background: '#2196F3',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            <span className="mobile-only"><FileSpreadsheet size={20} /></span>
+            <span className="desktop-only">Importar Excel</span>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleImportExcel}
+            />
+          </button>
+          <button
+            className="btn-primary"
+            style={{
+              background: '#4CAF50',
+              color: '#000',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <span className="mobile-only"><Plus size={20} /></span>
+            <span className="desktop-only">Vender Animal</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Resumen y Filtros */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px',
+          marginBottom: '24px',
+        }}
+      >
+        <div
+          className="premium-card"
           style={{
-            background: '#4CAF50',
-            color: '#000',
+            padding: '24px',
             display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            flexDirection: 'column',
+            justifyContent: 'center',
           }}
-          onClick={() => setIsModalOpen(true)}
         >
-          <Plus size={20} /> Vender Animal
-        </button>
+          <h3
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '1rem',
+              marginBottom: '8px',
+              fontWeight: '500',
+            }}
+          >
+            Total Ventas (Rango Seleccionado)
+          </h3>
+          <p
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              color: '#4CAF50',
+              margin: 0,
+            }}
+          >
+            Q{' '}
+            {filteredAnimals
+              .reduce((acc, curr) => acc + (curr.sale_price !== null ? Number(curr.sale_price) : 0), 0)
+              .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
+
+        <div className="premium-card" style={{ padding: '24px' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1.2rem' }}>
+            Filtro de Fechas
+          </h3>
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              flexWrap: 'wrap',
+              alignItems: 'flex-end',
+            }}
+          >
+            <div
+              className="form-group"
+              style={{ margin: 0, flex: 1, minWidth: '150px' }}
+            >
+              <label className="form-label">Desde</label>
+              <SystemDatePicker
+                name="startDate"
+                className="input-field"
+                value={dateFilter.startDate}
+                onChange={(e) =>
+                  setDateFilter((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div
+              className="form-group"
+              style={{ margin: 0, flex: 1, minWidth: '150px' }}
+            >
+              <label className="form-label">Hasta</label>
+              <SystemDatePicker
+                name="endDate"
+                className="input-field"
+                value={dateFilter.endDate}
+                onChange={(e) =>
+                  setDateFilter((prev) => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="premium-card">
@@ -334,7 +836,7 @@ export default function SalesView() {
                 </tr>
               </thead>
               <tbody>
-                {animals.length === 0 ? (
+                {filteredAnimals.length === 0 ? (
                   <tr>
                     <td
                       colSpan="8"
@@ -344,11 +846,11 @@ export default function SalesView() {
                         color: 'var(--text-muted)',
                       }}
                     >
-                      No hay ventas registradas históricamente en este módulo.
+                      No hay ventas registradas históricamente en este módulo para el rango de fechas seleccionado.
                     </td>
                   </tr>
                 ) : (
-                  animals.map((animal) => (
+                  filteredAnimals.map((animal) => (
                     <tr
                       key={animal.id}
                       style={{

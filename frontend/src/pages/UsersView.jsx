@@ -16,7 +16,7 @@ export default function UsersView() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:3001/users');
+      const res = await axios.get('/users');
       let fetchedUsers = res.data;
       if (!isSuperuser) {
         fetchedUsers = fetchedUsers.filter(u => u.role !== 'SUPERUSER');
@@ -54,7 +54,7 @@ export default function UsersView() {
       ).isConfirmed
     ) {
       try {
-        await axios.delete(`http://localhost:3001/users/${id}`);
+        await axios.delete(`/users/${id}`);
         fetchUsers();
       } catch (e) {
         CustomAlert.info(
@@ -86,9 +86,7 @@ export default function UsersView() {
               gap: '12px',
             }}
           >
-            <Users size={32} />
-            Gestión de Usuarios
-          </h1>
+            <span className="mobile-only"><Users size={32} /></span> <span className="desktop-only">Gestión de Usuarios</span></h1>
           <p style={{ color: 'var(--text-muted)' }}>
             Controle quién tiene acceso y permisos en el sistema.
           </p>
@@ -105,8 +103,7 @@ export default function UsersView() {
             }}
             onClick={() => openForm(null)}
           >
-            <Plus size={20} /> Crear Usuario
-          </button>
+            <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Crear Usuario</span></button>
         )}
       </div>
 
@@ -306,11 +303,11 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
 
       if (userToEdit) {
         await axios.patch(
-          `http://localhost:3001/users/${userToEdit.id}`,
+          `/users/${userToEdit.id}`,
           payload,
         );
       } else {
-        await axios.post('http://localhost:3001/users', payload);
+        await axios.post('/users', payload);
       }
       onSaved();
       onClose();

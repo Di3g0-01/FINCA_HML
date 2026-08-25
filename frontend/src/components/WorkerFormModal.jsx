@@ -64,11 +64,11 @@ export default function WorkerFormModal({
 
       if (workerToEdit) {
         await axios.patch(
-          `http://localhost:3001/workers/${workerToEdit.id}`,
+          `/workers/${workerToEdit.id}`,
           payload,
         );
       } else {
-        await axios.post('http://localhost:3001/workers', payload);
+        await axios.post('/workers', payload);
       }
       onSaved();
       onClose();

@@ -54,7 +54,7 @@ export class UsersService implements OnModuleInit {
 
   // --- STANDARD CRUD ---
 
-  async create(userData: Partial<User>, adminUsername: string = 'SISTEMA', adminRole: UserRole = UserRole.ADMIN) {
+  async create(userData: Partial<User>, adminUsername: string = 'SYSTEM', adminRole: UserRole = UserRole.ADMIN) {
     if (adminRole !== UserRole.SUPERUSER) {
       throw new Error('Solo el SUPERUSER puede crear usuarios.');
     }
@@ -87,7 +87,7 @@ export class UsersService implements OnModuleInit {
   async update(
     id: number,
     updateData: Partial<User>,
-    adminUsername: string = 'SISTEMA',
+    adminUsername: string = 'SYSTEM',
     adminRole: UserRole = UserRole.ADMIN,
   ) {
     if (adminRole !== UserRole.SUPERUSER) {
@@ -126,7 +126,7 @@ export class UsersService implements OnModuleInit {
     return updated!;
   }
 
-  async remove(id: number, adminUsername: string = 'SISTEMA', adminRole: UserRole = UserRole.ADMIN) {
+  async remove(id: number, adminUsername: string = 'SYSTEM', adminRole: UserRole = UserRole.ADMIN) {
     const user = await this.usersRepository.findOne({ where: { id } });
     
     if (!user) return null;

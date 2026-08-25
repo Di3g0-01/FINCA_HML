@@ -28,7 +28,7 @@ export default function PurchasesView() {
   const fetchAnimals = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:3001/animals?limit=5000');
+      const res = await axios.get('/animals?limit=5000');
       const data = res.data.data || res.data;
       // Mostramos todo lo que tenga origin COMPRA
       setAnimals(data.filter((a) => a.origin === 'COMPRA'));
@@ -173,7 +173,7 @@ export default function PurchasesView() {
       ).isConfirmed
     ) {
       try {
-        await axios.delete(`http://localhost:3001/animals/${id}`);
+        await axios.delete(`/animals/${id}`);
         fetchAnimals();
       } catch (err) {
         CustomAlert.info('Aviso', 'Error al eliminar compra.');
@@ -212,8 +212,7 @@ export default function PurchasesView() {
           }}
           onClick={() => setIsModalOpen(true)}
         >
-          <Plus size={20} /> Registrar Compra
-        </button>
+          <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Registrar Compra</span></button>
       </div>
 
       <div className="premium-card">

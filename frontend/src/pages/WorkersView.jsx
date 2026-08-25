@@ -13,7 +13,7 @@ export default function WorkersView() {
   const fetchWorkers = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:3001/workers');
+      const res = await axios.get('/workers');
       setWorkers(res.data);
     } catch (e) {
       console.error(e);
@@ -40,7 +40,7 @@ export default function WorkersView() {
       ).isConfirmed
     ) {
       try {
-        await axios.delete(`http://localhost:3001/workers/${id}`);
+        await axios.delete(`/workers/${id}`);
         fetchWorkers();
       } catch (e) {
         CustomAlert.info('Aviso', 'Error eliminando trabajador.');
@@ -69,9 +69,7 @@ export default function WorkersView() {
               gap: '12px',
             }}
           >
-            <Users size={32} />
-            Módulo de Trabajadores
-          </h1>
+            <span className="mobile-only"><Users size={32} /></span> <span className="desktop-only">Módulo de Trabajadores</span></h1>
           <p style={{ color: 'var(--text-muted)' }}></p>
         </div>
         <button
@@ -85,8 +83,7 @@ export default function WorkersView() {
           }}
           onClick={() => openForm(null)}
         >
-          <Plus size={20} /> Contratar Empleado
-        </button>
+          <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Contratar Empleado</span></button>
       </div>
 
       <div className="premium-card">

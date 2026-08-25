@@ -29,18 +29,7 @@ axios.defaults.withCredentials = true;
 
 // Configurar Interceptor Global de Axios
 axios.interceptors.request.use((config) => {
-  // Reescribir URLs hardcodeadas para usar la baseURL
-  if (config.url && config.url.startsWith('http://localhost:3001')) {
-    config.url = config.url.replace(
-      'http://localhost:3001',
-      axios.defaults.baseURL,
-    );
-  } else if (config.url && config.url.startsWith('http://127.0.0.1:3001')) {
-    config.url = config.url.replace(
-      'http://127.0.0.1:3001',
-      axios.defaults.baseURL,
-    );
-  }
+
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

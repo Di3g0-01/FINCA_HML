@@ -570,8 +570,7 @@ const AnimalRow = memo(
                           background: 'rgba(33, 150, 243, 0.1)',
                         }}
                       >
-                        <Edit size={16} /> Editar Datos
-                      </button>
+                        <span className="mobile-only"><Edit size={16} /></span> <span className="desktop-only">Editar Datos</span></button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -585,8 +584,7 @@ const AnimalRow = memo(
                           background: 'rgba(239, 68, 68, 0.1)',
                         }}
                       >
-                        <Trash2 size={16} /> Eliminar Registro
-                      </button>
+                        <span className="mobile-only"><Trash2 size={16} /></span> <span className="desktop-only">Eliminar Registro</span></button>
                     </div>
                   )}
                 </div>

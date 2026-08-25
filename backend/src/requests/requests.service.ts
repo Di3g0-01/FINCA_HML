@@ -61,7 +61,7 @@ export class RequestsService {
         await this.logsService.createLog({
           username: approverUser.username,
           action_type: 'APROBAR_NACIMIENTO',
-          details: `Nacimiento aprobado. Solicitado por: ${request.requester?.username || 'Sistema'}`,
+          details: `Nacimiento aprobado. Solicitado por: ${request.requester?.username || 'SYSTEM'}`,
           animal_identifier: savedAnimal.identifier,
         });
       } else if (request.type === 'MUERTE') {
@@ -75,7 +75,7 @@ export class RequestsService {
         await this.logsService.createLog({
           username: approverUser.username,
           action_type: 'APROBAR_MUERTE',
-          details: `Muerte aprobada (Animal ID: ${payload.animal_id}). Solicitado por: ${request.requester?.username || 'Sistema'}`,
+          details: `Muerte aprobada (Animal ID: ${payload.animal_id}). Solicitado por: ${request.requester?.username || 'SYSTEM'}`,
           animal_identifier: payload.animal_id?.toString(),
         });
       }
@@ -109,9 +109,9 @@ export class RequestsService {
       where: { id: approverId },
     });
     await this.logsService.createLog({
-      username: approver?.username || 'SISTEMA',
+      username: approver?.username || 'SYSTEM',
       action_type: 'RECHAZAR_SOLICITUD',
-      details: `Solicitud de ${request.type} rechazada. Solicitado por: ${request.requester?.username || 'Sistema'}`,
+      details: `Solicitud de ${request.type} rechazada. Solicitado por: ${request.requester?.username || 'SYSTEM'}`,
       animal_identifier:
         request.payload?.identifier || request.payload?.animal_id?.toString(),
     });

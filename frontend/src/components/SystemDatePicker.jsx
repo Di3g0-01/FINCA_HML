@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -14,6 +15,7 @@ export default function SystemDatePicker({
   disabled,
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
 
   // viewDate indica el mes/año que el calendario está renderizando
   const [viewDate, setViewDate] = useState(() => {
@@ -26,11 +28,15 @@ export default function SystemDatePicker({
   });
 
   const containerRef = useRef(null);
+  const calendarRef = useRef(null);
 
   // Cerrar al hacer clic fuera del componente
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const isOutsideContainer = containerRef.current && !containerRef.current.contains(e.target);
+      const isOutsideCalendar = calendarRef.current && !calendarRef.current.contains(e.target);
+      
+      if (isOutsideContainer && isOutsideCalendar) {
         setIsOpen(false);
       }
     };
@@ -152,14 +158,14 @@ export default function SystemDatePicker({
       'Diciembre',
     ];
 
-    return (
+    return createPortal(
       <div
-        className="premium-card"
+        ref={calendarRef}
         style={{
           position: 'absolute',
-          top: 'calc(100% + 8px)',
-          left: 0,
-          zIndex: 9999,
+          top: dropdownStyle.top,
+          left: dropdownStyle.left,
+          zIndex: 999999, // increased z-index just in case
           padding: '16px',
           width: '260px',
           display: 'flex',
@@ -167,6 +173,7 @@ export default function SystemDatePicker({
           gap: '12px',
           backgroundColor: '#0F172A', // Fondo oscuro sólido (slate-900) para evitar transparencias
           border: '1px solid rgba(255, 255, 255, 0.1)', // Borde sutil
+          borderRadius: '12px', // added since premium-card had radius
           boxShadow: '0 10px 30px rgba(0,0,0,0.8)', // Sombra más fuerte
           animation: 'fadeIn 0.2s ease-out',
         }}
@@ -239,18 +246,35 @@ export default function SystemDatePicker({
           ))}
           {days}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   };
 
   // Convertimos YYYY-MM-DD a DD/MM/YYYY solo para mostrar en la interfaz visual
   const displayValue = value ? value.split('-').reverse().join('/') : '';
 
+  const toggleOpen = (e) => {
+    if (disabled) return;
+    if (!isOpen) {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDropdownStyle({
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX,
+        });
+      }
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
       <div
         className={className}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={toggleOpen}
         style={{
           display: 'flex',
           alignItems: 'center',

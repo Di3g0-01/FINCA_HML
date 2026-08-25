@@ -77,9 +77,9 @@ export class AnimalsService implements OnModuleInit {
   async handleCalfGrowth() {
     this.logger.log('Iniciando rutina de crecimiento cronológica...');
     const now = new Date();
-    const sixHalfMonthsAgo = new Date(
-      now.getTime() - 6.5 * 30.4375 * 24 * 60 * 60 * 1000,
-    );
+    const sixHalfMonthsAgo = new Date(now);
+    sixHalfMonthsAgo.setMonth(now.getMonth() - 6);
+    sixHalfMonthsAgo.setDate(now.getDate() - 15);
     const oneYearAgo = new Date(now);
     oneYearAgo.setFullYear(now.getFullYear() - 1);
     const twoYearsAgo = new Date(now);
@@ -102,7 +102,7 @@ export class AnimalsService implements OnModuleInit {
 
         const logPromises = animals.map(animal => 
           this.logsService.createLog({
-            username: 'SISTEMA',
+            username: 'SYSTEM',
             action_type: 'EVOLUCION',
             animal_identifier: animal.identifier,
             details: `Cambio automático de etapa: de ${currentType} a ${newType}`,
@@ -191,7 +191,7 @@ export class AnimalsService implements OnModuleInit {
 
   // --- STANDARD CRUD ---
 
-  async create(animalData: Partial<Animal>, username: string = 'SISTEMA') {
+  async create(animalData: Partial<Animal>, username: string = 'SYSTEM') {
     if (animalData.type === AnimalType.CABALLO) {
       if (!animalData.nickname) {
         throw new BadRequestException(
@@ -306,6 +306,7 @@ export class AnimalsService implements OnModuleInit {
             : new Date();
           mother.is_pregnant = false;
           mother.pregnancy_months = null;
+          mother.pregnancy_start_date = null;
         }
         // Recount offspring to ensure accuracy
         const offspringCount = await this.animalsRepository.count({
@@ -450,7 +451,7 @@ export class AnimalsService implements OnModuleInit {
   async update(
     id: number,
     updateData: Partial<Animal>,
-    username: string = 'SISTEMA',
+    username: string = 'SYSTEM',
   ) {
     const current = await this.findOne(id);
     if (!current)
@@ -460,12 +461,16 @@ export class AnimalsService implements OnModuleInit {
     const changes: string[] = [];
     const fieldsToTrack = [
       { key: 'identifier', label: 'ID' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'sex', label: 'Sexo' },
       { key: 'lote', label: 'Lote' },
       { key: 'color', label: 'Color' },
       { key: 'nickname', label: 'Apodo' },
       { key: 'current_weight', label: 'Peso' },
       { key: 'observations', label: 'Obs.' },
       { key: 'grado', label: 'Grado' },
+      { key: 'is_pregnant', label: 'Preñada' },
+      { key: 'pregnancy_months', label: 'Meses de preñez' }
     ];
 
     fieldsToTrack.forEach((f) => {
@@ -507,19 +512,32 @@ export class AnimalsService implements OnModuleInit {
           ? updateData.pregnancy_months
           : current.pregnancy_months;
 
-      if (isPregnant && months) {
+      if (isPregnant) {
         if (
-          isPregnant !== current.is_pregnant ||
-          months !== current.pregnancy_months ||
+          !current.is_pregnant ||
           !current.pregnancy_start_date
         ) {
           const start = new Date();
-          start.setDate(start.getDate() - Math.round(Number(months) * 30.4375));
+          start.setDate(start.getDate() - Math.round(Number(months || 0) * 30.4375));
           updateData.pregnancy_start_date = start;
+        } else if (
+          updateData.pregnancy_months !== undefined &&
+          Number(updateData.pregnancy_months) !== Number(current.pregnancy_months)
+        ) {
+          const start = new Date();
+          start.setDate(start.getDate() - Math.round(Number(months || 0) * 30.4375));
+          updateData.pregnancy_start_date = start;
+        } else {
+          // Mantener la fecha inicial, no sobreescribir si no hay cambio manual de meses
+          delete updateData.pregnancy_start_date;
+          delete updateData.pregnancy_months;
         }
       } else {
         updateData.pregnancy_start_date = null;
+        updateData.pregnancy_months = null;
       }
+    } else {
+      delete updateData.pregnancy_start_date;
     }
 
     if (
@@ -594,7 +612,7 @@ export class AnimalsService implements OnModuleInit {
     return updated as any;
   }
 
-  async remove(id: number, username: string = 'SISTEMA') {
+  async remove(id: number, username: string = 'SYSTEM') {
     const animal = await this.findOne(id);
     if (!animal) return { deleted: false };
 
@@ -642,7 +660,7 @@ export class AnimalsService implements OnModuleInit {
     return alerts;
   }
 
-  async removeAll(username: string = 'SISTEMA') {
+  async removeAll(username: string = 'SYSTEM') {
     this.logger.log(
       'Iniciando limpieza total de la base de datos de animales...',
     );

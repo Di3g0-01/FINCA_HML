@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { CustomAlert } from '../utils/alerts';
-import { Plus, X, Trash2, Download } from 'lucide-react';
+import { Plus, X, Trash2, Download, UploadCloud } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
@@ -47,7 +47,7 @@ export default function ExternalExpensesView() {
   const fetchExpenses = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:3001/external-expenses', {
+      const res = await axios.get('/external-expenses', {
         params: {
           startDate: dateFilter.startDate,
           endDate: dateFilter.endDate,
@@ -56,7 +56,7 @@ export default function ExternalExpensesView() {
       setExpenses(res.data);
     } catch (error) {
       console.error('Error fetching expenses:', error);
-      CustomAlert.error('Error', 'No se pudieron cargar los gastos externos.');
+      CustomAlert.error('Error', 'No se pudieron cargar los gastos generales.');
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +77,32 @@ export default function ExternalExpensesView() {
     }
   };
 
+  const handleZipUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formDataObj = new FormData();
+    formDataObj.append('zipFile', file);
+
+    try {
+      setIsLoading(true);
+      const res = await axios.post('/external-expenses/upload-zip', formDataObj, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      CustomAlert.success('Comprobantes Importados', res.data.message || 'Se procesaron los comprobantes del ZIP.');
+      fetchExpenses();
+    } catch (err) {
+      console.error(err);
+      CustomAlert.error(
+        'Error',
+        err.response?.data?.message || 'Hubo un error al procesar el archivo ZIP.',
+      );
+    } finally {
+      setIsLoading(false);
+      e.target.value = null; // Limpiar input para permitir subir el mismo archivo de nuevo si es necesario
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -90,7 +116,7 @@ export default function ExternalExpensesView() {
     }
 
     try {
-      await axios.post('http://localhost:3001/external-expenses', data, {
+      await axios.post('/external-expenses', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -105,14 +131,14 @@ export default function ExternalExpensesView() {
       setImageFile(null);
       CustomAlert.success(
         'Gasto Registrado',
-        'El gasto externo se guardó correctamente.',
+        'El gasto general se guardó correctamente.',
       );
       fetchExpenses();
     } catch (error) {
       console.error(error);
       CustomAlert.error(
         'Error',
-        'Hubo un error al registrar el gasto externo.',
+        'Hubo un error al registrar el gasto general.',
       );
     }
   };
@@ -123,11 +149,32 @@ export default function ExternalExpensesView() {
     );
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3001/external-expenses/${id}`);
+        await axios.delete(`/external-expenses/${id}`);
         fetchExpenses();
         CustomAlert.success('Eliminado', 'Gasto eliminado exitosamente.');
       } catch (err) {
         CustomAlert.error('Error', 'No se pudo eliminar el gasto.');
+      }
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    const result = await CustomAlert.confirm(
+      '¿Estás ABSOLUTAMENTE seguro? Se eliminarán TODOS los gastos generales y sus comprobantes de manera permanente. Esta acción no se puede deshacer.'
+    );
+    if (result.isConfirmed) {
+      const doubleCheck = await CustomAlert.confirm(
+        'Confirmación final: ¿Realmente deseas VACIAR todos los gastos generales del sistema?'
+      );
+      if (doubleCheck.isConfirmed) {
+        try {
+          await axios.delete('/external-expenses/bulk/all');
+          fetchExpenses();
+          CustomAlert.success('Vaciado completo', 'Se han eliminado todos los gastos generales correctamente.');
+        } catch (err) {
+          console.error(err);
+          CustomAlert.error('Error', 'No se pudo realizar el vaciado masivo.');
+        }
       }
     }
   };
@@ -152,7 +199,7 @@ export default function ExternalExpensesView() {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Gastos');
     XLSX.writeFile(
       workbook,
-      `Gastos_Externos_${dateFilter.startDate}_a_${dateFilter.endDate}.xlsx`,
+      `Gastos_Generales_${dateFilter.startDate}_a_${dateFilter.endDate}.xlsx`,
     );
   };
 
@@ -172,14 +219,32 @@ export default function ExternalExpensesView() {
           <h1
             style={{ fontSize: '2rem', marginBottom: '8px', color: '#2196F3' }}
           >
-            Gastos Externos
+            Gastos Generales
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
             Registra y monitorea gastos de gasolina, sal, insumos y otros de la
             finca.
           </p>
+          <p style={{ color: '#8b5cf6', margin: '8px 0 0 0', fontSize: '0.85rem', fontWeight: '500' }}>
+            Para importar un ZIP, los PDFs deben llamarse: <br/> 
+            <b>YYYY-MM-DD_Q[Monto] Descripción.pdf</b> o <b>DD mes YYYY Q[Monto] Descripción.pdf</b>
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          {isSuperUser && expenses.length > 0 && (
+            <button
+              className="btn-primary"
+              style={{
+                background: '#ef4444',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+              onClick={handleDeleteAll}
+            >
+              <span className="mobile-only"><Trash2 size={20} /></span> <span className="desktop-only">Eliminar Todos</span></button>
+          )}
           <button
             className="btn-primary"
             style={{
@@ -191,8 +256,26 @@ export default function ExternalExpensesView() {
             }}
             onClick={exportToExcel}
           >
-            <Download size={20} /> Exportar Excel
-          </button>
+            <span className="mobile-only"><Download size={20} /></span> <span className="desktop-only">Exportar Excel</span></button>
+          <label
+            className="btn-primary"
+            style={{
+              background: '#8b5cf6',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              margin: 0,
+            }}
+          >
+            <span className="mobile-only"><UploadCloud size={20} /></span> <span className="desktop-only">Importar ZIP</span><input
+              type="file"
+              accept=".zip"
+              style={{ display: 'none' }}
+              onChange={handleZipUpload}
+            />
+          </label>
           <button
             className="btn-primary"
             style={{
@@ -204,8 +287,7 @@ export default function ExternalExpensesView() {
             }}
             onClick={() => setIsModalOpen(true)}
           >
-            <Plus size={20} /> Registrar Gasto
-          </button>
+            <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Registrar Gasto</span></button>
         </div>
       </div>
 
@@ -471,7 +553,7 @@ export default function ExternalExpensesView() {
                                 }}
                                 onClick={() => {
                                   const url = `${axios.defaults.baseURL}/external-expenses/uploads/${expense.imageUrl}`;
-                                  setPreviewImage(url);
+                                  setPreviewImage({ url, description: expense.description });
                                 }}
                                 title="Ver imagen completa"
                                 onMouseEnter={(e) => {
@@ -521,19 +603,21 @@ export default function ExternalExpensesView() {
                             gap: '8px',
                           }}
                         >
-                          <button
-                            onClick={() => handleDelete(expense.id)}
-                            style={{
-                              background: 'rgba(244,67,54,0.1)',
-                              color: '#F44336',
-                              border: 'none',
-                              padding: '6px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {isSuperUser && (
+                            <button
+                              onClick={() => handleDelete(expense.id)}
+                              style={{
+                                background: 'rgba(244,67,54,0.1)',
+                                color: '#F44336',
+                                border: 'none',
+                                padding: '6px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -573,7 +657,7 @@ export default function ExternalExpensesView() {
                   color: '#2196F3',
                 }}
               >
-                Registrar Gasto Externo
+                Registrar Gasto General
               </h2>
               <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
                 Ingresa los detalles del gasto y adjunta el comprobante
@@ -790,7 +874,7 @@ export default function ExternalExpensesView() {
                 <X size={22} />
               </button>
               <img
-                src={previewImage}
+                src={previewImage.url}
                 alt="Comprobante - Vista Completa"
                 style={{
                   maxWidth: '90vw',
@@ -809,13 +893,30 @@ export default function ExternalExpensesView() {
               />
               <p style={{
                 position: 'absolute',
-                bottom: '-36px',
+                bottom: '-24px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 color: 'rgba(255,255,255,0.5)',
                 fontSize: '12px',
                 whiteSpace: 'nowrap',
               }}>Haz clic fuera para cerrar</p>
+              {previewImage.description && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-60px',
+                  width: '100%',
+                  textAlign: 'center',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  padding: '8px',
+                  background: 'rgba(0,0,0,0.6)',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+                }}>
+                  {previewImage.description}
+                </div>
+              )}
             </div>
           </div>,
           document.body,
