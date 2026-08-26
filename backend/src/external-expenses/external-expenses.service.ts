@@ -5,7 +5,7 @@ import { ExternalExpense } from './entities/external-expense.entity';
 import { CreateExternalExpenseDto } from './dto/create-external-expense.dto';
 import { UserRole } from '../users/entities/user.entity';
 import { LogsService } from '../logs/logs.service';
-import * as fs from 'fs';
+import { CloudinaryService } from '../cloudinary.service';
 import * as path from 'path';
 
 function parseExpenseFileName(fileName: string): { date: string, amount: number, description: string } | null {
@@ -104,6 +104,7 @@ export class ExternalExpensesService {
     @InjectRepository(ExternalExpense)
     private readonly externalExpenseRepository: Repository<ExternalExpense>,
     private readonly logsService: LogsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   // --- STANDARD CRUD ---
@@ -126,9 +127,15 @@ export class ExternalExpensesService {
       }
     }
 
+    let imageUrl = null;
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadFile(file);
+      imageUrl = uploadResult.secure_url;
+    }
+
     const expense = this.externalExpenseRepository.create({
       ...createDto,
-      imageUrl: file ? file.filename : null,
+      imageUrl: imageUrl,
     });
     const saved = await this.externalExpenseRepository.save(expense);
 
@@ -167,15 +174,16 @@ export class ExternalExpensesService {
       throw new NotFoundException(`Gasto general con ID ${id} no encontrado`);
     }
 
-    if (expense.imageUrl) {
-      const filePath = path.join(
-        process.cwd(),
-        'uploads',
-        'external-expenses',
-        expense.imageUrl,
-      );
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    // Since deleting from cloudinary is not strictly required but a good practice,
+    // we can attempt it if the URL contains 'cloudinary'
+    if (expense.imageUrl && expense.imageUrl.includes('cloudinary')) {
+      try {
+        const urlParts = expense.imageUrl.split('/');
+        const fileWithExt = urlParts[urlParts.length - 1];
+        const publicId = 'finca_hml/' + fileWithExt.split('.')[0];
+        await this.cloudinaryService.deleteFile(publicId);
+      } catch (e) {
+        console.error('Error deleting from Cloudinary:', e);
       }
     }
 
@@ -191,20 +199,16 @@ export class ExternalExpensesService {
   async removeAll(username: string = 'SYSTEM'): Promise<void> {
     const expenses = await this.externalExpenseRepository.find();
     
-    // Eliminar archivos físicos
-    for (const expense of expenses) {
-      if (expense.imageUrl) {
-        const filePath = path.join(
-          process.cwd(),
-          'uploads',
-          'external-expenses',
-          expense.imageUrl,
-        );
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
+    // We could delete from cloudinary, but it might hit rate limits or timeout if there are many files.
+    // For now, we will just clear the table to keep the behavior fast, or delete asynchronously.
+    expenses.forEach(expense => {
+      if (expense.imageUrl && expense.imageUrl.includes('cloudinary')) {
+        const urlParts = expense.imageUrl.split('/');
+        const fileWithExt = urlParts[urlParts.length - 1];
+        const publicId = 'finca_hml/' + fileWithExt.split('.')[0];
+        this.cloudinaryService.deleteFile(publicId).catch(console.error);
       }
-    }
+    });
 
     // Vaciar tabla
     await this.externalExpenseRepository.clear();
@@ -222,21 +226,15 @@ export class ExternalExpensesService {
     const AdmZip = require('adm-zip');
     let zip;
     try {
-      zip = new AdmZip(file.path);
+      zip = new AdmZip(file.buffer);
     } catch (err) {
-      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      throw new Error('No se pudo leer el archivo ZIP');
+      throw new Error('No se pudo leer el archivo ZIP de la memoria');
     }
     
     const zipEntries = zip.getEntries();
     
     let processed = 0;
     let errors: string[] = [];
-
-    const uploadDir = path.join(process.cwd(), 'uploads', 'external-expenses');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
 
     for (const zipEntry of zipEntries) {
       if (!zipEntry.isDirectory && zipEntry.entryName.toLowerCase().endsWith('.pdf')) {
@@ -248,37 +246,33 @@ export class ExternalExpensesService {
         if (parsed) {
           const { date: dateStr, amount, description } = parsed;
           
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const newFileName = `${uniqueSuffix}.pdf`;
-          const targetPath = path.join(uploadDir, newFileName);
-          
-          fs.writeFileSync(targetPath, zipEntry.getData());
-
-          const expense = this.externalExpenseRepository.create({
-            category: 'Otros',
-            description,
-            amount: amount,
-            date: dateStr,
-            imageUrl: newFileName,
-          });
-          await this.externalExpenseRepository.save(expense);
-          
-          await this.logsService.createLog({
-            username,
-            action_type: 'GASTO_GENERAL',
-            amount: amount,
-            details: `Gasto importado desde ZIP: ${description}`,
-          });
-          
-          processed++;
+          try {
+            const uploadResult = await this.cloudinaryService.uploadBuffer(zipEntry.getData());
+            
+            const expense = this.externalExpenseRepository.create({
+              category: 'Otros',
+              description,
+              amount: amount,
+              date: dateStr,
+              imageUrl: uploadResult.secure_url,
+            });
+            await this.externalExpenseRepository.save(expense);
+            
+            await this.logsService.createLog({
+              username,
+              action_type: 'GASTO_GENERAL',
+              amount: amount,
+              details: `Gasto importado desde ZIP: ${description}`,
+            });
+            
+            processed++;
+          } catch (uploadError) {
+            errors.push(`Error subiendo el archivo a Cloudinary: ${fileName}`);
+          }
         } else {
           errors.push(`Formato inválido en archivo: ${fileName}. Use YYYY-MM-DD_Descripcion.pdf o DD MES YYYY Q[Monto] Descripcion.pdf`);
         }
       }
-    }
-    
-    if (fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
     }
     
     return {

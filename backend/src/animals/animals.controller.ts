@@ -17,16 +17,22 @@ import { AnimalsService } from './animals.service';
 import { Animal } from './entities/animal.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
+import { CloudinaryService } from '../cloudinary.service';
+
+const storage = memoryStorage();
 
 @UseGuards(JwtAuthGuard)
 @Controller('animals')
 export class AnimalsController {
-  constructor(private readonly animalsService: AnimalsService) {}
+  constructor(
+    private readonly animalsService: AnimalsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   // --- STANDARD CRUD ---
 
@@ -90,14 +96,7 @@ export class AnimalsController {
   @Post('upload-document')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
+      storage,
       fileFilter: (req, file, cb) => {
         if (
           file.mimetype === 'application/pdf' ||
@@ -110,11 +109,12 @@ export class AnimalsController {
       },
     }),
   )
-  uploadDocument(@UploadedFile() file: any) {
+  async uploadDocument(@UploadedFile() file: any) {
     if (!file) {
       throw new BadRequestException('No se subió ningún archivo.');
     }
-    return { path: `/uploads/${file.filename}` };
+    const uploadResult = await this.cloudinaryService.uploadFile(file);
+    return { path: uploadResult.secure_url };
   }
 
   @Delete()

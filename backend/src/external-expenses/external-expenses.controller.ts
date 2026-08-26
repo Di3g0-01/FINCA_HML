@@ -18,28 +18,10 @@ import { ExternalExpensesService } from './external-expenses.service';
 import { CreateExternalExpenseDto } from './dto/create-external-expense.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import type { Response } from 'express';
-import * as fs from 'fs';
+import { memoryStorage } from 'multer';
+import { extname } from 'path';
 
-const storage = diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = join(
-      process.cwd(),
-      'uploads',
-      'external-expenses',
-    );
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-  },
-});
+const storage = memoryStorage();
 
 @Controller('external-expenses')
 export class ExternalExpensesController {
@@ -133,19 +115,5 @@ export class ExternalExpensesController {
       throw new BadRequestException('No se recibió ningún archivo ZIP');
     }
     return this.externalExpensesService.processZipFile(file, req.user?.username);
-  }
-
-  @Get('uploads/:filename')
-  getUploadedFile(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = join(
-      process.cwd(),
-      'uploads',
-      'external-expenses',
-      filename,
-    );
-    if (fs.existsSync(filePath)) {
-      return res.sendFile(filePath);
-    }
-    return res.status(404).send('Archivo no encontrado');
   }
 }
