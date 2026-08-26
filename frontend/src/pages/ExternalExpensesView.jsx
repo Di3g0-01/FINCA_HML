@@ -525,7 +525,7 @@ export default function ExternalExpensesView() {
                                   transition: 'transform 0.2s, box-shadow 0.2s',
                                 }}
                                 onClick={() => {
-                                  const url = `${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`;
+                                  const url = expense.imageUrl.startsWith('http') ? expense.imageUrl : `${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`;
                                   window.open(url, '_blank', 'noopener,noreferrer');
                                 }}
                                 title="Ver PDF"
@@ -552,7 +552,7 @@ export default function ExternalExpensesView() {
                                   transition: 'transform 0.2s, box-shadow 0.2s',
                                 }}
                                 onClick={() => {
-                                  const url = `${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`;
+                                  const url = expense.imageUrl.startsWith('http') ? expense.imageUrl : `${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`;
                                   setPreviewImage({ url, description: expense.description });
                                 }}
                                 title="Ver imagen completa"
@@ -566,7 +566,7 @@ export default function ExternalExpensesView() {
                                 }}
                               >
                                 <img
-                                  src={`${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`}
+                                  src={expense.imageUrl.startsWith('http') ? expense.imageUrl : `${axios.defaults.baseURL}/uploads/external-expenses/${expense.imageUrl}`}
                                   alt="Comprobante"
                                   loading="lazy"
                                   width="100%"
