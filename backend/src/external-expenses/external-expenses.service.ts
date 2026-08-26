@@ -127,7 +127,7 @@ export class ExternalExpensesService {
       }
     }
 
-    let imageUrl = null;
+    let imageUrl: string | undefined;
     if (file) {
       const uploadResult = await this.cloudinaryService.uploadFile(file);
       imageUrl = uploadResult.secure_url;
