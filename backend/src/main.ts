@@ -34,6 +34,8 @@ async function bootstrap() {
       'https://finca-hml.vercel.app',
       'https://finca-om0nc4s0p-di3g0-01s-projects.vercel.app', // Custom Vercel domain
       /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
+      'https://www.hmfinca.com',
+      'https://hmfinca.com',
     ].filter(Boolean) as (string | RegExp)[],
     credentials: true, // Allow cookies
   });
