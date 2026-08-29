@@ -407,7 +407,17 @@ export default function AnimalFormModal({
                 value={formData.motherIdentifier}
                 onChange={handleChange}
                 placeholder="Ej. 1/21"
+                list="cows-list"
               />
+              <datalist id="cows-list">
+                {Array.isArray(cows) && cows
+                  .filter((c) => c.status === 'ACTIVO' && c.sex === 'H')
+                  .map((cow) => (
+                    <option key={cow.id} value={cow.identifier}>
+                      {cow.identifier} {cow.nickname ? `- ${cow.nickname}` : ''}
+                    </option>
+                  ))}
+              </datalist>
             </div>
             {formData.type === 'VACA' && (
               <>

@@ -13,8 +13,10 @@ import {
   AnimalLote,
   AnimalOrigin,
 } from './entities/animal.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogsService } from '../logs/logs.service';
+import { AnimalGrowthUseCase } from './application/use-cases/animal-growth.use-case';
+import { AnimalPregnancyUseCase } from './application/use-cases/animal-pregnancy.use-case';
+import { AnimalDomainService } from './domain/services/animal-domain.service';
 
 @Injectable()
 export class AnimalsService implements OnModuleInit {
@@ -24,170 +26,17 @@ export class AnimalsService implements OnModuleInit {
     @InjectRepository(Animal)
     private animalsRepository: Repository<Animal>,
     private logsService: LogsService,
+    private animalGrowthUseCase: AnimalGrowthUseCase,
+    private animalPregnancyUseCase: AnimalPregnancyUseCase,
   ) {}
 
   async onModuleInit() {
     this.logger.log('Boot Sequence: Corriendo Validaciones Cronológicas...');
-    await this.handleCalfGrowth();
-    await this.updatePregnancies();
+    await this.animalGrowthUseCase.execute();
+    await this.animalPregnancyUseCase.execute();
   }
 
-  private autoAdjustTypeByAge(animalData: Partial<Animal>) {
-    if (!animalData.birth_date) return;
-    if (animalData.type === AnimalType.CABALLO) return;
 
-    const birth = new Date(animalData.birth_date);
-    const now = new Date();
-    const ageInDays = (now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24);
-    const ageInMonths = ageInDays / 30.4375;
-
-    // Determinar orientación biológica basada en el tipo actual o el sexo enviado
-    let isMale = ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(
-      animalData.type as string,
-    );
-    let isFemale = ['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(
-      animalData.type as string,
-    );
-
-    if (animalData.sex === 'M') {
-      isMale = true;
-      isFemale = false;
-    }
-    if (animalData.sex === 'H') {
-      isMale = false;
-      isFemale = true;
-    }
-
-    if (isMale) {
-      if (ageInMonths <= 6.5) animalData.type = AnimalType.CHIVO;
-      else if (ageInMonths < 12) animalData.type = AnimalType.DESMADRE_MACHO;
-      else if (ageInMonths < 24) animalData.type = AnimalType.TORETE;
-      else animalData.type = AnimalType.TORO;
-      animalData.sex = 'M';
-    } else if (isFemale) {
-      if (ageInMonths <= 6.5) animalData.type = AnimalType.CHIVA;
-      else if (ageInMonths < 12) animalData.type = AnimalType.DESMADRE_HEMBRA;
-      else if (ageInMonths < 24) animalData.type = AnimalType.NOVILLA;
-      else animalData.type = AnimalType.VACA;
-      animalData.sex = 'H';
-    }
-  }
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleCalfGrowth() {
-    this.logger.log('Iniciando rutina de crecimiento cronológica...');
-    const now = new Date();
-    const sixHalfMonthsAgo = new Date(now);
-    sixHalfMonthsAgo.setMonth(now.getMonth() - 6);
-    sixHalfMonthsAgo.setDate(now.getDate() - 15);
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setFullYear(now.getFullYear() - 1);
-    const twoYearsAgo = new Date(now);
-    twoYearsAgo.setFullYear(now.getFullYear() - 2);
-
-    try {
-      const processEvolutions = async (
-        currentType: AnimalType,
-        newType: AnimalType,
-        dateLimit: Date,
-      ) => {
-        const animals = await this.animalsRepository.find({
-          where: { type: currentType, birth_date: LessThanOrEqual(dateLimit) },
-        });
-
-        if (animals.length === 0) return 0;
-
-        const animalIds = animals.map(a => a.id);
-        await this.animalsRepository.update(animalIds, { type: newType });
-
-        const logPromises = animals.map(animal => 
-          this.logsService.createLog({
-            username: 'SYSTEM',
-            action_type: 'EVOLUCION',
-            animal_identifier: animal.identifier,
-            details: `Cambio automático de etapa: de ${currentType} a ${newType}`,
-          })
-        );
-        await Promise.all(logPromises);
-
-        return animals.length;
-      };
-
-      const cToDM = await processEvolutions(
-        AnimalType.CHIVO,
-        AnimalType.DESMADRE_MACHO,
-        sixHalfMonthsAgo,
-      );
-      const dmToT = await processEvolutions(
-        AnimalType.DESMADRE_MACHO,
-        AnimalType.TORETE,
-        oneYearAgo,
-      );
-      const tToTo = await processEvolutions(
-        AnimalType.TORETE,
-        AnimalType.TORO,
-        twoYearsAgo,
-      );
-
-      const cToDH = await processEvolutions(
-        AnimalType.CHIVA,
-        AnimalType.DESMADRE_HEMBRA,
-        sixHalfMonthsAgo,
-      );
-      const dhToN = await processEvolutions(
-        AnimalType.DESMADRE_HEMBRA,
-        AnimalType.NOVILLA,
-        oneYearAgo,
-      );
-      const nToV = await processEvolutions(
-        AnimalType.NOVILLA,
-        AnimalType.VACA,
-        twoYearsAgo,
-      );
-
-      this.logger.log(
-        `Evoluciones: ${cToDM} Chivo->DesmadreM, ${dmToT} DesmadreM->Torete, ${tToTo} Torete->Toro, ${cToDH} Chiva->DesmadreH, ${dhToN} DesmadreH->Novilla, ${nToV} Novilla->Vaca.`,
-      );
-    } catch (e) {
-      this.logger.error(
-        'Error durante la rutina de crecimiento cronológica.',
-        e,
-      );
-    }
-  }
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async updatePregnancies() {
-    this.logger.log('Iniciando rutina de actualización de preñeces...');
-    try {
-      const pregnantAnimals = await this.animalsRepository.find({
-        where: { is_pregnant: true, status: AnimalStatus.ACTIVO },
-      });
-
-      const now = new Date();
-      const animalsToSave: Animal[] = [];
-      for (const animal of pregnantAnimals) {
-        if (animal.pregnancy_start_date) {
-          const start = new Date(animal.pregnancy_start_date);
-          const diffDays =
-            (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-          const months = diffDays / 30.4375;
-
-          const newMonths = months >= 10.0 ? 10.0 : Math.round(months * 10) / 10;
-          if (animal.pregnancy_months !== newMonths) {
-            animal.pregnancy_months = newMonths;
-            animalsToSave.push(animal);
-          }
-        }
-      }
-
-      if (animalsToSave.length > 0) {
-        await this.animalsRepository.save(animalsToSave);
-      }
-    } catch (e) {
-      this.logger.error('Error actualizando preñeces:', e);
-    }
-  }
 
   // --- STANDARD CRUD ---
 
@@ -216,7 +65,15 @@ export class AnimalsService implements OnModuleInit {
       }
     }
 
-    this.autoAdjustTypeByAge(animalData);
+    if (animalData.type) {
+      const adjusted = AnimalDomainService.autoAdjustTypeByAge(
+        animalData.birth_date ?? null,
+        animalData.type,
+        animalData.sex ?? null
+      );
+      animalData.type = adjusted.type;
+      animalData.sex = adjusted.sex;
+    }
 
     // Auto-sex logic
     if (
@@ -284,7 +141,8 @@ export class AnimalsService implements OnModuleInit {
         }
       });
 
-      animalData.identifier = `${maxSerial + 1}/${yearForId}`;
+      const nextSerial = (maxSerial + 1).toString().padStart(2, '0');
+      animalData.identifier = `${nextSerial}/${yearForId}`;
     }
 
     // Lógica Automática Partos
@@ -485,9 +343,15 @@ export class AnimalsService implements OnModuleInit {
     });
 
     const combined = { ...current, ...updateData };
-    this.autoAdjustTypeByAge(combined);
-    updateData.type = combined.type;
-    updateData.sex = combined.sex;
+    if (combined.type) {
+      const adjusted = AnimalDomainService.autoAdjustTypeByAge(
+        combined.birth_date ?? null,
+        combined.type,
+        combined.sex ?? null
+      );
+      updateData.type = adjusted.type;
+      updateData.sex = adjusted.sex;
+    }
 
     if (combined.type === AnimalType.CABALLO) {
       updateData.identifier =

@@ -12,6 +12,18 @@ const formatDate = (dateStr) => {
   return dateStr;
 };
 
+const getPregnancyMonths = (animal) => {
+  if (!animal.is_pregnant) return 0;
+  if (animal.pregnancy_months != null) return animal.pregnancy_months;
+  const start = animal.pregnancy_start_date
+    ? new Date(animal.pregnancy_start_date)
+    : new Date();
+  const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  let months = diffDays / 30.4375;
+  if (months > 10.0) months = 10.0;
+  return Math.round(months * 10) / 10;
+};
+
 // --- COMPONENT ---
 const AnimalRow = memo(
   ({
@@ -162,18 +174,7 @@ const AnimalRow = memo(
                 }}
               >
                 {animal.is_pregnant
-                  ? (() => {
-                      const start = animal.pregnancy_start_date
-                        ? new Date(animal.pregnancy_start_date)
-                        : new Date();
-                      const diffDays =
-                        (new Date().getTime() - start.getTime()) /
-                        (1000 * 60 * 60 * 24);
-                      let months = diffDays / 30.4375;
-                      if (months > 10.0) months = 10.0;
-                      months = Math.round(months * 10) / 10;
-                      return `Sí (${months} m)`;
-                    })()
+                  ? `Sí (${getPregnancyMonths(animal)} m)`
                   : 'No'}
               </td>
               <td
@@ -185,13 +186,7 @@ const AnimalRow = memo(
               >
                 {animal.is_pregnant
                   ? (() => {
-                      const start = animal.pregnancy_start_date
-                        ? new Date(animal.pregnancy_start_date)
-                        : new Date();
-                      const diffDays =
-                        (new Date().getTime() - start.getTime()) /
-                        (1000 * 60 * 60 * 24);
-                      let months = diffDays / 30.4375;
+                      const months = getPregnancyMonths(animal);
                       const monthsLeft = 9 - months;
                       const daysLeft = Math.round(monthsLeft * 30.4375);
                       const d = new Date();
@@ -375,7 +370,7 @@ const AnimalRow = memo(
                               }}
                             >
                               {animal.is_pregnant
-                                ? `Sí (${animal.pregnancy_months} m)`
+                                ? `Sí (${getPregnancyMonths(animal)} m)`
                                 : 'No'}
                             </span>
                           </div>
@@ -501,8 +496,8 @@ const AnimalRow = memo(
                           >
                             {(() => {
                               const monthsLeft =
-                                9 - (animal.pregnancy_months || 0);
-                              const daysLeft = Math.round(monthsLeft * 30.44); // 30.44 days per average month
+                                9 - getPregnancyMonths(animal);
+                              const daysLeft = Math.round(monthsLeft * 30.4375); // 30.4375 days per average month
                               const d = new Date();
                               d.setDate(d.getDate() + daysLeft);
                               const start = new Date(d);
@@ -518,7 +513,7 @@ const AnimalRow = memo(
                               fontSize: '12px',
                             }}
                           >
-                            Rango estimado basado en {animal.pregnancy_months}{' '}
+                            Rango estimado basado en {getPregnancyMonths(animal)}{' '}
                             meses de gestación
                           </span>
                         </>

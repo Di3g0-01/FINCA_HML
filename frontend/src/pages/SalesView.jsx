@@ -611,7 +611,7 @@ export default function SalesView() {
               cursor: 'pointer',
               fontWeight: 'bold',
             }}
-            onClick={() => setIsImportModalOpen(true)}
+            onClick={() => fileInputRef.current?.click()}
           >
             <span className="mobile-only"><FileSpreadsheet size={20} /></span>
             <span className="desktop-only">Importar Excel</span>
