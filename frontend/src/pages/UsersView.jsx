@@ -2,7 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { Plus, Edit, Trash2, Users, Key } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Key, Eye, EyeOff } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
 export default function UsersView() {
@@ -277,6 +277,7 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
     role: 'OPERADOR',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (userToEdit) {
@@ -356,16 +357,38 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
             <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               Contraseña {userToEdit && '(Déjalo vacío para no cambiar)'}
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="input-field"
-              value={formData.password_hash}
-              onChange={(e) =>
-                setFormData({ ...formData, password_hash: e.target.value })
-              }
-              required={!userToEdit}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="input-field"
+                style={{ width: '100%', paddingRight: '40px' }}
+                value={formData.password_hash}
+                onChange={(e) =>
+                  setFormData({ ...formData, password_hash: e.target.value })
+                }
+                required={!userToEdit}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gap: '8px' }}>
