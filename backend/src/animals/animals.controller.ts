@@ -104,7 +104,12 @@ export class AnimalsController {
         ) {
           cb(null, true);
         } else {
-          cb(new Error('Solo se permiten archivos PDF o imágenes (jpg, jpeg, png, gif).'), false);
+          cb(
+            new Error(
+              'Solo se permiten archivos PDF o imágenes (jpg, jpeg, png, gif).',
+            ),
+            false,
+          );
         }
       },
     }),

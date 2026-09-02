@@ -13,6 +13,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.13.6",
+    "bootstrap": "^5.3.8",
     "file-saver": "^2.0.5",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

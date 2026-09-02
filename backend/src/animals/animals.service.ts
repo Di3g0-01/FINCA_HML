@@ -36,8 +36,6 @@ export class AnimalsService implements OnModuleInit {
     await this.animalPregnancyUseCase.execute();
   }
 
-
-
   // --- STANDARD CRUD ---
 
   async create(animalData: Partial<Animal>, username: string = 'SYSTEM') {
@@ -69,7 +67,7 @@ export class AnimalsService implements OnModuleInit {
       const adjusted = AnimalDomainService.autoAdjustTypeByAge(
         animalData.birth_date ?? null,
         animalData.type,
-        animalData.sex ?? null
+        animalData.sex ?? null,
       );
       animalData.type = adjusted.type;
       animalData.sex = adjusted.sex;
@@ -328,7 +326,7 @@ export class AnimalsService implements OnModuleInit {
       { key: 'observations', label: 'Obs.' },
       { key: 'grado', label: 'Grado' },
       { key: 'is_pregnant', label: 'Preñada' },
-      { key: 'pregnancy_months', label: 'Meses de preñez' }
+      { key: 'pregnancy_months', label: 'Meses de preñez' },
     ];
 
     fieldsToTrack.forEach((f) => {
@@ -347,7 +345,7 @@ export class AnimalsService implements OnModuleInit {
       const adjusted = AnimalDomainService.autoAdjustTypeByAge(
         combined.birth_date ?? null,
         combined.type,
-        combined.sex ?? null
+        combined.sex ?? null,
       );
       updateData.type = adjusted.type;
       updateData.sex = adjusted.sex;
@@ -377,19 +375,21 @@ export class AnimalsService implements OnModuleInit {
           : current.pregnancy_months;
 
       if (isPregnant) {
-        if (
-          !current.is_pregnant ||
-          !current.pregnancy_start_date
-        ) {
+        if (!current.is_pregnant || !current.pregnancy_start_date) {
           const start = new Date();
-          start.setDate(start.getDate() - Math.round(Number(months || 0) * 30.4375));
+          start.setDate(
+            start.getDate() - Math.round(Number(months || 0) * 30.4375),
+          );
           updateData.pregnancy_start_date = start;
         } else if (
           updateData.pregnancy_months !== undefined &&
-          Number(updateData.pregnancy_months) !== Number(current.pregnancy_months)
+          Number(updateData.pregnancy_months) !==
+            Number(current.pregnancy_months)
         ) {
           const start = new Date();
-          start.setDate(start.getDate() - Math.round(Number(months || 0) * 30.4375));
+          start.setDate(
+            start.getDate() - Math.round(Number(months || 0) * 30.4375),
+          );
           updateData.pregnancy_start_date = start;
         } else {
           // Mantener la fecha inicial, no sobreescribir si no hay cambio manual de meses

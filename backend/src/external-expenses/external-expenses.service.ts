@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExternalExpense } from './entities/external-expense.entity';
@@ -8,7 +12,9 @@ import { LogsService } from '../logs/logs.service';
 import { CloudinaryService } from '../cloudinary.service';
 import * as path from 'path';
 
-function parseExpenseFileName(fileName: string): { date: string, amount: number, description: string } | null {
+function parseExpenseFileName(
+  fileName: string,
+): { date: string; amount: number; description: string } | null {
   const name = fileName.replace(/\.pdf$/i, '').trim();
 
   let dateStr = '';
@@ -21,21 +27,33 @@ function parseExpenseFileName(fileName: string): { date: string, amount: number,
     rest = yyyyMmDdMatch[2];
   } else {
     // Try DD [MES] YYYY
-    const ddMesYyyyMatch = name.match(/^(\d{1,2})[_\s]+([a-z]+)(?:[_\s]+(\d{4}))?[_\s]*(.*)$/i);
+    const ddMesYyyyMatch = name.match(
+      /^(\d{1,2})[_\s]+([a-z]+)(?:[_\s]+(\d{4}))?[_\s]*(.*)$/i,
+    );
     if (ddMesYyyyMatch) {
       const day = ddMesYyyyMatch[1].padStart(2, '0');
       const rawMonth = ddMesYyyyMatch[2].toLowerCase();
-      
+
       const monthMap: Record<string, string> = {
-        'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
-        'mayo': '05', 'junio': '06', 'julio': '07', 'jlio': '07', 
-        'agosto': '08', 'septiembre': '09', 'setiembre': '09',
-        'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+        enero: '01',
+        febrero: '02',
+        marzo: '03',
+        abril: '04',
+        mayo: '05',
+        junio: '06',
+        julio: '07',
+        jlio: '07',
+        agosto: '08',
+        septiembre: '09',
+        setiembre: '09',
+        octubre: '10',
+        noviembre: '11',
+        diciembre: '12',
       };
-      
+
       const month = monthMap[rawMonth] || '01';
       const year = ddMesYyyyMatch[3] || new Date().getFullYear().toString();
-      
+
       dateStr = `${year}-${month}-${day}`;
       rest = ddMesYyyyMatch[4];
     }
@@ -52,14 +70,16 @@ function parseExpenseFileName(fileName: string): { date: string, amount: number,
   let description = rest;
 
   // Try to extract amount anywhere in the string if it has Q, or at the start if it doesn't
-  let amountMatch = rest.match(/Q\.?\s*([0-9]+(?:[.,][0-9]+)?)\s*(MIL|M|K)?\b/i);
+  let amountMatch = rest.match(
+    /Q\.?\s*([0-9]+(?:[.,][0-9]+)?)\s*(MIL|M|K)?\b/i,
+  );
   if (!amountMatch) {
     amountMatch = rest.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(MIL|M|K)?\b/i);
   }
 
   if (amountMatch) {
     let numericStr = amountMatch[1];
-    
+
     // Normalize decimal and thousands separators
     if (numericStr.includes(',') && numericStr.includes('.')) {
       numericStr = numericStr.replace(/,/g, '');
@@ -72,17 +92,20 @@ function parseExpenseFileName(fileName: string): { date: string, amount: number,
     }
 
     let val = parseFloat(numericStr);
-    
+
     const suffix = amountMatch[2]?.toUpperCase();
     if (suffix === 'MIL' || suffix === 'K') {
       val *= 1000;
     } else if (suffix === 'M') {
       val *= 1000000;
     }
-    
+
     if (!isNaN(val)) {
       amount = val;
-      description = rest.replace(amountMatch[0], '').replace(/\s+/g, ' ').trim();
+      description = rest
+        .replace(amountMatch[0], '')
+        .replace(/\s+/g, ' ')
+        .trim();
       description = description.replace(/^[-_]+/, '').trim();
     }
   }
@@ -94,7 +117,7 @@ function parseExpenseFileName(fileName: string): { date: string, amount: number,
   return {
     date: dateStr,
     amount,
-    description
+    description,
   };
 }
 
@@ -119,11 +142,13 @@ export class ExternalExpensesService {
 
     if (!defaultCategories.includes(createDto.category)) {
       const existingCategory = await this.externalExpenseRepository.findOne({
-        where: { category: createDto.category }
+        where: { category: createDto.category },
       });
 
       if (!existingCategory && userRole !== UserRole.SUPERUSER) {
-        throw new ForbiddenException('Solo el SUPERUSER puede agregar nuevas categorías de gastos.');
+        throw new ForbiddenException(
+          'Solo el SUPERUSER puede agregar nuevas categorías de gastos.',
+        );
       }
     }
 
@@ -198,10 +223,10 @@ export class ExternalExpensesService {
 
   async removeAll(username: string = 'SYSTEM'): Promise<void> {
     const expenses = await this.externalExpenseRepository.find();
-    
+
     // We could delete from cloudinary, but it might hit rate limits or timeout if there are many files.
     // For now, we will just clear the table to keep the behavior fast, or delete asynchronously.
-    expenses.forEach(expense => {
+    expenses.forEach((expense) => {
       if (expense.imageUrl && expense.imageUrl.includes('cloudinary')) {
         const urlParts = expense.imageUrl.split('/');
         const fileWithExt = urlParts[urlParts.length - 1];
@@ -230,25 +255,30 @@ export class ExternalExpensesService {
     } catch (err) {
       throw new Error('No se pudo leer el archivo ZIP de la memoria');
     }
-    
+
     const zipEntries = zip.getEntries();
-    
+
     let processed = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     for (const zipEntry of zipEntries) {
-      if (!zipEntry.isDirectory && zipEntry.entryName.toLowerCase().endsWith('.pdf')) {
+      if (
+        !zipEntry.isDirectory &&
+        zipEntry.entryName.toLowerCase().endsWith('.pdf')
+      ) {
         const fileName = path.basename(zipEntry.entryName);
-        
+
         // Esperamos el formato YYYY-MM-DD_Descripcion.pdf o los nuevos formatos
         const parsed = parseExpenseFileName(fileName);
-        
+
         if (parsed) {
           const { date: dateStr, amount, description } = parsed;
-          
+
           try {
-            const uploadResult = await this.cloudinaryService.uploadBuffer(zipEntry.getData());
-            
+            const uploadResult = await this.cloudinaryService.uploadBuffer(
+              zipEntry.getData(),
+            );
+
             const expense = this.externalExpenseRepository.create({
               category: 'Otros',
               description,
@@ -257,28 +287,30 @@ export class ExternalExpensesService {
               imageUrl: uploadResult.secure_url,
             });
             await this.externalExpenseRepository.save(expense);
-            
+
             await this.logsService.createLog({
               username,
               action_type: 'GASTO_GENERAL',
               amount: amount,
               details: `Gasto importado desde ZIP: ${description}`,
             });
-            
+
             processed++;
           } catch (uploadError) {
             errors.push(`Error subiendo el archivo a Cloudinary: ${fileName}`);
           }
         } else {
-          errors.push(`Formato inválido en archivo: ${fileName}. Use YYYY-MM-DD_Descripcion.pdf o DD MES YYYY Q[Monto] Descripcion.pdf`);
+          errors.push(
+            `Formato inválido en archivo: ${fileName}. Use YYYY-MM-DD_Descripcion.pdf o DD MES YYYY Q[Monto] Descripcion.pdf`,
+          );
         }
       }
     }
-    
+
     return {
       message: `Proceso completado. ${processed} archivos importados.`,
       processed,
-      errors
+      errors,
     };
   }
 }

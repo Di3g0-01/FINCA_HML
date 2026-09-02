@@ -34,10 +34,12 @@ async function run() {
       user.role = UserRole.SUPERUSER;
       user.password_hash = await bcrypt.hash('super123', 10); // reset password just in case
       await userRepository.save(user);
-      console.log('El usuario ya existía, rol actualizado a SUPERUSER y contraseña reiniciada:');
+      console.log(
+        'El usuario ya existía, rol actualizado a SUPERUSER y contraseña reiniciada:',
+      );
     }
-    
-    console.log(`Usuario: ${user!.username}`);
+
+    console.log(`Usuario: ${user.username}`);
     console.log(`Contraseña: super123`);
 
     await AppDataSource.destroy();

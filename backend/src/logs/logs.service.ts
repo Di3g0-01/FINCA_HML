@@ -26,13 +26,16 @@ export class LogsService {
     return this.logsRepository.save(log);
   }
 
-  async findAll(query: {
-    startDate?: string;
-    endDate?: string;
-    page?: number;
-    limit?: number;
-    actionType?: string;
-  }, requesterRole?: string) {
+  async findAll(
+    query: {
+      startDate?: string;
+      endDate?: string;
+      page?: number;
+      limit?: number;
+      actionType?: string;
+    },
+    requesterRole?: string,
+  ) {
     console.log('Querying logs with:', query);
     const qb = this.logsRepository
       .createQueryBuilder('log')
@@ -40,7 +43,7 @@ export class LogsService {
 
     if (requesterRole !== 'SUPERUSER') {
       qb.andWhere(
-        `log.username NOT IN (SELECT username FROM users WHERE role = 'SUPERUSER')`
+        `log.username NOT IN (SELECT username FROM users WHERE role = 'SUPERUSER')`,
       );
     }
 

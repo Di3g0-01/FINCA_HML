@@ -16,7 +16,9 @@ export class AnimalPregnancyUseCase {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async execute() {
-    this.logger.log('Iniciando rutina de actualización de preñeces (UseCase)...');
+    this.logger.log(
+      'Iniciando rutina de actualización de preñeces (UseCase)...',
+    );
     try {
       const pregnantAnimals = await this.animalsRepository.find({
         where: { is_pregnant: true, status: AnimalStatus.ACTIVO },
@@ -25,7 +27,9 @@ export class AnimalPregnancyUseCase {
       const animalsToSave: Animal[] = [];
       for (const animal of pregnantAnimals) {
         if (animal.pregnancy_start_date) {
-          const newMonths = AnimalDomainService.calculatePregnancyMonths(animal.pregnancy_start_date);
+          const newMonths = AnimalDomainService.calculatePregnancyMonths(
+            animal.pregnancy_start_date,
+          );
           if (newMonths !== null && animal.pregnancy_months !== newMonths) {
             animal.pregnancy_months = newMonths;
             animalsToSave.push(animal);

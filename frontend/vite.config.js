@@ -9,6 +9,15 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
+              return 'pdf-vendor';
+            }
+            if (id.includes('xlsx')) {
+              return 'excel-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'charts-vendor';
+            }
             if (id.includes('@mui') || id.includes('@emotion')) {
               return 'ui';
             }

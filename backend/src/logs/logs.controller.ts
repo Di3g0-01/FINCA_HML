@@ -28,13 +28,16 @@ export class LogsController {
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
-    return this.logsService.findAll({
-      startDate,
-      endDate,
-      page: pageNum,
-      limit: limitNum,
-      actionType,
-    }, req.user?.role);
+    return this.logsService.findAll(
+      {
+        startDate,
+        endDate,
+        page: pageNum,
+        limit: limitNum,
+        actionType,
+      },
+      req.user?.role,
+    );
   }
 
   // --- CUSTOM ACTIONS ---

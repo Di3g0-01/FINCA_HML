@@ -22,7 +22,11 @@ export class UsersController {
 
   @Post()
   create(@Body() createData: Partial<User>, @Request() req) {
-    return this.usersService.create(createData, req.user?.username, req.user?.role);
+    return this.usersService.create(
+      createData,
+      req.user?.username,
+      req.user?.role,
+    );
   }
 
   @Get()
@@ -36,7 +40,12 @@ export class UsersController {
     @Body() updateData: Partial<User>,
     @Request() req,
   ) {
-    return this.usersService.update(+id, updateData, req.user?.username, req.user?.role);
+    return this.usersService.update(
+      +id,
+      updateData,
+      req.user?.username,
+      req.user?.role,
+    );
   }
 
   @Delete(':id')

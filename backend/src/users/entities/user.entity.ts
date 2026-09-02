@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 export enum UserRole {
@@ -22,6 +23,7 @@ export class User {
   @Column()
   password_hash: string;
 
+  @Index()
   @Column({ type: 'enum', enum: UserRole, default: UserRole.OPERADOR })
   role: UserRole;
 

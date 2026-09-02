@@ -67,25 +67,9 @@ export default function UsersView() {
 
   return (
     <div className="fade-in">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '32px',
-        }}
-      >
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h1
-            style={{
-              fontSize: '2rem',
-              marginBottom: '8px',
-              color: '#9C27B0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
+          <h1 className="d-flex align-items-center mb-2 gap-2" style={{ color: '#9C27B0', fontSize: '2rem' }}>
             <span className="mobile-only"><Users size={32} /></span> <span className="desktop-only">Gestión de Usuarios</span></h1>
           <p style={{ color: 'var(--text-muted)' }}>
             Controle quién tiene acceso y permisos en el sistema.
@@ -93,15 +77,10 @@ export default function UsersView() {
         </div>
         {isSuperuser && (
           <button
-            className="btn-primary"
-            style={{
-              background: '#9C27B0',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
+            className="btn d-flex align-items-center gap-2 text-white"
+            style={{ background: '#9C27B0' }}
             onClick={() => openForm(null)}
+            aria-label="Crear Usuario"
           >
             <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Crear Usuario</span></button>
         )}
@@ -119,53 +98,15 @@ export default function UsersView() {
             Cargando usuarios...
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                textAlign: 'left',
-              }}
-            >
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--panel-border)' }}>
-                  <th
-                    style={{
-                      padding: '16px',
-                      color: 'var(--text-muted)',
-                      fontWeight: '500',
-                    }}
-                  >
-                    ID
-                  </th>
-                  <th
-                    style={{
-                      padding: '16px',
-                      color: 'var(--text-muted)',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Usuario (Nick)
-                  </th>
-                  <th
-                    style={{
-                      padding: '16px',
-                      color: 'var(--text-muted)',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Rol
-                  </th>
+                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>ID</th>
+                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Usuario (Nick)</th>
+                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Rol</th>
                   {isSuperuser && (
-                    <th
-                      style={{
-                        padding: '16px',
-                        color: 'var(--text-muted)',
-                        fontWeight: '500',
-                      }}
-                    >
-                      Acciones
-                    </th>
+                    <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Acciones</th>
                   )}
                 </tr>
               </thead>
@@ -218,33 +159,23 @@ export default function UsersView() {
                         </span>
                       </td>
                       {isSuperuser && (
-                        <td
-                          style={{ padding: '16px', display: 'flex', gap: '8px' }}
-                        >
+                        <td className="d-flex gap-2" style={{ padding: '16px' }}>
                           <button
-                            style={{
-                              background: 'transparent',
-                              color: '#2196F3',
-                              padding: '6px',
-                              border: 'none',
-                              cursor: 'pointer',
-                            }}
+                            className="btn btn-link p-1"
+                            style={{ color: '#2196F3' }}
                             onClick={() => openForm(u)}
                             title="Cambiar Contraseña / Editar"
+                            aria-label={`Editar usuario ${u.username}`}
                           >
                             <Key size={18} />
                           </button>
                           {u.username !== 'admin' && (
                             <button
-                              style={{
-                                background: 'transparent',
-                                color: 'var(--danger-color)',
-                                padding: '6px',
-                                border: 'none',
-                                cursor: 'pointer',
-                              }}
+                              className="btn btn-link p-1"
+                              style={{ color: 'var(--danger-color)' }}
                               onClick={() => handleDelete(u.id, u.username)}
                               title="Eliminar Acceso"
+                              aria-label={`Eliminar usuario ${u.username}`}
                             >
                               <Trash2 size={18} />
                             </button>
@@ -371,19 +302,15 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
               />
               <button
                 type="button"
+                className="btn btn-link p-0 d-flex align-items-center"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 style={{
                   position: 'absolute',
                   right: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
                   color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
                 }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

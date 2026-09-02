@@ -17,7 +17,9 @@ export class UsersService implements OnModuleInit {
 
   async onModuleInit() {
     // Seed admin
-    const adminCount = await this.usersRepository.count({ where: { username: 'admin' } });
+    const adminCount = await this.usersRepository.count({
+      where: { username: 'admin' },
+    });
     if (adminCount === 0) {
       const password_hash = await bcrypt.hash('AdministradorHML', 10);
       const admin = this.usersRepository.create({
@@ -30,7 +32,9 @@ export class UsersService implements OnModuleInit {
     }
 
     // Seed superuser
-    const superuserCount = await this.usersRepository.count({ where: { username: 'superuser' } });
+    const superuserCount = await this.usersRepository.count({
+      where: { username: 'superuser' },
+    });
     const superuserPassword = await bcrypt.hash('SistemasFincaHM2024!', 10);
     if (superuserCount === 0) {
       const superuser = this.usersRepository.create({
@@ -42,7 +46,9 @@ export class UsersService implements OnModuleInit {
       console.log('✅ Default superuser seeded securely.');
     } else {
       // Siempre sincronizar rol y contraseña del superuser al arrancar
-      const su = await this.usersRepository.findOne({ where: { username: 'superuser' } });
+      const su = await this.usersRepository.findOne({
+        where: { username: 'superuser' },
+      });
       if (su) {
         su.role = UserRole.SUPERUSER;
         su.password_hash = superuserPassword;
@@ -54,7 +60,11 @@ export class UsersService implements OnModuleInit {
 
   // --- STANDARD CRUD ---
 
-  async create(userData: Partial<User>, adminUsername: string = 'SYSTEM', adminRole: UserRole = UserRole.ADMIN) {
+  async create(
+    userData: Partial<User>,
+    adminUsername: string = 'SYSTEM',
+    adminRole: UserRole = UserRole.ADMIN,
+  ) {
     if (adminRole !== UserRole.SUPERUSER) {
       throw new Error('Solo el SUPERUSER puede crear usuarios.');
     }
@@ -94,15 +104,15 @@ export class UsersService implements OnModuleInit {
       throw new Error('Solo el SUPERUSER puede modificar usuarios.');
     }
     const current = await this.usersRepository.findOne({ where: { id } });
-    
+
     if (!current) return null;
 
     const changes: string[] = [];
-    
+
     if (updateData.role && updateData.role !== current.role) {
       changes.push(`Rol: ${current.role} -> ${updateData.role}`);
     }
-    
+
     if (updateData.password_hash) {
       changes.push(`Contraseña actualizada`);
       updateData.password_hash = await bcrypt.hash(
@@ -112,7 +122,7 @@ export class UsersService implements OnModuleInit {
     }
 
     await this.usersRepository.update(id, updateData);
-    
+
     const updated = await this.usersRepository.findOne({ where: { id } });
 
     if (changes.length > 0) {
@@ -126,11 +136,15 @@ export class UsersService implements OnModuleInit {
     return updated!;
   }
 
-  async remove(id: number, adminUsername: string = 'SYSTEM', adminRole: UserRole = UserRole.ADMIN) {
+  async remove(
+    id: number,
+    adminUsername: string = 'SYSTEM',
+    adminRole: UserRole = UserRole.ADMIN,
+  ) {
     const user = await this.usersRepository.findOne({ where: { id } });
-    
+
     if (!user) return null;
-    
+
     if (user.username === 'admin') {
       throw new Error(
         'No se puede eliminar el usuario administrador principal.',

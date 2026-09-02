@@ -39,35 +39,62 @@ export class AnimalGrowthUseCase {
 
         if (animals.length === 0) return 0;
 
-        const animalIds = animals.map(a => a.id);
+        const animalIds = animals.map((a) => a.id);
         await this.animalsRepository.update(animalIds, { type: newType });
 
-        const logPromises = animals.map(animal => 
+        const logPromises = animals.map((animal) =>
           this.logsService.createLog({
             username: 'SYSTEM',
             action_type: 'EVOLUCION',
             animal_identifier: animal.identifier,
             details: `Cambio automático de etapa: de ${currentType} a ${newType}`,
-          })
+          }),
         );
         await Promise.all(logPromises);
 
         return animals.length;
       };
 
-      const cToDM = await processEvolutions(AnimalType.CHIVO, AnimalType.DESMADRE_MACHO, sixHalfMonthsAgo);
-      const dmToT = await processEvolutions(AnimalType.DESMADRE_MACHO, AnimalType.TORETE, oneYearAgo);
-      const tToTo = await processEvolutions(AnimalType.TORETE, AnimalType.TORO, twoYearsAgo);
+      const cToDM = await processEvolutions(
+        AnimalType.CHIVO,
+        AnimalType.DESMADRE_MACHO,
+        sixHalfMonthsAgo,
+      );
+      const dmToT = await processEvolutions(
+        AnimalType.DESMADRE_MACHO,
+        AnimalType.TORETE,
+        oneYearAgo,
+      );
+      const tToTo = await processEvolutions(
+        AnimalType.TORETE,
+        AnimalType.TORO,
+        twoYearsAgo,
+      );
 
-      const cToDH = await processEvolutions(AnimalType.CHIVA, AnimalType.DESMADRE_HEMBRA, sixHalfMonthsAgo);
-      const dhToN = await processEvolutions(AnimalType.DESMADRE_HEMBRA, AnimalType.NOVILLA, oneYearAgo);
-      const nToV = await processEvolutions(AnimalType.NOVILLA, AnimalType.VACA, twoYearsAgo);
+      const cToDH = await processEvolutions(
+        AnimalType.CHIVA,
+        AnimalType.DESMADRE_HEMBRA,
+        sixHalfMonthsAgo,
+      );
+      const dhToN = await processEvolutions(
+        AnimalType.DESMADRE_HEMBRA,
+        AnimalType.NOVILLA,
+        oneYearAgo,
+      );
+      const nToV = await processEvolutions(
+        AnimalType.NOVILLA,
+        AnimalType.VACA,
+        twoYearsAgo,
+      );
 
       this.logger.log(
         `Evoluciones: ${cToDM} Chivo->DesmadreM, ${dmToT} DesmadreM->Torete, ${tToTo} Torete->Toro, ${cToDH} Chiva->DesmadreH, ${dhToN} DesmadreH->Novilla, ${nToV} Novilla->Vaca.`,
       );
     } catch (e) {
-      this.logger.error('Error durante la rutina de crecimiento cronológica.', e);
+      this.logger.error(
+        'Error durante la rutina de crecimiento cronológica.',
+        e,
+      );
     }
   }
 }

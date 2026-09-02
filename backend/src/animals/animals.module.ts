@@ -12,10 +12,10 @@ import { AnimalPregnancyUseCase } from './application/use-cases/animal-pregnancy
   imports: [TypeOrmModule.forFeature([Animal]), LogsModule],
   controllers: [AnimalsController],
   providers: [
-    AnimalsService, 
+    AnimalsService,
     CloudinaryService,
     AnimalGrowthUseCase,
-    AnimalPregnancyUseCase
+    AnimalPregnancyUseCase,
   ],
   exports: [TypeOrmModule, AnimalsService],
 })

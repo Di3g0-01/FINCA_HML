@@ -40,7 +40,9 @@ export class ExternalExpensesController {
       fileFilter: (req, file, cb) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|pdf)$/)) {
           return cb(
-            new Error('Solo se permiten imágenes y PDFs (jpg, jpeg, png, gif, pdf)'),
+            new Error(
+              'Solo se permiten imágenes y PDFs (jpg, jpeg, png, gif, pdf)',
+            ),
             false,
           );
         }
@@ -53,7 +55,12 @@ export class ExternalExpensesController {
     @UploadedFile() file: any,
     @Request() req: any,
   ) {
-    return this.externalExpensesService.create(createExternalExpenseDto, file, req.user?.role, req.user?.username);
+    return this.externalExpensesService.create(
+      createExternalExpenseDto,
+      file,
+      req.user?.role,
+      req.user?.username,
+    );
   }
 
   @Get()
@@ -69,7 +76,9 @@ export class ExternalExpensesController {
   @UseGuards(JwtAuthGuard)
   removeAll(@Request() req: any) {
     if (req.user?.role !== 'SUPERUSER') {
-      throw new ForbiddenException('Solo el SUPERUSER puede eliminar masivamente los gastos generales.');
+      throw new ForbiddenException(
+        'Solo el SUPERUSER puede eliminar masivamente los gastos generales.',
+      );
     }
     return this.externalExpensesService.removeAll(req.user?.username);
   }
@@ -78,7 +87,9 @@ export class ExternalExpensesController {
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Request() req: any) {
     if (req.user?.role !== 'SUPERUSER') {
-      throw new ForbiddenException('Solo el SUPERUSER puede eliminar gastos generales.');
+      throw new ForbiddenException(
+        'Solo el SUPERUSER puede eliminar gastos generales.',
+      );
     }
     return this.externalExpensesService.remove(id, req.user?.username);
   }
@@ -94,8 +105,8 @@ export class ExternalExpensesController {
       fileFilter: (req, file, cb) => {
         const ext = extname(file.originalname).toLowerCase();
         if (
-          file.mimetype !== 'application/zip' && 
-          file.mimetype !== 'application/x-zip-compressed' && 
+          file.mimetype !== 'application/zip' &&
+          file.mimetype !== 'application/x-zip-compressed' &&
           ext !== '.zip'
         ) {
           return cb(
@@ -107,13 +118,13 @@ export class ExternalExpensesController {
       },
     }),
   )
-  uploadZip(
-    @UploadedFile() file: any,
-    @Request() req: any,
-  ) {
+  uploadZip(@UploadedFile() file: any, @Request() req: any) {
     if (!file) {
       throw new BadRequestException('No se recibió ningún archivo ZIP');
     }
-    return this.externalExpensesService.processZipFile(file, req.user?.username);
+    return this.externalExpensesService.processZipFile(
+      file,
+      req.user?.username,
+    );
   }
 }

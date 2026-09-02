@@ -11,15 +11,20 @@ export class AnimalDomainService {
     currentSex: string | null,
   ): { type: AnimalType; sex: string | null } {
     if (!birthDate) return { type: currentType, sex: currentSex };
-    if (currentType === AnimalType.CABALLO) return { type: currentType, sex: currentSex };
+    if (currentType === AnimalType.CABALLO)
+      return { type: currentType, sex: currentSex };
 
     const birth = new Date(birthDate);
     const now = new Date();
     const ageInDays = (now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24);
     const ageInMonths = ageInDays / 30.4375;
 
-    let isMale = ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(currentType as string);
-    let isFemale = ['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(currentType as string);
+    let isMale = ['TORO', 'TORETE', 'CHIVO', 'DESMADRE_MACHO'].includes(
+      currentType as string,
+    );
+    let isFemale = ['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(
+      currentType as string,
+    );
 
     if (currentSex === 'M') {
       isMale = true;
@@ -50,7 +55,9 @@ export class AnimalDomainService {
     return { type: newType, sex: newSex };
   }
 
-  static calculatePregnancyMonths(pregnancyStartDate: Date | null): number | null {
+  static calculatePregnancyMonths(
+    pregnancyStartDate: Date | null,
+  ): number | null {
     if (!pregnancyStartDate) return null;
     const now = new Date();
     const start = new Date(pregnancyStartDate);

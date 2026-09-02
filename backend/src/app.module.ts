@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { APP_GUARD } from '@nestjs/core';
 import { Animal } from './animals/entities/animal.entity';
 import { User } from './users/entities/user.entity';
 import { UsersModule } from './users/users.module';
@@ -17,9 +20,21 @@ import { RequestsModule } from './requests/requests.module';
 import { RequestEntity } from './requests/entities/request.entity';
 import { ExternalExpensesModule } from './external-expenses/external-expenses.module';
 import { ExternalExpense } from './external-expenses/entities/external-expense.entity';
+import { AuditSubscriber } from './common/subscribers/audit.subscriber';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000,
+      max: 100,
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(
       process.env.DATABASE_URL
@@ -35,6 +50,7 @@ import { ExternalExpense } from './external-expenses/entities/external-expense.e
               RequestEntity,
               ExternalExpense,
             ],
+            subscribers: [AuditSubscriber],
             synchronize: true, // Temporalmente activo para crear columnas nuevas
           }
         : {
@@ -53,6 +69,7 @@ import { ExternalExpense } from './external-expenses/entities/external-expense.e
               RequestEntity,
               ExternalExpense,
             ],
+            subscribers: [AuditSubscriber],
             synchronize: true, // Activa la sincronización automática de tablas para desarrollo
           },
     ),
@@ -67,6 +84,11 @@ import { ExternalExpense } from './external-expenses/entities/external-expense.e
     ScheduleModule.forRoot(),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

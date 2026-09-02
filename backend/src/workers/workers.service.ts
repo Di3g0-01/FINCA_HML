@@ -37,9 +37,9 @@ export class WorkersService {
 
   async findOne(id: number) {
     const worker = await this.workersRepository.findOne({ where: { id } });
-    
+
     if (!worker) throw new NotFoundException('Trabajador no encontrado');
-    
+
     return worker;
   }
 
@@ -50,21 +50,26 @@ export class WorkersService {
   ) {
     const current = await this.findOne(id);
     const changes: string[] = [];
-    
+
     if (updateWorkerDto.name && updateWorkerDto.name !== current.name) {
       changes.push(`Nombre: ${current.name} -> ${updateWorkerDto.name}`);
     }
-      
-    if (updateWorkerDto.position && updateWorkerDto.position !== current.position) {
-      changes.push(`Puesto: ${current.position} -> ${updateWorkerDto.position}`);
+
+    if (
+      updateWorkerDto.position &&
+      updateWorkerDto.position !== current.position
+    ) {
+      changes.push(
+        `Puesto: ${current.position} -> ${updateWorkerDto.position}`,
+      );
     }
-      
+
     if (updateWorkerDto.salary && updateWorkerDto.salary !== current.salary) {
       changes.push(`Tarifa: ${current.salary} -> ${updateWorkerDto.salary}`);
     }
 
     await this.workersRepository.update(id, updateWorkerDto);
-    
+
     const updated = await this.findOne(id);
 
     if (changes.length > 0) {
@@ -80,7 +85,7 @@ export class WorkersService {
 
   async remove(id: number, username: string = 'SYSTEM') {
     const worker = await this.findOne(id);
-    
+
     await this.workersRepository.delete(id);
 
     await this.logsService.createLog({
