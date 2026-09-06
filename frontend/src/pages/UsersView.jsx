@@ -98,15 +98,23 @@ export default function UsersView() {
             Cargando usuarios...
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
+          <div style={{ overflowX: 'auto' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                textAlign: 'left',
+              }}
+            >
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--panel-border)' }}>
-                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>ID</th>
-                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Usuario (Nick)</th>
-                  <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Rol</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>ID</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Usuario (Nick)</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Correo Electrónico</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Estado</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Rol</th>
                   {isSuperuser && (
-                    <th scope="col" style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Acciones</th>
+                    <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500' }}>Acciones</th>
                   )}
                 </tr>
               </thead>
@@ -141,6 +149,24 @@ export default function UsersView() {
                         {u.username}
                       </td>
                       <td style={{ padding: '16px' }}>
+                        {u.email || '-'}
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <span
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            background: u.is_verified ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                            color: u.is_verified ? '#4caf50' : '#f44336',
+                          }}
+                        >
+                          {u.is_verified ? 'Verificado' : 'Pendiente'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px' }}>
                         <span
                           style={{
                             padding: '4px 8px',
@@ -159,10 +185,15 @@ export default function UsersView() {
                         </span>
                       </td>
                       {isSuperuser && (
-                        <td className="d-flex gap-2" style={{ padding: '16px' }}>
+                        <td style={{ padding: '16px', display: 'flex', gap: '8px' }}>
                           <button
-                            className="btn btn-link p-1"
-                            style={{ color: '#2196F3' }}
+                            style={{ 
+                              background: 'transparent',
+                              color: '#2196F3',
+                              padding: '6px',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
                             onClick={() => openForm(u)}
                             title="Cambiar Contraseña / Editar"
                             aria-label={`Editar usuario ${u.username}`}
@@ -171,8 +202,13 @@ export default function UsersView() {
                           </button>
                           {u.username !== 'admin' && (
                             <button
-                              className="btn btn-link p-1"
-                              style={{ color: 'var(--danger-color)' }}
+                              style={{
+                                background: 'transparent',
+                                color: 'var(--danger-color)',
+                                padding: '6px',
+                                border: 'none',
+                                cursor: 'pointer',
+                              }}
                               onClick={() => handleDelete(u.id, u.username)}
                               title="Eliminar Acceso"
                               aria-label={`Eliminar usuario ${u.username}`}
@@ -204,6 +240,7 @@ export default function UsersView() {
 function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
     password_hash: '',
     role: 'OPERADOR',
   });
@@ -214,11 +251,12 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
     if (userToEdit) {
       setFormData({
         username: userToEdit.username,
+        email: userToEdit.email || '',
         password_hash: '',
         role: userToEdit.role || 'OPERADOR',
       });
     } else {
-      setFormData({ username: '', password_hash: '', role: 'OPERADOR' });
+      setFormData({ username: '', email: '', password_hash: '', role: 'OPERADOR' });
     }
   }, [userToEdit, isOpen]);
 
@@ -281,6 +319,21 @@ function UserFormModal({ isOpen, onClose, onSaved, userToEdit }) {
               }
               required
               disabled={userToEdit && userToEdit.username === 'admin'}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gap: '8px' }}>
+            <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              Correo Electrónico
+            </label>
+            <input
+              type="email"
+              className="input-field"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              required
             />
           </div>
 

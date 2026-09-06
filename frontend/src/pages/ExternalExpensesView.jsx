@@ -230,7 +230,7 @@ export default function ExternalExpensesView() {
             <b>YYYY-MM-DD_Q[Monto] Descripción.pdf</b> o <b>DD mes YYYY Q[Monto] Descripción.pdf</b>
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
           {isSuperUser && expenses.length > 0 && (
             <button
               className="btn-primary"
@@ -240,10 +240,16 @@ export default function ExternalExpensesView() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                padding: '10px 22px',
+                borderRadius: '14px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 'bold',
               }}
               onClick={handleDeleteAll}
             >
-              <span className="mobile-only"><Trash2 size={20} /></span> <span className="desktop-only">Eliminar Todos</span></button>
+              <span className="mobile-only"><Trash2 size={20} /></span> <span className="desktop-only">Eliminar Todos</span>
+            </button>
           )}
           <button
             className="btn-primary"
@@ -253,10 +259,16 @@ export default function ExternalExpensesView() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              padding: '10px 22px',
+              borderRadius: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
             }}
             onClick={exportToExcel}
           >
-            <span className="mobile-only"><Download size={20} /></span> <span className="desktop-only">Exportar Excel</span></button>
+            <span className="mobile-only"><Download size={20} /></span> <span className="desktop-only">Exportar Excel</span>
+          </button>
           <label
             className="btn-primary"
             style={{
@@ -265,11 +277,16 @@ export default function ExternalExpensesView() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              padding: '10px 22px',
+              borderRadius: '14px',
+              border: 'none',
               cursor: 'pointer',
               margin: 0,
+              fontWeight: 'bold',
             }}
           >
-            <span className="mobile-only"><UploadCloud size={20} /></span> <span className="desktop-only">Importar ZIP</span><input
+            <span className="mobile-only"><UploadCloud size={20} /></span> <span className="desktop-only">Importar ZIP</span>
+            <input
               type="file"
               accept=".zip"
               style={{ display: 'none' }}
@@ -284,10 +301,16 @@ export default function ExternalExpensesView() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              padding: '10px 22px',
+              borderRadius: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
             }}
             onClick={() => setIsModalOpen(true)}
           >
-            <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Registrar Gasto</span></button>
+            <span className="mobile-only"><Plus size={20} /></span> <span className="desktop-only">Registrar Gasto</span>
+          </button>
         </div>
       </div>
 

@@ -26,36 +26,35 @@ function parseExpenseFileName(
     dateStr = yyyyMmDdMatch[1];
     rest = yyyyMmDdMatch[2];
   } else {
-    // Try DD [MES] YYYY
+    // Try DD [MES] [YYYY] or DDMES [YYYY] (e.g. "01JULIO 2026", "04 AGOSTO 2026", "7JULIO 2026", "11MAYO 2025")
     const ddMesYyyyMatch = name.match(
-      /^(\d{1,2})[_\s]+([a-z]+)(?:[_\s]+(\d{4}))?[_\s]*(.*)$/i,
+      /^(\d{1,2})[_\s]*([a-z]+)(?:[_\s]+(\d{4}))?[_\s]*(.*)$/i,
     );
     if (ddMesYyyyMatch) {
       const day = ddMesYyyyMatch[1].padStart(2, '0');
       const rawMonth = ddMesYyyyMatch[2].toLowerCase();
 
       const monthMap: Record<string, string> = {
-        enero: '01',
-        febrero: '02',
-        marzo: '03',
-        abril: '04',
-        mayo: '05',
-        junio: '06',
-        julio: '07',
-        jlio: '07',
-        agosto: '08',
-        septiembre: '09',
-        setiembre: '09',
-        octubre: '10',
-        noviembre: '11',
-        diciembre: '12',
+        enero: '01', ene: '01',
+        febrero: '02', feb: '02',
+        marzo: '03', mar: '03',
+        abril: '04', abr: '04',
+        mayo: '05', may: '05',
+        junio: '06', jun: '06',
+        julio: '07', jlio: '07', jul: '07',
+        agosto: '08', agto: '08', ago: '08',
+        septiembre: '09', setiembre: '09', sep: '09', set: '09',
+        octubre: '10', oct: '10',
+        noviembre: '11', nov: '11',
+        diciembre: '12', dic: '12',
       };
 
-      const month = monthMap[rawMonth] || '01';
-      const year = ddMesYyyyMatch[3] || new Date().getFullYear().toString();
-
-      dateStr = `${year}-${month}-${day}`;
-      rest = ddMesYyyyMatch[4];
+      const month = monthMap[rawMonth];
+      if (month) {
+        const year = ddMesYyyyMatch[3] || new Date().getFullYear().toString();
+        dateStr = `${year}-${month}-${day}`;
+        rest = ddMesYyyyMatch[4];
+      }
     }
   }
 
@@ -69,29 +68,27 @@ function parseExpenseFileName(
   let amount = 0;
   let description = rest;
 
-  // Try to extract amount anywhere in the string if it has Q, or at the start if it doesn't
-  let amountMatch = rest.match(
-    /Q\.?\s*([0-9]+(?:[.,][0-9]+)?)\s*(MIL|M|K)?\b/i,
-  );
+  // Extract amount logic (e.g. Q24MIL, Q13,200, Q675.GARRIDO, Q550.01, Q160)
+  let amountMatch = rest.match(/Q\.?\s*([0-9.,]+)\s*(MIL|M|K)?\b/i);
   if (!amountMatch) {
-    amountMatch = rest.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(MIL|M|K)?\b/i);
+    amountMatch = rest.match(/^([0-9.,]+)\s*(MIL|M|K)?\b/i);
   }
 
   if (amountMatch) {
-    let numericStr = amountMatch[1];
+    let numericRaw = amountMatch[1].replace(/[.,]+$/, '');
 
     // Normalize decimal and thousands separators
-    if (numericStr.includes(',') && numericStr.includes('.')) {
-      numericStr = numericStr.replace(/,/g, '');
-    } else if (numericStr.includes(',')) {
-      if (/,[0-9]{1,2}$/.test(numericStr)) {
-        numericStr = numericStr.replace(/,/g, '.');
+    if (numericRaw.includes(',') && numericRaw.includes('.')) {
+      numericRaw = numericRaw.replace(/,/g, '');
+    } else if (numericRaw.includes(',')) {
+      if (/,\d{1,2}$/.test(numericRaw) && !/,\d{3}$/.test(numericRaw)) {
+        numericRaw = numericRaw.replace(/,/g, '.');
       } else {
-        numericStr = numericStr.replace(/,/g, '');
+        numericRaw = numericRaw.replace(/,/g, '');
       }
     }
 
-    let val = parseFloat(numericStr);
+    let val = parseFloat(numericRaw);
 
     const suffix = amountMatch[2]?.toUpperCase();
     if (suffix === 'MIL' || suffix === 'K') {
@@ -100,13 +97,13 @@ function parseExpenseFileName(
       val *= 1000000;
     }
 
-    if (!isNaN(val)) {
+    if (!isNaN(val) && val > 0) {
       amount = val;
       description = rest
         .replace(amountMatch[0], '')
         .replace(/\s+/g, ' ')
         .trim();
-      description = description.replace(/^[-_]+/, '').trim();
+      description = description.replace(/^[-_.,;:]+/, '').trim();
     }
   }
 

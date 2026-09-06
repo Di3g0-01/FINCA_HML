@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
@@ -27,7 +27,11 @@ export default function LoginPage() {
         navigate('/dashboard');
       }
     } catch (error) {
-      setErrorMsg('Credenciales inválidas o servidor inactivo.');
+      if (error.response?.data?.message) {
+        setErrorMsg(error.response.data.message);
+      } else {
+        setErrorMsg('Credenciales inválidas o servidor inactivo.');
+      }
     }
   };
 
@@ -119,7 +123,7 @@ export default function LoginPage() {
               className="form-label"
               style={{ marginBottom: '8px', display: 'block' }}
             >
-              Usuario
+              Usuario o Correo Electrónico
             </label>
             <input
               type="text"
@@ -137,7 +141,7 @@ export default function LoginPage() {
             >
               Contraseña
             </label>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', marginBottom: '8px' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="input-field"
@@ -163,6 +167,18 @@ export default function LoginPage() {
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <Link
+                to="/forgot-password"
+                style={{
+                  color: 'var(--primary-color)',
+                  textDecoration: 'none',
+                  fontSize: '0.85rem',
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
           </div>
           <button

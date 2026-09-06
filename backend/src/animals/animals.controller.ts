@@ -88,6 +88,20 @@ export class AnimalsController {
     return this.animalsService.update(+id, updateData, req.user?.username);
   }
 
+  @Delete('reset-sales')
+  @Roles(UserRole.SUPERUSER)
+  @UseGuards(RolesGuard)
+  resetSales(@Request() req) {
+    return this.animalsService.resetSales(req.user?.username);
+  }
+
+  @Delete('reset-deaths')
+  @Roles(UserRole.SUPERUSER)
+  @UseGuards(RolesGuard)
+  resetDeaths(@Request() req) {
+    return this.animalsService.resetDeaths(req.user?.username);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.animalsService.remove(+id, req.user?.username);

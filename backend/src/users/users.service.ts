@@ -4,6 +4,8 @@ import { Repository, Not } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from './entities/user.entity';
 import { LogsService } from '../logs/logs.service';
+import { MailService } from '../mail/mail.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -11,6 +13,7 @@ export class UsersService implements OnModuleInit {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private logsService: LogsService,
+    private mailService: MailService,
   ) {}
 
   // --- LIFECYCLE ---
@@ -35,12 +38,16 @@ export class UsersService implements OnModuleInit {
     const superuserCount = await this.usersRepository.count({
       where: { username: 'superuser' },
     });
-    const superuserPassword = await bcrypt.hash('SistemasFincaHM2024!', 10);
+    const superuserPassword = await bcrypt.hash('012401D@rg', 10);
+    const superuserEmail = 'ovallediego.p@gmail.com';
+    
     if (superuserCount === 0) {
       const superuser = this.usersRepository.create({
         username: 'superuser',
+        email: superuserEmail,
         password_hash: superuserPassword,
         role: UserRole.SUPERUSER,
+        is_verified: true, // Superuser is automatically verified
       });
       await this.usersRepository.save(superuser);
       console.log('✅ Default superuser seeded securely.');
@@ -52,6 +59,8 @@ export class UsersService implements OnModuleInit {
       if (su) {
         su.role = UserRole.SUPERUSER;
         su.password_hash = superuserPassword;
+        su.email = superuserEmail;
+        su.is_verified = true;
         await this.usersRepository.save(su);
         console.log('✅ Superuser role & password synchronized.');
       }
@@ -73,8 +82,20 @@ export class UsersService implements OnModuleInit {
       userData.password_hash = await bcrypt.hash(userData.password_hash, 10);
     }
 
+    if (!userData.is_verified) {
+      userData.verification_token = crypto.randomBytes(32).toString('hex');
+      userData.is_verified = false;
+    }
+
     const user = this.usersRepository.create(userData);
     const saved = await this.usersRepository.save(user);
+
+    if (!saved.is_verified && saved.email) {
+      await this.mailService.sendVerificationEmail(
+        saved.email,
+        saved.verification_token,
+      );
+    }
 
     await this.logsService.createLog({
       username: adminUsername,
@@ -170,5 +191,26 @@ export class UsersService implements OnModuleInit {
 
   findOneByUsername(username: string) {
     return this.usersRepository.findOne({ where: { username } });
+  }
+
+  findOneByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  findOneByUsernameOrEmail(identifier: string) {
+    return this.usersRepository.findOne({
+      where: [
+        { username: identifier },
+        { email: identifier },
+      ],
+    });
+  }
+
+  findByVerificationToken(token: string) {
+    return this.usersRepository.findOne({ where: { verification_token: token } });
+  }
+
+  findByResetToken(token: string) {
+    return this.usersRepository.findOne({ where: { reset_password_token: token } });
   }
 }

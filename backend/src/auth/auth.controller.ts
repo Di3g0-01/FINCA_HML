@@ -35,4 +35,30 @@ export class AuthController {
 
     return { access_token, user: payload };
   }
+  @Post('verify-account')
+  async verifyAccount(@Body('token') token: string) {
+    if (!token) {
+      throw new UnauthorizedException('Token no proporcionado');
+    }
+    return this.authService.verifyAccount(token);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    if (!email) {
+      throw new UnauthorizedException('Correo no proporcionado');
+    }
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ) {
+    if (!token || !password) {
+      throw new UnauthorizedException('Token o contraseña no proporcionados');
+    }
+    return this.authService.resetPassword(token, password);
+  }
 }

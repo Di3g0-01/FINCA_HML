@@ -8,6 +8,9 @@ import {
 import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const VerifyAccountPage = lazy(() => import('./pages/VerifyAccountPage'));
 const DashboardLayout = lazy(() => import('./components/DashboardLayout'));
 import axios from 'axios';
 
@@ -67,6 +70,9 @@ function App() {
         <Suspense fallback={<div style={{ padding: '20px' }}>Cargando aplicación...</div>}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-account" element={<VerifyAccountPage />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard/*" element={<DashboardLayout />} />
             </Route>

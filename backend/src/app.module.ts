@@ -21,13 +21,14 @@ import { RequestEntity } from './requests/entities/request.entity';
 import { ExternalExpensesModule } from './external-expenses/external-expenses.module';
 import { ExternalExpense } from './external-expenses/entities/external-expense.entity';
 import { AuditSubscriber } from './common/subscribers/audit.subscriber';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 100,
+        limit: 5000,
       },
     ]),
     CacheModule.register({
@@ -81,6 +82,7 @@ import { AuditSubscriber } from './common/subscribers/audit.subscriber';
     LogsModule,
     RequestsModule,
     ExternalExpensesModule,
+    MailModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [],

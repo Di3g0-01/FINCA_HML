@@ -14,14 +14,14 @@ const formatDate = (dateStr) => {
 
 const getPregnancyMonths = (animal) => {
   if (!animal.is_pregnant) return 0;
-  if (animal.pregnancy_months != null) return animal.pregnancy_months;
-  const start = animal.pregnancy_start_date
-    ? new Date(animal.pregnancy_start_date)
-    : new Date();
-  const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-  let months = diffDays / 30.4375;
-  if (months > 10.0) months = 10.0;
-  return Math.round(months * 10) / 10;
+  if (animal.pregnancy_start_date) {
+    const start = new Date(animal.pregnancy_start_date);
+    const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    let months = diffDays / 30.4375;
+    if (months > 10.0) months = 10.0;
+    return Math.round(months * 10) / 10;
+  }
+  return animal.pregnancy_months != null ? animal.pregnancy_months : 0;
 };
 
 // --- COMPONENT ---

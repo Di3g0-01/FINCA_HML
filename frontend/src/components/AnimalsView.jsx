@@ -522,7 +522,7 @@ export default function AnimalsView() {
           };
 
           for (const rawRow of data) {
-            await new Promise((r) => setTimeout(r, 40));
+            await new Promise((r) => setTimeout(r, 200));
             const row = {};
             Object.keys(rawRow).forEach((k) => {
               // Limpieza más robusta para nombres de columnas
@@ -845,14 +845,14 @@ export default function AnimalsView() {
       await axios.delete('/animals');
       CustomAlert.info(
         'Aviso',
-        'Base de datos de animales limpiada exitosamente.',
+        'Inventario activo limpiado exitosamente. Se conservaron intactos los registros de Ventas y Muertes.',
       );
       fetchAnimals();
     } catch (error) {
       console.error(error);
       CustomAlert.info(
         'Aviso',
-        'Error crítico al intentar limpiar la base de datos.',
+        'Error al intentar limpiar el inventario.',
       );
     } finally {
       setIsLoading(false);
@@ -1379,8 +1379,9 @@ export default function AnimalsView() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
               Esta acción eliminará{' '}
               <strong style={{ color: 'white' }}>TODOS</strong> los animales del
-              inventario. Esta operación es irreversible y se registrará en la
-              bitácora.
+              inventario activo (incluyendo Control de Partos y Compras). Los registros históricos de{' '}
+              <strong style={{ color: '#4CAF50' }}>Ventas</strong> y{' '}
+              <strong style={{ color: '#FF9800' }}>Muertes</strong> NO se verán afectados.
             </p>
             <div
               style={{
@@ -1401,7 +1402,7 @@ export default function AnimalsView() {
                 style={{ background: '#f97316' }}
                 onClick={handleResetDatabase}
               >
-                Confirmar Borrado Total
+                Confirmar Limpieza de Inventario
               </button>
             </div>
           </div>

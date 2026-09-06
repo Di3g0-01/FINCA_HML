@@ -26,13 +26,17 @@ async function run() {
     if (!user) {
       user = new User();
       user.username = username;
-      user.password_hash = await bcrypt.hash('super123', 10);
+      user.email = 'ovallediego.p@gmail.com';
+      user.is_verified = true;
+      user.password_hash = await bcrypt.hash('012401D@rg', 10);
       user.role = UserRole.SUPERUSER;
       await userRepository.save(user);
       console.log('Superusuario creado exitosamente:');
     } else {
+      user.email = 'ovallediego.p@gmail.com';
+      user.is_verified = true;
       user.role = UserRole.SUPERUSER;
-      user.password_hash = await bcrypt.hash('super123', 10); // reset password just in case
+      user.password_hash = await bcrypt.hash('012401D@rg', 10); // reset password just in case
       await userRepository.save(user);
       console.log(
         'El usuario ya existía, rol actualizado a SUPERUSER y contraseña reiniciada:',
@@ -40,7 +44,8 @@ async function run() {
     }
 
     console.log(`Usuario: ${user.username}`);
-    console.log(`Contraseña: super123`);
+    console.log(`Correo: ${user.email}`);
+    console.log(`Contraseña: 012401D@rg`);
 
     await AppDataSource.destroy();
   } catch (error) {

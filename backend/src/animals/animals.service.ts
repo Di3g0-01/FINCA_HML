@@ -98,13 +98,21 @@ export class AnimalsService implements OnModuleInit {
     // Note: CABALLO sex remains selectable.
 
     // Pregnancy calculations
-    if (animalData.is_pregnant && animalData.pregnancy_months) {
-      const months = Number(animalData.pregnancy_months);
-      const start = new Date();
-      start.setDate(start.getDate() - Math.round(months * 30.4375));
-      animalData.pregnancy_start_date = start;
+    if (animalData.is_pregnant) {
+      if (animalData.pregnancy_start_date) {
+        const start = new Date(animalData.pregnancy_start_date);
+        animalData.pregnancy_start_date = start;
+        animalData.pregnancy_months =
+          AnimalDomainService.calculatePregnancyMonths(start);
+      } else if (animalData.pregnancy_months) {
+        const months = Number(animalData.pregnancy_months);
+        const start = new Date();
+        start.setDate(start.getDate() - Math.round(months * 30.4375));
+        animalData.pregnancy_start_date = start;
+      }
     } else {
       animalData.pregnancy_start_date = null;
+      animalData.pregnancy_months = null;
     }
 
     // Si no es compra y no tiene identificador manual (y no es caballo), generamos automáticamente.
@@ -363,38 +371,48 @@ export class AnimalsService implements OnModuleInit {
 
     if (
       updateData.is_pregnant !== undefined ||
-      updateData.pregnancy_months !== undefined
+      updateData.pregnancy_months !== undefined ||
+      updateData.pregnancy_start_date !== undefined
     ) {
       const isPregnant =
         updateData.is_pregnant !== undefined
           ? updateData.is_pregnant
           : current.is_pregnant;
-      const months =
-        updateData.pregnancy_months !== undefined
-          ? updateData.pregnancy_months
-          : current.pregnancy_months;
 
       if (isPregnant) {
-        if (!current.is_pregnant || !current.pregnancy_start_date) {
-          const start = new Date();
-          start.setDate(
-            start.getDate() - Math.round(Number(months || 0) * 30.4375),
-          );
+        if (updateData.pregnancy_start_date) {
+          const start = new Date(updateData.pregnancy_start_date);
           updateData.pregnancy_start_date = start;
-        } else if (
-          updateData.pregnancy_months !== undefined &&
-          Number(updateData.pregnancy_months) !==
-            Number(current.pregnancy_months)
-        ) {
-          const start = new Date();
-          start.setDate(
-            start.getDate() - Math.round(Number(months || 0) * 30.4375),
-          );
-          updateData.pregnancy_start_date = start;
+          updateData.pregnancy_months =
+            AnimalDomainService.calculatePregnancyMonths(start);
         } else {
-          // Mantener la fecha inicial, no sobreescribir si no hay cambio manual de meses
-          delete updateData.pregnancy_start_date;
-          delete updateData.pregnancy_months;
+          const months =
+            updateData.pregnancy_months !== undefined
+              ? updateData.pregnancy_months
+              : current.pregnancy_months;
+
+          if (!current.is_pregnant || !current.pregnancy_start_date) {
+            const start = new Date();
+            start.setDate(
+              start.getDate() - Math.round(Number(months || 0) * 30.4375),
+            );
+            updateData.pregnancy_start_date = start;
+            updateData.pregnancy_months = Number(months || 0);
+          } else if (
+            updateData.pregnancy_months !== undefined &&
+            Number(updateData.pregnancy_months) !==
+              Number(current.pregnancy_months)
+          ) {
+            const start = new Date();
+            start.setDate(
+              start.getDate() - Math.round(Number(months || 0) * 30.4375),
+            );
+            updateData.pregnancy_start_date = start;
+            updateData.pregnancy_months = Number(months || 0);
+          } else {
+            delete updateData.pregnancy_start_date;
+            delete updateData.pregnancy_months;
+          }
         }
       } else {
         updateData.pregnancy_start_date = null;
@@ -526,7 +544,7 @@ export class AnimalsService implements OnModuleInit {
 
   async removeAll(username: string = 'SYSTEM') {
     this.logger.log(
-      'Iniciando limpieza total de la base de datos de animales...',
+      'Iniciando limpieza del inventario activo de animales (respetando Ventas y Muertes)...',
     );
     const queryRunner =
       this.animalsRepository.manager.connection.createQueryRunner();
@@ -534,13 +552,18 @@ export class AnimalsService implements OnModuleInit {
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.query('TRUNCATE TABLE animals CASCADE');
+      // 1. Limpiar referencias de madre que apunten a animales activos a ser eliminados
+      await queryRunner.query(
+        "UPDATE animals SET mother_id = NULL WHERE mother_id IN (SELECT id FROM animals WHERE status = 'ACTIVO')",
+      );
+      // 2. Eliminar únicamente los animales con estado ACTIVO
+      await queryRunner.query("DELETE FROM animals WHERE status = 'ACTIVO'");
       await queryRunner.commitTransaction();
-      this.logger.log('Limpieza completada exitosamente.');
+      this.logger.log('Limpieza del inventario activo completada exitosamente.');
     } catch (e) {
       if (queryRunner.isTransactionActive)
         await queryRunner.rollbackTransaction();
-      this.logger.error('Error durante la limpieza de la base de datos:', e);
+      this.logger.error('Error durante la limpieza del inventario:', e);
       throw e;
     } finally {
       await queryRunner.release();
@@ -549,9 +572,9 @@ export class AnimalsService implements OnModuleInit {
     try {
       await this.logsService.createLog({
         username,
-        action_type: 'LIMPIEZA_DB',
+        action_type: 'LIMPIEZA_INVENTARIO',
         details:
-          'Se ha eliminado la base de datos completa de animales mediante la función de Reiniciar BD.',
+          'Se han eliminado los animales del inventario activo (respetando los registros de ventas y muertes).',
       });
     } catch (logErr) {
       this.logger.warn(
@@ -562,7 +585,45 @@ export class AnimalsService implements OnModuleInit {
 
     return {
       message:
-        'Todos los registros de animales han sido eliminados correctamente.',
+        'Se han limpiado los animales del inventario activo correctamente. Las ventas y muertes fueron conservadas.',
     };
+  }
+
+  async resetSales(username: string = 'SYSTEM') {
+    this.logger.log('Iniciando limpieza y eliminación de la base de datos de ventas...');
+
+    // Eliminar por completo todos los registros de animales con estado VENDIDO
+    await this.animalsRepository.delete({ status: AnimalStatus.VENDIDO });
+
+    try {
+      await this.logsService.createLog({
+        username,
+        action_type: 'REINICIO_VENTAS',
+        details: 'Se han eliminado completamente todos los registros de ventas de la base de datos.',
+      });
+    } catch (logErr) {
+      this.logger.warn('Reinicio de ventas exitoso pero falló el log de auditoría:', logErr);
+    }
+
+    return { message: 'Base de datos de ventas eliminada y reiniciada exitosamente.' };
+  }
+
+  async resetDeaths(username: string = 'SYSTEM') {
+    this.logger.log('Iniciando limpieza y eliminación de la base de datos de muertes...');
+
+    // Eliminar por completo todos los registros de animales con estado MUERTO
+    await this.animalsRepository.delete({ status: AnimalStatus.MUERTO });
+
+    try {
+      await this.logsService.createLog({
+        username,
+        action_type: 'REINICIO_MUERTES',
+        details: 'Se han eliminado completamente todos los registros de muertes de la base de datos.',
+      });
+    } catch (logErr) {
+      this.logger.warn('Reinicio de muertes exitoso pero falló el log de auditoría:', logErr);
+    }
+
+    return { message: 'Base de datos de muertes eliminada exitosamente.' };
   }
 }

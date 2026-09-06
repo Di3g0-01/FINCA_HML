@@ -2,7 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { Plus, X, Edit, Upload, Eye, FileSpreadsheet } from 'lucide-react';
+import { Plus, X, Edit, Upload, Eye, FileSpreadsheet, Download, Trash2 } from 'lucide-react';
 import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -199,26 +199,75 @@ export default function SalesView() {
     setIsModalOpen(true);
   };
 
-  const handleRevert = async (id) => {
+  const handleRevert = async (animalOrId) => {
+    const animalObj = typeof animalOrId === 'object'
+      ? animalOrId
+      : animals.find((a) => a.id === animalOrId);
+    if (!animalObj) return;
+
+    if (animalObj.origin === 'HISTORICO') {
+      if (
+        (
+          await CustomAlert.confirm(
+            `¿Deseas ANULAR la venta del animal ${animalObj.identifier}? Como es un registro histórico, se ELIMINARÁ permanentemente y no regresará al inventario activo.`,
+          )
+        ).isConfirmed
+      ) {
+        try {
+          await axios.delete(`/animals/${animalObj.id}`);
+          CustomAlert.success('Registro histórico eliminado.');
+          fetchData();
+        } catch (err) {
+          console.error(err);
+          CustomAlert.info('Aviso', 'Error al anular la venta histórica.');
+        }
+      }
+    } else {
+      if (
+        (
+          await CustomAlert.confirm(
+            `¿Deseas ANULAR la venta del animal ${animalObj.identifier}? El animal volverá al Inventario Activo.`,
+          )
+        ).isConfirmed
+      ) {
+        try {
+          await axios.patch(`/animals/${animalObj.id}`, {
+            status: 'ACTIVO',
+            sale_date: null,
+            sale_price: null,
+            sale_weight: null,
+            sale_modality: null,
+            buyer_name: null,
+            sale_receipt_path: null,
+          });
+          CustomAlert.success('Venta anulada. El animal ha retornado al inventario activo.');
+          fetchData();
+        } catch (err) {
+          console.error(err);
+          CustomAlert.info('Aviso', 'Error al anular venta.');
+        }
+      }
+    }
+  };
+
+  const handleResetSales = async () => {
     if (
       (
         await CustomAlert.confirm(
-          '¿Deseas ANULAR esta venta? El animal volverá al Inventario Activo.',
+          '¿Estás seguro de que deseas REINICIAR LA BASE DE DATOS DE VENTAS? Se ELIMINARÁN PERMANENTEMENTE todos los registros de ventas de la finca (no regresarán al inventario general). Esta acción no se puede deshacer.',
         )
       ).isConfirmed
     ) {
       try {
-        await axios.patch(`/animals/${id}`, {
-          status: 'ACTIVO',
-          sale_date: null,
-          sale_price: null,
-          sale_weight: null,
-          sale_modality: null,
-          buyer_name: null,
-        });
+        setIsLoading(true);
+        await axios.delete('/animals/reset-sales');
+        CustomAlert.success('La base de datos de ventas ha sido eliminada y reiniciada con éxito.');
         fetchData();
       } catch (err) {
-        CustomAlert.info('Aviso', 'Error al anular venta.');
+        console.error('Error al reiniciar base de datos de ventas:', err);
+        CustomAlert.info('Aviso', 'Error al reiniciar la base de datos de ventas.');
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -555,6 +604,44 @@ export default function SalesView() {
     }
   };
 
+  const exportToExcel = () => {
+    if (filteredAnimals.length === 0) {
+      CustomAlert.info('Aviso', 'No hay datos de ventas para exportar.');
+      return;
+    }
+
+    const sortedAnimals = [...filteredAnimals].sort((a, b) => {
+      const dateA = new Date(a.sale_date || '1970-01-01');
+      const dateB = new Date(b.sale_date || '1970-01-01');
+      return dateA - dateB;
+    });
+
+    const exportData = sortedAnimals.map((animal) => {
+      let formattedDate = 'N/A';
+      if (animal.sale_date) {
+        formattedDate = animal.sale_date.split('T')[0].split('-').reverse().join('/');
+      }
+
+      return {
+        'Identificador': animal.identifier || 'Sin ID',
+        'Tipo': animal.type,
+        'Fecha Venta': formattedDate,
+        'Comprador': animal.buyer_name || 'No Registrado',
+        'Modalidad': animal.sale_modality || '-',
+        'Libras': animal.sale_weight || '-',
+        'Monto Transacción (Q)': animal.sale_price !== null ? animal.sale_price : '-',
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Ventas');
+    XLSX.writeFile(
+      workbook,
+      `Registro_Ventas_${dateFilter.startDate}_a_${dateFilter.endDate}.xlsx`,
+    );
+  };
+
   return (
     <div className="fade-in">
       <div
@@ -575,28 +662,26 @@ export default function SalesView() {
             Módulo para dar de baja animales por venta y registrar ingresos.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          {isSuperUser && animals.length > 0 && (
-            <button
-              className="btn-danger"
-              style={{
-                background: '#f44336',
-                color: 'white',
-                padding: '8px 16px',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                fontWeight: 'bold',
-                gap: '8px'
-              }}
-              onClick={handleClearAllSales}
-            >
-              <span className="mobile-only"><X size={20} /></span>
-              <span className="desktop-only">Borrar Todo</span>
-            </button>
-          )}
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn-primary"
+            style={{
+              background: '#10b981',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 22px',
+              borderRadius: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+            onClick={exportToExcel}
+          >
+            <span className="mobile-only"><Download size={20} /></span>
+            <span className="desktop-only">Exportar Excel</span>
+          </button>
           <button
             className="btn-primary"
             style={{
@@ -605,8 +690,8 @@ export default function SalesView() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '8px 16px',
-              borderRadius: '4px',
+              padding: '10px 22px',
+              borderRadius: '14px',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 'bold',
@@ -626,13 +711,13 @@ export default function SalesView() {
           <button
             className="btn-primary"
             style={{
-              background: '#4CAF50',
-              color: '#000',
+              background: '#2196F3',
+              color: '#fff',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '8px 16px',
-              borderRadius: '4px',
+              padding: '10px 22px',
+              borderRadius: '14px',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 'bold',
@@ -863,7 +948,11 @@ export default function SalesView() {
                       <td style={{ padding: '16px' }}>{animal.type}</td>
                       <td style={{ padding: '16px' }}>
                         {animal.sale_date
-                          ? new Date(animal.sale_date).toLocaleDateString()
+                          ? (() => {
+                              const clean = String(animal.sale_date).split('T')[0];
+                              const [y, m, d] = clean.split('-');
+                              return y && m && d ? `${parseInt(d)}/${parseInt(m)}/${y}` : clean;
+                            })()
                           : 'N/A'}
                       </td>
                       <td
@@ -988,7 +1077,7 @@ export default function SalesView() {
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleRevert(animal.id)}
+                            onClick={() => handleRevert(animal)}
                             style={{
                               background: 'rgba(244,67,54,0.1)',
                               color: '#F44336',

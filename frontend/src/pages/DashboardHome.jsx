@@ -310,7 +310,7 @@ export default function DashboardHome() {
                 }}
               >
                 {typeData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                     <PieChart>
                       <Pie
                         data={typeData}
