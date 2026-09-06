@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -74,8 +74,8 @@ export class UsersService implements OnModuleInit {
     adminUsername: string = 'SYSTEM',
     adminRole: UserRole = UserRole.ADMIN,
   ) {
-    if (adminRole !== UserRole.SUPERUSER) {
-      throw new Error('Solo el SUPERUSER puede crear usuarios.');
+    if (adminUsername !== 'SYSTEM' && adminRole !== UserRole.SUPERUSER) {
+      throw new ForbiddenException('Solo el SUPERUSER puede crear usuarios.');
     }
 
     if (userData.password_hash) {
@@ -121,8 +121,8 @@ export class UsersService implements OnModuleInit {
     adminUsername: string = 'SYSTEM',
     adminRole: UserRole = UserRole.ADMIN,
   ) {
-    if (adminRole !== UserRole.SUPERUSER) {
-      throw new Error('Solo el SUPERUSER puede modificar usuarios.');
+    if (adminUsername !== 'SYSTEM' && adminRole !== UserRole.SUPERUSER) {
+      throw new ForbiddenException('Solo el SUPERUSER puede modificar usuarios.');
     }
     const current = await this.usersRepository.findOne({ where: { id } });
 
@@ -166,14 +166,14 @@ export class UsersService implements OnModuleInit {
 
     if (!user) return null;
 
-    if (user.username === 'admin') {
-      throw new Error(
-        'No se puede eliminar el usuario administrador principal.',
+    if (user.username === 'admin' || user.username === 'superuser' || user.role === UserRole.SUPERUSER) {
+      throw new BadRequestException(
+        'No se puede eliminar un usuario protegido del sistema.',
       );
     }
 
     if (adminRole !== UserRole.SUPERUSER) {
-      throw new Error('Solo el SUPERUSER puede eliminar usuarios.');
+      throw new ForbiddenException('Solo el SUPERUSER puede eliminar usuarios.');
     }
 
     const result = await this.usersRepository.delete(id);
