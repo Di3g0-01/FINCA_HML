@@ -30,10 +30,20 @@ export default function DeathsView() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('/animals?limit=5000');
+      const res = await axios.get('/animals?status=MUERTO&limit=5000');
       const data = res.data.data || res.data;
-      setAnimals(data.filter((a) => a.status === 'MUERTO'));
-      setActiveInventory(data.filter((a) => a.status === 'ACTIVO'));
+      const list = Array.isArray(data) ? data : [];
+      list.sort((a, b) => {
+        const timeA = a.death_date ? new Date(a.death_date).getTime() : 0;
+        const timeB = b.death_date ? new Date(b.death_date).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA; // Mas reciente primero
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      setAnimals(list);
+
+      const activeRes = await axios.get('/animals?status=ACTIVO&limit=5000');
+      const activeData = activeRes.data.data || activeRes.data;
+      setActiveInventory(Array.isArray(activeData) ? activeData : (activeData.data || []));
     } catch (error) {
       console.error('Error fetching animals:', error);
     } finally {

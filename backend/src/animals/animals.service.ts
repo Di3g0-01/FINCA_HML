@@ -215,12 +215,12 @@ export class AnimalsService implements OnModuleInit {
 
     if (status === 'VENDIDO') {
       query
-        .orderBy('animal.sale_date', 'DESC')
-        .addOrderBy('animal.updated_at', 'DESC');
+        .orderBy('animal.sale_date', 'DESC', 'NULLS LAST')
+        .addOrderBy('animal.created_at', 'DESC');
     } else if (status === 'MUERTO') {
       query
-        .orderBy('animal.death_date', 'DESC')
-        .addOrderBy('animal.updated_at', 'DESC');
+        .orderBy('animal.death_date', 'DESC', 'NULLS LAST')
+        .addOrderBy('animal.created_at', 'DESC');
     } else {
       query
         .orderBy(
