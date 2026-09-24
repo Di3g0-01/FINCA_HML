@@ -65,7 +65,7 @@ export default function LoginPage() {
         >
           <img
             src="/logo.png"
-            alt="Logo Finca HM"
+            alt="Logo Finca HML"
             fetchPriority="high"
             width="80"
             height="80"
@@ -87,7 +87,7 @@ export default function LoginPage() {
             fontWeight: '700',
           }}
         >
-          Finca HM
+          Finca HML
         </h2>
         <p
           style={{
@@ -194,17 +194,6 @@ export default function LoginPage() {
           >
             <span className="mobile-only"><LogIn size={20} /></span> <span className="desktop-only">Ingresar al Sistema</span></button>
         </form>
-
-        <div
-          style={{
-            marginTop: '32px',
-            textAlign: 'center',
-            fontSize: '0.8rem',
-            color: 'var(--text-muted)',
-          }}
-        >
-          Tip: Pass: AdministradorHM
-        </div>
       </div>
     </main>
   );

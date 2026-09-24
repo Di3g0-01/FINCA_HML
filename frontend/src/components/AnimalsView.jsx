@@ -259,8 +259,8 @@ export default function AnimalsView() {
       const doc = new jsPDF('landscape', 'pt', 'a4');
       const title =
         filterStatus === 'TODOS'
-          ? 'Inventario General Completo - Finca HM'
-          : `Inventario (${filterStatus}) - Finca HM`;
+          ? 'Inventario General Completo - Finca HML'
+          : `Inventario (${filterStatus}) - Finca HML`;
       doc.text(title, 14, 25);
 
       const tableColumn = [

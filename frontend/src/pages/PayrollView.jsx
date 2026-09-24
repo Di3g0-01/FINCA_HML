@@ -138,7 +138,7 @@ export default function PayrollView() {
 
     try {
       const doc = new jsPDF('landscape');
-      doc.text(`PLANILLA TRABAJADORES FINCA HM - ${payrollName}`, 14, 20);
+      doc.text(`PLANILLA TRABAJADORES FINCA HML - ${payrollName}`, 14, 20);
 
       // FIJOS
       doc.setFontSize(14);

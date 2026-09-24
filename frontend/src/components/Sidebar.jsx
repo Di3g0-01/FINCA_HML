@@ -117,7 +117,7 @@ export default function Sidebar({
         >
           <img
             src="/logo.png"
-            alt="Logo Finca HM"
+            alt="Logo Finca HML"
             width="40"
             height="40"
             style={{
@@ -137,7 +137,7 @@ export default function Sidebar({
                 whiteSpace: 'nowrap',
               }}
             >
-              Finca HM
+              Finca HML
             </h3>
           )}
         </div>

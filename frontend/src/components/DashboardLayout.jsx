@@ -84,7 +84,7 @@ export default function DashboardLayout() {
             <Menu size={24} />
           </button>
           <span style={{ marginLeft: '16px', fontWeight: 'bold' }}>
-            Finca HM
+            Finca HML
           </span>
         </div>
         <div style={{ flex: 1 }} />

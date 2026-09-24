@@ -60,7 +60,7 @@ export default function VerifyAccountPage() {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <img src="/logo.png" alt="Logo Finca HM" width="80" height="80" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
+          <img src="/logo.png" alt="Logo Finca HML" width="80" height="80" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '50%' }} />
         </div>
 
         <h2 style={{ marginBottom: '16px', fontSize: '1.8rem', fontWeight: '700' }}>
