@@ -417,6 +417,7 @@ export default function Sidebar({
           textAlign: 'left',
           border: '1px solid transparent',
           marginTop: 'auto',
+          flexShrink: 0,
         }}
         className="logout-btn"
       >

@@ -7,7 +7,8 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    const apiKey = (process.env.RESEND_API_KEY || '').trim();
+    this.resend = new Resend(apiKey);
   }
 
   private getFrontendUrl(): string {
@@ -16,7 +17,7 @@ export class MailService {
   }
 
   private getFromEmail(): string {
-    return process.env.MAIL_FROM || 'no-reply@hmfinca.com';
+    return (process.env.MAIL_FROM || 'onboarding@resend.dev').trim();
   }
 
   async sendVerificationEmail(email: string, token: string) {
@@ -24,7 +25,7 @@ export class MailService {
     const from = this.getFromEmail();
 
     try {
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from,
         to: email,
         subject: 'Verifica tu cuenta - FINCA HML',
@@ -41,9 +42,17 @@ export class MailService {
           </div>
         `,
       });
-      this.logger.log(`Verification email sent to ${email}`);
+
+      if (response.error) {
+        this.logger.error(`Resend API Error sending verification email to ${email}: ${JSON.stringify(response.error)}`);
+        return false;
+      }
+
+      this.logger.log(`Verification email sent to ${email} (Resend ID: ${response.data?.id})`);
+      return true;
     } catch (error) {
-      this.logger.error(`Error sending verification email to ${email}`, error);
+      this.logger.error(`Exception sending verification email to ${email}`, error);
+      return false;
     }
   }
 
@@ -52,7 +61,7 @@ export class MailService {
     const from = this.getFromEmail();
 
     try {
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from,
         to: email,
         subject: 'Recuperación de Contraseña - FINCA HML',
@@ -70,9 +79,17 @@ export class MailService {
           </div>
         `,
       });
-      this.logger.log(`Password reset email sent to ${email}`);
+
+      if (response.error) {
+        this.logger.error(`Resend API Error sending password reset email to ${email}: ${JSON.stringify(response.error)}`);
+        return false;
+      }
+
+      this.logger.log(`Password reset email sent to ${email} (Resend ID: ${response.data?.id})`);
+      return true;
     } catch (error) {
-      this.logger.error(`Error sending password reset email to ${email}`, error);
+      this.logger.error(`Exception sending password reset email to ${email}`, error);
+      return false;
     }
   }
 }

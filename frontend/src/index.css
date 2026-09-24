@@ -268,9 +268,13 @@ select option {
     left: 0;
     top: 0;
     height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     z-index: 1000;
     transform: translateX(-100%);
     width: 260px !important;
+    padding: 16px 12px !important;
+    box-sizing: border-box;
   }
   .sidebar.sidebar-expanded {
     transform: translateX(0);
