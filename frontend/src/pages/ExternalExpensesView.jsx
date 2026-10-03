@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { CustomAlert } from '../utils/alerts';
-import { Plus, X, Trash2, Download, UploadCloud, FileText, Shield, FileCheck } from 'lucide-react';
+import { Plus, X, Trash2, Download, UploadCloud, FileText, Shield, FileCheck, Filter } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
@@ -521,6 +521,27 @@ export default function ExternalExpensesView() {
                 }
               />
             </div>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                setPage(1);
+                fetchExpenses();
+              }}
+              style={{
+                height: '42px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '0 24px',
+                fontWeight: 'bold',
+                minWidth: '130px',
+                justifyContent: 'center',
+              }}
+            >
+              <Filter size={18} />
+              Filtrar
+            </button>
           </div>
         </div>
       </div>

@@ -84,13 +84,41 @@ export default function SystemDatePicker({
   const handleMonthChange = (e) => {
     e.stopPropagation();
     const newMonth = parseInt(e.target.value, 10);
-    setViewDate(new Date(viewDate.getFullYear(), newMonth, 1));
+    const newYear = viewDate.getFullYear();
+    const currentDay = value ? parseInt(value.split('-')[2], 10) : 1;
+    const daysInNewMonth = new Date(newYear, newMonth + 1, 0).getDate();
+    const validDay = Math.min(currentDay || 1, daysInNewMonth);
+
+    const newDate = new Date(newYear, newMonth, validDay);
+    setViewDate(newDate);
+
+    const monthStr = String(newMonth + 1).padStart(2, '0');
+    const dayStr = String(validDay).padStart(2, '0');
+    const selected = `${newYear}-${monthStr}-${dayStr}`;
+
+    if (onChange) {
+      onChange({ target: { name, value: selected } });
+    }
   };
 
   const handleYearChange = (e) => {
     e.stopPropagation();
     const newYear = parseInt(e.target.value, 10);
-    setViewDate(new Date(newYear, viewDate.getMonth(), 1));
+    const newMonth = viewDate.getMonth();
+    const currentDay = value ? parseInt(value.split('-')[2], 10) : 1;
+    const daysInNewMonth = new Date(newYear, newMonth + 1, 0).getDate();
+    const validDay = Math.min(currentDay || 1, daysInNewMonth);
+
+    const newDate = new Date(newYear, newMonth, validDay);
+    setViewDate(newDate);
+
+    const monthStr = String(newMonth + 1).padStart(2, '0');
+    const dayStr = String(validDay).padStart(2, '0');
+    const selected = `${newYear}-${monthStr}-${dayStr}`;
+
+    if (onChange) {
+      onChange({ target: { name, value: selected } });
+    }
   };
 
   const getDaysInMonth = (year, month) => {
@@ -324,6 +352,31 @@ export default function SystemDatePicker({
             </div>
           ))}
           {days}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+            style={{
+              backgroundColor: 'var(--accent-color)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 14px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => (e.target.style.opacity = '0.9')}
+            onMouseLeave={(e) => (e.target.style.opacity = '1')}
+          >
+            Listo
+          </button>
         </div>
       </div>,
       document.body

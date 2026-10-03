@@ -2,7 +2,7 @@ import { CustomAlert } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { Plus, X, Edit, Upload, Eye, FileSpreadsheet, Download, Trash2 } from 'lucide-react';
+import { Plus, X, Edit, Upload, Eye, FileSpreadsheet, Download, Trash2, Filter } from 'lucide-react';
 import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -819,6 +819,26 @@ export default function SalesView() {
                 }
               />
             </div>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                fetchData();
+              }}
+              style={{
+                height: '42px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '0 24px',
+                fontWeight: 'bold',
+                minWidth: '130px',
+                justifyContent: 'center',
+              }}
+            >
+              <Filter size={18} />
+              Filtrar
+            </button>
           </div>
         </div>
       </div>
