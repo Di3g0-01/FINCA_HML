@@ -72,6 +72,12 @@ export class ExternalExpensesController {
     return this.externalExpensesService.findAll(startDate, endDate);
   }
 
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  getStats() {
+    return this.externalExpensesService.getStats();
+  }
+
   @Delete('bulk/all')
   @UseGuards(JwtAuthGuard)
   removeAll(@Request() req: any) {

@@ -244,6 +244,21 @@ export class ExternalExpensesService {
     });
   }
 
+  async getStats(): Promise<{ totalExpenses: number; totalDocuments: number }> {
+    const totalExpenses = await this.externalExpenseRepository.count();
+    const totalDocuments = await this.externalExpenseRepository
+      .createQueryBuilder('expense')
+      .where('expense.imageUrl IS NOT NULL AND expense.imageUrl != :empty', {
+        empty: '',
+      })
+      .getCount();
+
+    return {
+      totalExpenses,
+      totalDocuments,
+    };
+  }
+
   async processZipFile(file: any, username: string = 'SYSTEM'): Promise<any> {
     const AdmZip = require('adm-zip');
     let zip;
@@ -256,6 +271,7 @@ export class ExternalExpensesService {
     const zipEntries = zip.getEntries();
 
     let processed = 0;
+    let skippedDuplicates = 0;
     const errors: string[] = [];
 
     for (const zipEntry of zipEntries) {
@@ -272,6 +288,22 @@ export class ExternalExpensesService {
           const { date: dateStr, amount, description } = parsed;
 
           try {
+            // Verificación de duplicados: Buscar si ya existe un gasto con misma fecha, monto y descripción
+            const existing = await this.externalExpenseRepository
+              .createQueryBuilder('e')
+              .where('e.date = :date', { date: dateStr })
+              .andWhere('e.amount = :amount', { amount })
+              .andWhere(
+                'LOWER(TRIM(e.description)) = LOWER(TRIM(:description))',
+                { description },
+              )
+              .getOne();
+
+            if (existing) {
+              skippedDuplicates++;
+              continue;
+            }
+
             const uploadResult = await this.cloudinaryService.uploadBuffer(
               zipEntry.getData(),
             );
@@ -304,10 +336,17 @@ export class ExternalExpensesService {
       }
     }
 
+    let message = `Proceso completado. ${processed} comprobante(s) nuevo(s) importado(s).`;
+    if (skippedDuplicates > 0) {
+      message += ` ${skippedDuplicates} comprobante(s) existente(s) omitido(s) por estar duplicado(s).`;
+    }
+
     return {
-      message: `Proceso completado. ${processed} archivos importados.`,
+      message,
       processed,
+      skippedDuplicates,
       errors,
     };
   }
 }
+

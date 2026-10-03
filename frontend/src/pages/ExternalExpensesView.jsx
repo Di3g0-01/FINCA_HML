@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { CustomAlert } from '../utils/alerts';
-import { Plus, X, Trash2, Download, UploadCloud } from 'lucide-react';
+import { Plus, X, Trash2, Download, UploadCloud, FileText, Shield, FileCheck } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 import SystemDatePicker from '../components/SystemDatePicker';
 import * as XLSX from 'xlsx';
 
 export default function ExternalExpensesView() {
   const [expenses, setExpenses] = useState([]);
+  const [docStats, setDocStats] = useState({ totalExpenses: 0, totalDocuments: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -16,7 +17,6 @@ export default function ExternalExpensesView() {
 
   const user = JSON.parse(localStorage.getItem('user'));
   const isSuperUser = user?.role === 'SUPERUSER';
-
 
   // Utilidad para obtener YYYY-MM-DD en la zona horaria local
   const getLocalYMD = (dateObj) => {
@@ -44,6 +44,15 @@ export default function ExternalExpensesView() {
 
   const [imageFile, setImageFile] = useState(null);
 
+  const fetchDocStats = async () => {
+    try {
+      const res = await axios.get('/external-expenses/stats');
+      setDocStats(res.data);
+    } catch (error) {
+      console.error('Error fetching doc stats:', error);
+    }
+  };
+
   const fetchExpenses = async () => {
     try {
       setIsLoading(true);
@@ -64,7 +73,9 @@ export default function ExternalExpensesView() {
 
   useEffect(() => {
     fetchExpenses();
+    fetchDocStats();
   }, [dateFilter]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,6 +102,7 @@ export default function ExternalExpensesView() {
       });
       CustomAlert.success('Comprobantes Importados', res.data.message || 'Se procesaron los comprobantes del ZIP.');
       fetchExpenses();
+      fetchDocStats();
     } catch (err) {
       console.error(err);
       CustomAlert.error(
@@ -134,6 +146,7 @@ export default function ExternalExpensesView() {
         'El gasto general se guardó correctamente.',
       );
       fetchExpenses();
+      fetchDocStats();
     } catch (error) {
       console.error(error);
       CustomAlert.error(
@@ -151,6 +164,7 @@ export default function ExternalExpensesView() {
       try {
         await axios.delete(`/external-expenses/${id}`);
         fetchExpenses();
+        fetchDocStats();
         CustomAlert.success('Eliminado', 'Gasto eliminado exitosamente.');
       } catch (err) {
         CustomAlert.error('Error', 'No se pudo eliminar el gasto.');
@@ -170,6 +184,7 @@ export default function ExternalExpensesView() {
         try {
           await axios.delete('/external-expenses/bulk/all');
           fetchExpenses();
+          fetchDocStats();
           CustomAlert.success('Vaciado completo', 'Se han eliminado todos los gastos generales correctamente.');
         } catch (err) {
           console.error(err);
@@ -318,7 +333,7 @@ export default function ExternalExpensesView() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '24px',
           marginBottom: '24px',
         }}
@@ -356,6 +371,99 @@ export default function ExternalExpensesView() {
               .toFixed(2)}
           </p>
         </div>
+
+        <div
+          className="premium-card"
+          style={{
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            borderLeft: '4px solid #8b5cf6',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FileText size={20} color="#8b5cf6" />
+            <h3
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '1rem',
+                margin: 0,
+                fontWeight: '500',
+              }}
+            >
+              Documentos / Comprobantes
+            </h3>
+          </div>
+          <p
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              color: '#8b5cf6',
+              margin: 0,
+            }}
+          >
+            {docStats.totalDocuments}{' '}
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+              en el sistema ({expenses.filter(e => !!e.imageUrl).length} en rango)
+            </span>
+          </p>
+        </div>
+
+        {isSuperUser && (
+          <div
+            className="premium-card"
+            style={{
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              borderLeft: '4px solid #a855f7',
+              background: 'rgba(168, 85, 247, 0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Shield size={18} color="#a855f7" />
+              <span
+                style={{
+                  color: '#a855f7',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Panel SuperAdmin
+              </span>
+            </div>
+            <h3
+              style={{
+                color: 'white',
+                fontSize: '1rem',
+                marginBottom: '4px',
+                fontWeight: '600',
+              }}
+            >
+              Documentos en la Actualidad
+            </h3>
+            <p
+              style={{
+                fontSize: '2.2rem',
+                fontWeight: 'bold',
+                color: '#a855f7',
+                margin: 0,
+              }}
+            >
+              {docStats.totalDocuments}{' '}
+              <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                comprobantes activos
+              </span>
+            </p>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              {docStats.totalExpenses} gastos registrados en total
+            </span>
+          </div>
+        )}
 
         <div className="premium-card" style={{ padding: '24px' }}>
           <h3 style={{ marginBottom: '16px', fontSize: '1.2rem' }}>
