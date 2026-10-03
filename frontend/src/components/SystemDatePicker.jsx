@@ -44,6 +44,20 @@ export default function SystemDatePicker({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Sincronizar viewDate si cambia la prop value
+  useEffect(() => {
+    if (value) {
+      const parts = value.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        if (!isNaN(y) && !isNaN(m)) {
+          setViewDate(new Date(y, m, 1));
+        }
+      }
+    }
+  }, [value]);
+
   const handleDayClick = (day) => {
     const year = viewDate.getFullYear();
     const month = String(viewDate.getMonth() + 1).padStart(2, '0');
@@ -65,6 +79,18 @@ export default function SystemDatePicker({
   const prevMonth = (e) => {
     e.stopPropagation();
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  };
+
+  const handleMonthChange = (e) => {
+    e.stopPropagation();
+    const newMonth = parseInt(e.target.value, 10);
+    setViewDate(new Date(viewDate.getFullYear(), newMonth, 1));
+  };
+
+  const handleYearChange = (e) => {
+    e.stopPropagation();
+    const newYear = parseInt(e.target.value, 10);
+    setViewDate(new Date(newYear, viewDate.getMonth(), 1));
   };
 
   const getDaysInMonth = (year, month) => {
@@ -158,6 +184,14 @@ export default function SystemDatePicker({
       'Diciembre',
     ];
 
+    const currentYear = new Date().getFullYear();
+    const startYear = 1970;
+    const endYear = currentYear + 10;
+    const years = [];
+    for (let y = startYear; y <= endYear; y++) {
+      years.push(y);
+    }
+
     return createPortal(
       <div
         ref={calendarRef}
@@ -167,7 +201,7 @@ export default function SystemDatePicker({
           left: dropdownStyle.left,
           zIndex: 999999, // increased z-index just in case
           padding: '16px',
-          width: '260px',
+          width: '270px',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
@@ -184,6 +218,7 @@ export default function SystemDatePicker({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: '4px',
           }}
         >
           <button
@@ -195,19 +230,60 @@ export default function SystemDatePicker({
               color: 'var(--text-main)',
               cursor: 'pointer',
               padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <ChevronLeft size={16} />
           </button>
-          <span
-            style={{
-              fontSize: '14px',
-              fontWeight: 'bold',
-              color: 'var(--text-main)',
-            }}
-          >
-            {monthNames[month]} {year}
-          </span>
+
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <select
+              value={month}
+              onChange={handleMonthChange}
+              style={{
+                backgroundColor: '#1E293B',
+                color: 'var(--text-main)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                padding: '3px 6px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {monthNames.map((mName, idx) => (
+                <option key={idx} value={idx} style={{ backgroundColor: '#0F172A', color: '#FFFFFF' }}>
+                  {mName}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={year}
+              onChange={handleYearChange}
+              style={{
+                backgroundColor: '#1E293B',
+                color: 'var(--text-main)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                padding: '3px 6px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {years.map((y) => (
+                <option key={y} value={y} style={{ backgroundColor: '#0F172A', color: '#FFFFFF' }}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
             type="button"
             onClick={nextMonth}
@@ -217,6 +293,9 @@ export default function SystemDatePicker({
               color: 'var(--text-main)',
               cursor: 'pointer',
               padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <ChevronRight size={16} />
