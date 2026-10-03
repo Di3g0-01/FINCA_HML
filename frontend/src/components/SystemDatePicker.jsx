@@ -71,54 +71,43 @@ export default function SystemDatePicker({
     setIsOpen(false);
   };
 
+  const updateDateAndEmit = (newYear, newMonth) => {
+    const currentDay = value ? parseInt(value.split('-')[2], 10) : 1;
+    const daysInNewMonth = new Date(newYear, newMonth + 1, 0).getDate();
+    const validDay = Math.min(currentDay || 1, daysInNewMonth);
+
+    const newDate = new Date(newYear, newMonth, validDay);
+    setViewDate(newDate);
+
+    const monthStr = String(newMonth + 1).padStart(2, '0');
+    const dayStr = String(validDay).padStart(2, '0');
+    const selected = `${newYear}-${monthStr}-${dayStr}`;
+
+    if (onChange) {
+      onChange({ target: { name, value: selected } });
+    }
+  };
+
   const nextMonth = (e) => {
     e.stopPropagation();
-    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+    updateDateAndEmit(viewDate.getFullYear(), viewDate.getMonth() + 1);
   };
 
   const prevMonth = (e) => {
     e.stopPropagation();
-    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+    updateDateAndEmit(viewDate.getFullYear(), viewDate.getMonth() - 1);
   };
 
   const handleMonthChange = (e) => {
     e.stopPropagation();
     const newMonth = parseInt(e.target.value, 10);
-    const newYear = viewDate.getFullYear();
-    const currentDay = value ? parseInt(value.split('-')[2], 10) : 1;
-    const daysInNewMonth = new Date(newYear, newMonth + 1, 0).getDate();
-    const validDay = Math.min(currentDay || 1, daysInNewMonth);
-
-    const newDate = new Date(newYear, newMonth, validDay);
-    setViewDate(newDate);
-
-    const monthStr = String(newMonth + 1).padStart(2, '0');
-    const dayStr = String(validDay).padStart(2, '0');
-    const selected = `${newYear}-${monthStr}-${dayStr}`;
-
-    if (onChange) {
-      onChange({ target: { name, value: selected } });
-    }
+    updateDateAndEmit(viewDate.getFullYear(), newMonth);
   };
 
   const handleYearChange = (e) => {
     e.stopPropagation();
     const newYear = parseInt(e.target.value, 10);
-    const newMonth = viewDate.getMonth();
-    const currentDay = value ? parseInt(value.split('-')[2], 10) : 1;
-    const daysInNewMonth = new Date(newYear, newMonth + 1, 0).getDate();
-    const validDay = Math.min(currentDay || 1, daysInNewMonth);
-
-    const newDate = new Date(newYear, newMonth, validDay);
-    setViewDate(newDate);
-
-    const monthStr = String(newMonth + 1).padStart(2, '0');
-    const dayStr = String(validDay).padStart(2, '0');
-    const selected = `${newYear}-${monthStr}-${dayStr}`;
-
-    if (onChange) {
-      onChange({ target: { name, value: selected } });
-    }
+    updateDateAndEmit(newYear, viewDate.getMonth());
   };
 
   const getDaysInMonth = (year, month) => {

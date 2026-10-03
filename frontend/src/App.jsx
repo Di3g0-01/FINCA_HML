@@ -5,7 +5,7 @@ import {
   Navigate,
   Outlet,
 } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -48,19 +48,55 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
       window.location.href = '/login';
     }
     return Promise.reject(error);
   },
 );
 
+const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 horas en milisegundos
+
+const InactivityHandler = () => {
+  useEffect(() => {
+    let timeoutId;
+
+    const logoutUser = () => {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    };
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(logoutUser, INACTIVITY_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, []);
+
+  return null;
+};
+
 const ProtectedRoute = () => {
-  // Verificamos si existe el usuario en localStorage. La verdadera seguridad está en la cookie HttpOnly en el backend.
   const user = localStorage.getItem('user');
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  return <Outlet />;
+  return (
+    <>
+      <InactivityHandler />
+      <Outlet />
+    </>
+  );
 };
 
 function App() {

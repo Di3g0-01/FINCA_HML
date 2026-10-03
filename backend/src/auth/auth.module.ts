@@ -14,7 +14,7 @@ import { MailModule } from '../mail/mail.module';
     PassportModule,
     JwtModule.register({
       secret: 'super-secret-key-finca-hml-2026',
-      signOptions: { expiresIn: '8h' },
+      signOptions: { expiresIn: '2h' },
     }),
   ],
   providers: [AuthService, JwtStrategy],
