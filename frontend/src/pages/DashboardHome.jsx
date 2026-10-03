@@ -168,14 +168,33 @@ export default function DashboardHome() {
     if (isOperator) return null;
 
     const now = new Date();
-    const currentMonth = now.getMonth();
+    const currentMonth = now.getMonth(); // 0-indexed (9 for October)
     const currentYear = now.getFullYear();
+
+    // Helper para extracción segura de año y mes de cadenas de fecha (YYYY-MM-DD o ISO)
+    const parseYearMonth = (dateStr) => {
+      if (!dateStr) return null;
+      if (typeof dateStr === 'string') {
+        const cleanStr = dateStr.split('T')[0];
+        const parts = cleanStr.split('-');
+        if (parts.length >= 2) {
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1; // 0-indexed
+          if (!isNaN(y) && !isNaN(m)) {
+            return { year: y, month: m };
+          }
+        }
+      }
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      return { year: d.getFullYear(), month: d.getMonth() };
+    };
 
     // Ventas del mes actual
     const salesThisMonth = animals.filter((a) => {
       if (a.status !== 'VENDIDO' || !a.sale_date) return false;
-      const d = new Date(a.sale_date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      const parsed = parseYearMonth(a.sale_date);
+      return parsed && parsed.month === currentMonth && parsed.year === currentYear;
     });
 
     const incomeTotal = salesThisMonth.reduce(
@@ -185,9 +204,11 @@ export default function DashboardHome() {
 
     // Compras del mes actual
     const purchasesThisMonth = animals.filter((a) => {
-      if (a.origin !== 'COMPRA' || !a.purchase_date) return false;
-      const d = new Date(a.purchase_date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      if (a.origin === 'COMPRA' && a.purchase_date) {
+        const parsed = parseYearMonth(a.purchase_date);
+        return parsed && parsed.month === currentMonth && parsed.year === currentYear;
+      }
+      return false;
     });
 
     const purchasesTotal = purchasesThisMonth.reduce(
@@ -196,15 +217,16 @@ export default function DashboardHome() {
     );
 
     // Gastos externos del mes actual
-    const externalTotal = externalExpenses
-      .filter((e) => {
-        if (!e.date) return false;
-        const d = new Date(e.date);
-        return (
-          d.getMonth() === currentMonth && d.getFullYear() === currentYear
-        );
-      })
-      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    const externalThisMonth = externalExpenses.filter((e) => {
+      if (!e.date) return false;
+      const parsed = parseYearMonth(e.date);
+      return parsed && parsed.month === currentMonth && parsed.year === currentYear;
+    });
+
+    const externalTotal = externalThisMonth.reduce(
+      (sum, e) => sum + (parseFloat(e.amount) || 0),
+      0,
+    );
 
     const expensesTotal = purchasesTotal + externalTotal;
     const netBalance = incomeTotal - expensesTotal;
