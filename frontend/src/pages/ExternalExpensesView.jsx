@@ -44,6 +44,9 @@ export default function ExternalExpensesView() {
 
   const [imageFile, setImageFile] = useState(null);
 
+  const ITEMS_PER_PAGE = 20;
+  const [page, setPage] = useState(1);
+
   const fetchDocStats = async () => {
     try {
       const res = await axios.get('/external-expenses/stats');
@@ -74,7 +77,14 @@ export default function ExternalExpensesView() {
   useEffect(() => {
     fetchExpenses();
     fetchDocStats();
+    setPage(1);
   }, [dateFilter]);
+
+  const totalPages = Math.ceil(expenses.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, expenses.length);
+  const currentExpenses = expenses.slice(startIndex, endIndex);
+
 
 
   const handleChange = (e) => {
@@ -609,7 +619,7 @@ export default function ExternalExpensesView() {
                     </td>
                   </tr>
                 ) : (
-                  expenses.map((expense) => (
+                  currentExpenses.map((expense) => (
                     <tr
                       key={expense.id}
                       style={{
@@ -756,6 +766,67 @@ export default function ExternalExpensesView() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {expenses.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 24px',
+              borderTop: '1px solid rgba(255,255,255,0.05)',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
+          >
+            <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+              Mostrando <b>{startIndex + 1}</b> - <b>{endIndex}</b> de <b>{expenses.length}</b> documentos de gastos (20 por pestaña)
+            </div>
+
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  className="btn-secondary"
+                  style={{
+                    opacity: page === 1 ? 0.5 : 1,
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                  }}
+                >
+                  Anterior
+                </button>
+
+                <span
+                  style={{
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    padding: '0 8px',
+                  }}
+                >
+                  Pestaña {page} de {totalPages}
+                </span>
+
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  className="btn-secondary"
+                  style={{
+                    opacity: page >= totalPages ? 0.5 : 1,
+                    cursor: page >= totalPages ? 'not-allowed' : 'pointer',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                  }}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
