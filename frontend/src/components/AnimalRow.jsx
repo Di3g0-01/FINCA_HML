@@ -1,5 +1,5 @@
 import { Fragment, memo } from 'react';
-import { ChevronDown, ChevronRight, Tag, Edit, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Tag, Edit, Trash2, Heart } from 'lucide-react';
 
 // --- HELPERS ---
 const formatDate = (dateStr) => {
@@ -32,6 +32,7 @@ const AnimalRow = memo(
     onToggleExpand,
     onEdit,
     onDelete,
+    onTogglePregnancy,
     relationshipLabel = null,
     viewMode = 'GENERAL',
   }) => {
@@ -552,6 +553,26 @@ const AnimalRow = memo(
                       >
                         Acciones de Gestión
                       </h4>
+                      {(['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(animal.type) || animal.sex === 'H') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onTogglePregnancy) onTogglePregnancy(animal);
+                          }}
+                          className="btn-secondary"
+                          style={{
+                            width: '100%',
+                            justifyContent: 'center',
+                            color: '#FF9800',
+                            background: 'rgba(255, 152, 0, 0.1)',
+                            borderColor: 'rgba(255, 152, 0, 0.3)',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          <Heart size={16} />
+                          <span>VACA PREÑADA</span>
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

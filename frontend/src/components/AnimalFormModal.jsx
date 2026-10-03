@@ -186,9 +186,9 @@ export default function AnimalFormModal({
       ].forEach((f) => {
         if (!payload[f]) payload[f] = null;
       });
-      if (!payload.is_pregnant || !payload.pregnancy_months)
-        payload.pregnancy_months = null;
-      ['color', 'nickname', 'breed', 'sex'].forEach((f) => {
+            delete payload.is_pregnant;
+            delete payload.pregnancy_months;
+            ['color', 'nickname', 'breed', 'sex'].forEach((f) => {
         if (!payload[f]) payload[f] = null;
       });
 
@@ -419,66 +419,8 @@ export default function AnimalFormModal({
                   ))}
               </datalist>
             </div>
-            {formData.type === 'VACA' && (
+            {['VACA', 'NOVILLA', 'CHIVA', 'DESMADRE_HEMBRA'].includes(formData.type) && (
               <>
-                <div
-                  className="form-group"
-                  style={{
-                    gridColumn: '1 / -1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    gap: '12px',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    name="is_pregnant"
-                    checked={formData.is_pregnant}
-                    onChange={handleChange}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      margin: 0,
-                      cursor: 'pointer',
-                    }}
-                  />
-                  <label
-                    style={{ margin: 0, cursor: 'pointer' }}
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        is_pregnant: !formData.is_pregnant,
-                      })
-                    }
-                  >
-                    ¿Está Preñada?
-                  </label>
-                </div>
-                {formData.is_pregnant && (
-                  <div
-                    className="form-group"
-                    style={{
-                      gridColumn: '1 / -1',
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      padding: '16px',
-                      borderRadius: '12px',
-                    }}
-                  >
-                    <label className="form-label">Meses de preñez</label>
-                    <input
-                      type="number"
-                      name="pregnancy_months"
-                      className="input-field"
-                      value={formData.pregnancy_months}
-                      onChange={handleChange}
-                      min="1"
-                      max="10"
-                      step="0.5"
-                      required
-                    />
-                  </div>
-                )}
                 <div className="form-group">
                   <label className="form-label">Total Partos</label>
                   <input

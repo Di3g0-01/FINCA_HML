@@ -30,6 +30,47 @@ export default function SystemDatePicker({
   const containerRef = useRef(null);
   const calendarRef = useRef(null);
 
+  const updatePosition = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      // Si el elemento padre está oculto o fuera de la pantalla, cerramos
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        setIsOpen(false);
+        return;
+      }
+      const calendarHeight = 310;
+      const calendarWidth = 270;
+      let top = rect.bottom + 6;
+      if (top + calendarHeight > window.innerHeight && rect.top - calendarHeight > 0) {
+        top = rect.top - calendarHeight - 6;
+      }
+      let left = rect.left;
+      if (left + calendarWidth > window.innerWidth) {
+        left = window.innerWidth - calendarWidth - 16;
+      }
+      if (left < 10) left = 10;
+
+      setDropdownStyle({
+        top: `${top}px`,
+        left: `${left}px`,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [isOpen, updatePosition]);
+
   // Cerrar al hacer clic fuera del componente
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -213,19 +254,19 @@ export default function SystemDatePicker({
       <div
         ref={calendarRef}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: dropdownStyle.top,
           left: dropdownStyle.left,
-          zIndex: 999999, // increased z-index just in case
+          zIndex: 999999, // superior a cualquier modal
           padding: '16px',
           width: '270px',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          backgroundColor: '#0F172A', // Fondo oscuro sólido (slate-900) para evitar transparencias
-          border: '1px solid rgba(255, 255, 255, 0.1)', // Borde sutil
-          borderRadius: '12px', // added since premium-card had radius
-          boxShadow: '0 10px 30px rgba(0,0,0,0.8)', // Sombra más fuerte
+          backgroundColor: '#0F172A', // Fondo oscuro sólido (slate-900)
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
           animation: 'fadeIn 0.2s ease-out',
         }}
         onClick={(e) => e.stopPropagation()} // Evitar que clic en calendario cierre el modal
@@ -378,13 +419,7 @@ export default function SystemDatePicker({
   const toggleOpen = (e) => {
     if (disabled) return;
     if (!isOpen) {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setDropdownStyle({
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX,
-        });
-      }
+      updatePosition();
       setIsOpen(true);
     } else {
       setIsOpen(false);

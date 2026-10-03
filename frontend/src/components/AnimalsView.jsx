@@ -1,4 +1,5 @@
 import { CustomAlert } from '../utils/alerts';
+import Swal from 'sweetalert2';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { Plus, Edit, Trash2, Search, Download, Upload } from 'lucide-react';
@@ -859,6 +860,159 @@ export default function AnimalsView() {
     }
   }, [fetchAnimals]);
 
+  const handleTogglePregnancy = useCallback(async (animal) => {
+    let currentMonths = 0;
+    if (animal.is_pregnant) {
+      if (animal.pregnancy_start_date) {
+        const start = new Date(animal.pregnancy_start_date);
+        const diffDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        let m = diffDays / 30.4375;
+        if (m > 10.0) m = 10.0;
+        currentMonths = Math.round(m * 10) / 10;
+      } else {
+        currentMonths = animal.pregnancy_months || 0;
+      }
+    }
+
+    if (!animal.is_pregnant) {
+      const { value: months, isConfirmed } = await Swal.fire({
+        background: '#1a1a1a',
+        color: '#ffffff',
+        title: `Registrar Vaca Preñada`,
+        html: `
+          <div style="text-align: left; font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">
+            Vaca / Hembra: <strong style="color:#fff;">${animal.identifier}</strong>
+          </div>
+          <p style="text-align: left; font-size: 13px; margin-bottom: 16px; color: #cbd5e1;">
+            Ingresa el tiempo de gestación en meses (ej: 1 a 10):
+          </p>
+        `,
+        input: 'number',
+        inputAttributes: {
+          min: '0.5',
+          max: '10',
+          step: '0.5',
+          placeholder: 'Ej. 5',
+          style: 'width: 80%; margin: 0 auto; text-align: center; font-size: 1.2rem; background: #0f172a; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px;',
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Guardar Preñez',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#FF9800',
+        cancelButtonColor: '#64748b',
+        customClass: {
+          popup: 'premium-card',
+        },
+        inputValidator: (value) => {
+          if (!value || isNaN(value) || parseFloat(value) <= 0) {
+            return 'Por favor ingresa un número de meses válido (ej. 1 a 10).';
+          }
+        },
+      });
+
+      if (isConfirmed && months) {
+        try {
+          const numMonths = parseFloat(months);
+          const start = new Date();
+          start.setDate(start.getDate() - Math.round(numMonths * 30.4375));
+
+          await axios.patch(`/animals/${animal.id}`, {
+            is_pregnant: true,
+            pregnancy_months: numMonths,
+            pregnancy_start_date: start.toISOString(),
+          });
+
+          CustomAlert.success('Preñez Registrada', `Se registró la vaca ${animal.identifier} con ${numMonths} meses de gestación.`);
+          fetchAnimals();
+        } catch (error) {
+          console.error(error);
+          CustomAlert.error('Error', 'No se pudo actualizar el estado de preñez.');
+        }
+      }
+    } else {
+      const result = await Swal.fire({
+        background: '#1a1a1a',
+        color: '#ffffff',
+        title: `Gestión de Preñez - ${animal.identifier}`,
+        html: `
+          <div style="background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <p style="color: #FF9800; font-weight: bold; margin: 0 0 4px 0;">Estado Actual: PREÑADA (${currentMonths} meses)</p>
+          </div>
+          <p style="text-align: left; font-size: 13px; color: #e2e8f0; margin-bottom: 8px;">
+            ¿Deseas cambiar el tiempo de preñez?
+          </p>
+          <p style="text-align: left; font-size: 12px; color: #94a3b8; font-style: italic; margin-bottom: 16px;">
+            * Si no deseas cambiar la fecha / tiempo, déjala en blanco y presiona Guardar.
+          </p>
+        `,
+        input: 'number',
+        inputAttributes: {
+          min: '0.5',
+          max: '10',
+          step: '0.5',
+          placeholder: 'Dejar en blanco para no cambiar',
+          style: 'width: 85%; margin: 0 auto; text-align: center; font-size: 1.1rem; background: #0f172a; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px;',
+        },
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Actualizar Tiempo',
+        denyButtonText: 'Quitar Preñez (Vacía)',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#FF9800',
+        denyButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        customClass: {
+          popup: 'premium-card',
+        },
+      });
+
+      if (result.isConfirmed) {
+        const newMonthsVal = result.value;
+        if (!newMonthsVal || newMonthsVal.trim() === '') {
+          CustomAlert.info('Sin Cambios', 'No se modificó el tiempo de preñez de la vaca.');
+          return;
+        }
+
+        const numMonths = parseFloat(newMonthsVal);
+        if (isNaN(numMonths) || numMonths <= 0) {
+          CustomAlert.error('Error', 'Ingresa un número de meses válido.');
+          return;
+        }
+
+        try {
+          const start = new Date();
+          start.setDate(start.getDate() - Math.round(numMonths * 30.4375));
+
+          await axios.patch(`/animals/${animal.id}`, {
+            is_pregnant: true,
+            pregnancy_months: numMonths,
+            pregnancy_start_date: start.toISOString(),
+          });
+
+          CustomAlert.success('Preñez Actualizada', `Se actualizó el tiempo a ${numMonths} meses de gestación.`);
+          fetchAnimals();
+        } catch (error) {
+          console.error(error);
+          CustomAlert.error('Error', 'No se pudo actualizar la preñez.');
+        }
+      } else if (result.isDenied) {
+        try {
+          await axios.patch(`/animals/${animal.id}`, {
+            is_pregnant: false,
+            pregnancy_months: null,
+            pregnancy_start_date: null,
+          });
+
+          CustomAlert.success('Estado Actualizado', `La vaca ${animal.identifier} ya no está registrada como preñada.`);
+          fetchAnimals();
+        } catch (error) {
+          console.error(error);
+          CustomAlert.error('Error', 'No se pudo quitar la preñez.');
+        }
+      }
+    }
+  }, [fetchAnimals]);
+
   const onToggleExpand = useCallback((id) => {
     setExpandedRowId(id);
   }, []);
@@ -872,6 +1026,7 @@ export default function AnimalsView() {
         onToggleExpand={onToggleExpand}
         onEdit={openForm}
         onDelete={handleDelete}
+        onTogglePregnancy={handleTogglePregnancy}
         relationshipLabel={relationshipLabel}
       />
     );
