@@ -281,8 +281,17 @@ export class ExternalExpensesService {
       ) {
         const fileName = path.basename(zipEntry.entryName);
 
+        // Ignorar archivos de metadatos del sistema (macOS / Windows)
+        if (
+          fileName.startsWith('._') ||
+          zipEntry.entryName.includes('__MACOSX')
+        ) {
+          continue;
+        }
+
         // Esperamos el formato YYYY-MM-DD_Descripcion.pdf o los nuevos formatos
         const parsed = parseExpenseFileName(fileName);
+
 
         if (parsed) {
           const { date: dateStr, amount, description } = parsed;
