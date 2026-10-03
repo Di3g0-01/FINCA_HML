@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Calendar,
@@ -11,10 +12,11 @@ import {
   Layers,
   Sparkles,
   Info,
-  CheckCircle2,
+  ArrowRight,
 } from 'lucide-react';
 
 export default function DashboardHome() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isOperator = user.role === 'OPERADOR';
   const isAdminOrSuper = user.role === 'ADMIN' || user.role === 'SUPERUSER';
@@ -96,7 +98,7 @@ export default function DashboardHome() {
       })
       .sort((a, b) => a.estimatedBirthDate - b.estimatedBirthDate);
 
-    // Próximos cambios de estado por edad
+    // Próximos cambios de estado por edad (Máximo 5)
     const upcomingAgeEvolutions = activos
       .filter((a) => a.birth_date && a.type !== 'CABALLO')
       .map((a) => {
@@ -151,8 +153,7 @@ export default function DashboardHome() {
         };
       })
       .filter(Boolean)
-      .sort((a, b) => a.targetDate - b.targetDate)
-      .slice(0, 10);
+      .sort((a, b) => a.targetDate - b.targetDate);
 
     return {
       totalActivos: activos.length,
@@ -219,7 +220,7 @@ export default function DashboardHome() {
     };
   }, [animals, externalExpenses, isOperator]);
 
-  // Últimos movimientos generales
+  // Últimos movimientos generales (Máximo 4)
   const latestMovements = useMemo(() => {
     return [...animals]
       .map((a) => {
@@ -238,7 +239,7 @@ export default function DashboardHome() {
         return { ...a, movementDate, movementType };
       })
       .sort((a, b) => new Date(b.movementDate) - new Date(a.movementDate))
-      .slice(0, 6);
+      .slice(0, 4);
   }, [animals]);
 
   const COLORS = {
@@ -253,24 +254,27 @@ export default function DashboardHome() {
     CABALLO: '#795548',
   };
 
+  const displayedPregnantCows = stats.pregnantCows.slice(0, 5);
+  const displayedEvolutions = stats.upcomingAgeEvolutions.slice(0, 5);
+
   return (
-    <div className="fade-in" style={{ paddingBottom: '40px' }}>
+    <div className="fade-in" style={{ paddingBottom: '32px' }}>
       {/* HEADER */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '28px',
+          marginBottom: '24px',
           flexWrap: 'wrap',
           gap: '16px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', marginBottom: '4px' }}>
             FINCA MARTÍNEZ
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
             {isOperator
               ? 'Panel Operativo de Control Ganadero'
               : 'Panel General de Control Fincas & Finanzas'}
@@ -279,10 +283,10 @@ export default function DashboardHome() {
         <div
           style={{
             background: 'rgba(255,255,255,0.05)',
-            padding: '8px 16px',
+            padding: '6px 14px',
             borderRadius: '20px',
             border: '1px solid rgba(255,255,255,0.1)',
-            fontSize: '13px',
+            fontSize: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -290,23 +294,23 @@ export default function DashboardHome() {
         >
           <span
             style={{
-              width: '10px',
-              height: '10px',
+              width: '8px',
+              height: '8px',
               borderRadius: '50%',
               backgroundColor: isOperator ? '#3B82F6' : '#10B981',
             }}
           />
-          <span style={{ color: 'var(--text-muted)' }}>Rol de Acceso:</span>
+          <span style={{ color: 'var(--text-muted)' }}>Rol:</span>
           <strong style={{ color: '#fff' }}>{user.role || 'USUARIO'}</strong>
         </div>
       </div>
 
       {isLoadingAnimals ? (
-        <div style={{ color: 'var(--text-muted)', padding: '40px 0' }}>
+        <div style={{ color: 'var(--text-muted)', padding: '30px 0' }}>
           Cargando panel de información...
         </div>
       ) : isErrorAnimals ? (
-        <div style={{ color: 'var(--danger-color)', padding: '40px 0' }}>
+        <div style={{ color: 'var(--danger-color)', padding: '30px 0' }}>
           Ocurrió un error al cargar los datos del sistema.
         </div>
       ) : (
@@ -316,17 +320,17 @@ export default function DashboardHome() {
             style={{
               display: 'grid',
               gridTemplateColumns: isOperator
-                ? 'repeat(auto-fit, minmax(220px, 1fr))'
-                : 'repeat(auto-fit, minmax(200px, 1fr))',
+                ? 'repeat(auto-fit, minmax(200px, 1fr))'
+                : 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '16px',
-              marginBottom: '32px',
+              marginBottom: '28px',
             }}
           >
             {/* Total Activos */}
             <div
               className="premium-card"
               style={{
-                padding: '20px',
+                padding: '16px 20px',
                 borderTop: '4px solid #3B82F6',
               }}
             >
@@ -335,26 +339,26 @@ export default function DashboardHome() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '12px',
+                  marginBottom: '8px',
                 }}
               >
                 <span
                   style={{
                     color: 'var(--text-muted)',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: 'bold',
                     letterSpacing: '0.05em',
                   }}
                 >
                   TOTAL GANADO ACTIVO
                 </span>
-                <Layers size={20} color="#3B82F6" />
+                <Layers size={18} color="#3B82F6" />
               </div>
-              <div style={{ fontSize: '2.2rem', fontWeight: 'bold' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
                 {stats.totalActivos}
               </div>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                Animales registrados
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Animales en la finca
               </span>
             </div>
 
@@ -362,7 +366,7 @@ export default function DashboardHome() {
             <div
               className="premium-card"
               style={{
-                padding: '20px',
+                padding: '16px 20px',
                 borderTop: '4px solid #FF9800',
               }}
             >
@@ -371,25 +375,25 @@ export default function DashboardHome() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '12px',
+                  marginBottom: '8px',
                 }}
               >
                 <span
                   style={{
                     color: '#FF9800',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: 'bold',
                     letterSpacing: '0.05em',
                   }}
                 >
                   VACAS POR PARIR
                 </span>
-                <Heart size={20} color="#FF9800" />
+                <Heart size={18} color="#FF9800" />
               </div>
-              <div style={{ fontSize: '2.2rem', fontWeight: 'bold', color: '#FF9800' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#FF9800' }}>
                 {stats.pregnantCows.length}
               </div>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 {stats.pregnantCows.filter((c) => c.isNearCalving).length} a punto de parir (&gt;= 7.5 m)
               </span>
             </div>
@@ -400,7 +404,7 @@ export default function DashboardHome() {
                 <div
                   className="premium-card"
                   style={{
-                    padding: '20px',
+                    padding: '16px 20px',
                     borderTop: '4px solid #10B981',
                   }}
                 >
@@ -409,33 +413,33 @@ export default function DashboardHome() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '12px',
+                      marginBottom: '8px',
                     }}
                   >
                     <span
                       style={{
                         color: '#10B981',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 'bold',
                         letterSpacing: '0.05em',
                       }}
                     >
                       INGRESOS MES ACTUAL
                     </span>
-                    <TrendingUp size={20} color="#10B981" />
+                    <TrendingUp size={18} color="#10B981" />
                   </div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#10B981' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10B981' }}>
                     Q {financialStats.incomeTotal.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                   </div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {financialStats.salesCount} ventas realizadas
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {financialStats.salesCount} ventas
                   </span>
                 </div>
 
                 <div
                   className="premium-card"
                   style={{
-                    padding: '20px',
+                    padding: '16px 20px',
                     borderTop: '4px solid #EF4444',
                   }}
                 >
@@ -444,33 +448,33 @@ export default function DashboardHome() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '12px',
+                      marginBottom: '8px',
                     }}
                   >
                     <span
                       style={{
                         color: '#EF4444',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 'bold',
                         letterSpacing: '0.05em',
                       }}
                     >
                       GASTOS MES ACTUAL
                     </span>
-                    <TrendingDown size={20} color="#EF4444" />
+                    <TrendingDown size={18} color="#EF4444" />
                   </div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#EF4444' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#EF4444' }}>
                     Q {financialStats.expensesTotal.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                   </div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    Compras + Gastos Operativos
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Compras + Gastos
                   </span>
                 </div>
 
                 <div
                   className="premium-card"
                   style={{
-                    padding: '20px',
+                    padding: '16px 20px',
                     borderTop: `4px solid ${financialStats.netBalance >= 0 ? '#10B981' : '#EF4444'}`,
                   }}
                 >
@@ -479,31 +483,31 @@ export default function DashboardHome() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '12px',
+                      marginBottom: '8px',
                     }}
                   >
                     <span
                       style={{
                         color: 'var(--text-muted)',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 'bold',
                         letterSpacing: '0.05em',
                       }}
                     >
                       BALANCE NETO
                     </span>
-                    <DollarSign size={20} color={financialStats.netBalance >= 0 ? '#10B981' : '#EF4444'} />
+                    <DollarSign size={18} color={financialStats.netBalance >= 0 ? '#10B981' : '#EF4444'} />
                   </div>
                   <div
                     style={{
-                      fontSize: '1.8rem',
+                      fontSize: '1.5rem',
                       fontWeight: 'bold',
                       color: financialStats.netBalance >= 0 ? '#10B981' : '#EF4444',
                     }}
                   >
                     Q {financialStats.netBalance.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                   </div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     Diferencia del mes
                   </span>
                 </div>
@@ -512,15 +516,15 @@ export default function DashboardHome() {
           </div>
 
           {/* DESGLOSE POR TIPO DE ANIMAL */}
-          <div style={{ marginBottom: '36px' }}>
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={20} color="#3B82F6" /> Desglose de Ganado Activo por Categoría
+          <div style={{ marginBottom: '28px' }}>
+            <h2 style={{ fontSize: '1.15rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Layers size={18} color="#3B82F6" /> Desglose por Categoría
             </h2>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                gap: '12px',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                gap: '10px',
               }}
             >
               {Object.keys(stats.counts).map((typeKey) => {
@@ -530,11 +534,11 @@ export default function DashboardHome() {
                     key={typeKey}
                     className="premium-card"
                     style={{
-                      padding: '16px',
+                      padding: '12px 14px',
                       background: 'rgba(255,255,255,0.02)',
                       borderLeft: `4px solid ${color}`,
                       display: 'flex',
-                      flexDirection: 'column',
+                      alignItems: 'center',
                       justifyContent: 'space-between',
                     }}
                   >
@@ -548,7 +552,7 @@ export default function DashboardHome() {
                     >
                       {typeKey.replace(/_/g, ' ')}
                     </span>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#fff', marginTop: '6px' }}>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>
                       {stats.counts[typeKey]}
                     </div>
                   </div>
@@ -561,89 +565,87 @@ export default function DashboardHome() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))',
-              gap: '24px',
-              marginBottom: '36px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
+              gap: '20px',
+              marginBottom: '28px',
             }}
           >
             {/* Tabla de Reglas de Clasificación por Edad */}
-            <div className="premium-card" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Info size={20} /> Reglas de Clasificación por Edad
+            <div className="premium-card" style={{ padding: '20px' }}>
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '12px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Info size={18} /> Reglas de Clasificación por Edad
               </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                Los animales evolucionan de categoría automáticamente en el sistema según su edad biológica:
-              </p>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--panel-border)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '10px 12px' }}>Rango de Edad</th>
-                      <th style={{ padding: '10px 12px' }}>Categoría Macho</th>
-                      <th style={{ padding: '10px 12px' }}>Categoría Hembra</th>
+                      <th style={{ padding: '8px 10px' }}>Rango Edad</th>
+                      <th style={{ padding: '8px 10px' }}>Macho</th>
+                      <th style={{ padding: '8px 10px' }}>Hembra</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '12px', fontWeight: 'bold', color: '#38BDF8' }}>0 a 6.5 meses</td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(33,150,243,0.15)', color: '#2196F3', fontWeight: 'bold' }}>CHIVO</span></td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(76,175,80,0.15)', color: '#4CAF50', fontWeight: 'bold' }}>CHIVA</span></td>
+                      <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#38BDF8' }}>0 a 6.5 meses</td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(33,150,243,0.15)', color: '#2196F3', fontWeight: 'bold' }}>CHIVO</span></td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(76,175,80,0.15)', color: '#4CAF50', fontWeight: 'bold' }}>CHIVA</span></td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '12px', fontWeight: 'bold', color: '#38BDF8' }}>6.5 a 12 meses</td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(156,39,176,0.15)', color: '#9C27B0', fontWeight: 'bold' }}>DESMADRE MACHO</span></td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,152,0,0.15)', color: '#FF9800', fontWeight: 'bold' }}>DESMADRE HEMBRA</span></td>
+                      <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#38BDF8' }}>6.5 a 12 meses</td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(156,39,176,0.15)', color: '#9C27B0', fontWeight: 'bold' }}>DESMADRE M.</span></td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,152,0,0.15)', color: '#FF9800', fontWeight: 'bold' }}>DESMADRE H.</span></td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '12px', fontWeight: 'bold', color: '#38BDF8' }}>1 a 2 años (12-24m)</td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(233,30,99,0.15)', color: '#E91E63', fontWeight: 'bold' }}>TORETE</span></td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(0,188,212,0.15)', color: '#00BCD4', fontWeight: 'bold' }}>NOVILLA</span></td>
+                      <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#38BDF8' }}>1 a 2 años (12-24m)</td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(233,30,99,0.15)', color: '#E91E63', fontWeight: 'bold' }}>TORETE</span></td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,188,212,0.15)', color: '#00BCD4', fontWeight: 'bold' }}>NOVILLA</span></td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '12px', fontWeight: 'bold', color: '#38BDF8' }}>&gt; 2 años (&gt; 24m)</td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(244,67,54,0.15)', color: '#F44336', fontWeight: 'bold' }}>TORO</span></td>
-                      <td style={{ padding: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: '#10B981', fontWeight: 'bold' }}>VACA</span></td>
+                      <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#38BDF8' }}>&gt; 2 años (&gt; 24m)</td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(244,67,54,0.15)', color: '#F44336', fontWeight: 'bold' }}>TORO</span></td>
+                      <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(16,185,129,0.15)', color: '#10B981', fontWeight: 'bold' }}>VACA</span></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Próximos Cambios de Estado por Edad (Lista) */}
-            <div className="premium-card" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={20} /> Próximos Cambios de Estado (Evolución)
-              </h2>
-              {stats.upcomingAgeEvolutions.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', padding: '20px', textAlign: 'center' }}>
-                  No hay animales jóvenes con fecha de nacimiento próxima a cambiar de estado.
+            {/* Próximos Cambios de Estado por Edad (Lista reducida a 5) */}
+            <div className="premium-card" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h2 style={{ fontSize: '1.15rem', color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={18} /> Próximos Cambios de Estado
+                </h2>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top 5 Próximos</span>
+              </div>
+              {displayedEvolutions.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', padding: '16px', textAlign: 'center', fontSize: '13px' }}>
+                  No hay animales jóvenes próximos a cambiar de estado.
                 </div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--panel-border)', color: 'var(--text-muted)' }}>
-                        <th style={{ padding: '10px' }}>ID Animal</th>
-                        <th style={{ padding: '10px' }}>Tipo Actual</th>
-                        <th style={{ padding: '10px' }}>Edad</th>
-                        <th style={{ padding: '10px' }}>Próximo Estado</th>
-                        <th style={{ padding: '10px' }}>Fecha Est. Cambio</th>
+                        <th style={{ padding: '8px' }}>ID</th>
+                        <th style={{ padding: '8px' }}>Actual</th>
+                        <th style={{ padding: '8px' }}>Edad</th>
+                        <th style={{ padding: '8px' }}>Próximo Estado</th>
+                        <th style={{ padding: '8px' }}>Fecha Cambio</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.upcomingAgeEvolutions.map((item) => (
+                      {displayedEvolutions.map((item) => (
                         <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <td style={{ padding: '10px', fontWeight: 'bold' }}>{item.identifier}</td>
-                          <td style={{ padding: '10px' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.type}</span>
-                          </td>
-                          <td style={{ padding: '10px' }}>{item.currentAgeMonths} m</td>
-                          <td style={{ padding: '10px' }}>
-                            <span style={{ padding: '2px 8px', background: 'rgba(245,158,11,0.15)', color: '#F59E0B', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px' }}>
+                          <td style={{ padding: '8px', fontWeight: 'bold' }}>{item.identifier}</td>
+                          <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{item.type}</td>
+                          <td style={{ padding: '8px' }}>{item.currentAgeMonths} m</td>
+                          <td style={{ padding: '8px' }}>
+                            <span style={{ padding: '2px 6px', background: 'rgba(245,158,11,0.15)', color: '#F59E0B', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }}>
                               {item.nextType.replace(/_/g, ' ')}
                             </span>
                           </td>
-                          <td style={{ padding: '10px', color: '#fff', fontWeight: '500' }}>
+                          <td style={{ padding: '8px', color: '#fff', fontWeight: '500' }}>
                             {item.targetDate.toLocaleDateString('es-ES', {
                               day: '2-digit',
                               month: 'short',
@@ -659,51 +661,62 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          {/* VACAS PRÓXIMAS A PARIR (TABLA DETALLADA) */}
-          <div className="premium-card" style={{ padding: '24px', marginBottom: '36px' }}>
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '16px', color: '#FF9800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} color="#FF9800" /> Vacas Próximas a Parir (Predicción)
-            </h2>
+          {/* VACAS PRÓXIMAS A PARIR (TABLA REDUCIDA A 5) */}
+          <div className="premium-card" style={{ padding: '20px', marginBottom: '28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.2rem', color: '#FF9800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} color="#FF9800" /> Vacas Próximas a Parir
+              </h2>
+              {stats.pregnantCows.length > 5 && (
+                <button
+                  onClick={() => navigate('/calving-control')}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FF9800', borderColor: 'rgba(255,152,0,0.3)' }}
+                >
+                  Ver todas ({stats.pregnantCows.length}) <ArrowRight size={14} />
+                </button>
+              )}
+            </div>
             {stats.pregnantCows.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', padding: '20px', textAlign: 'center' }}>
+              <div style={{ color: 'var(--text-muted)', padding: '16px', textAlign: 'center', fontSize: '13px' }}>
                 No hay vacas o novillas actualmente registradas en gestación activa.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--panel-border)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '12px' }}>Identificador</th>
-                      <th style={{ padding: '12px' }}>Clasificación</th>
-                      <th style={{ padding: '12px' }}>Lote</th>
-                      <th style={{ padding: '12px' }}>Gestación Actual</th>
-                      <th style={{ padding: '12px' }}>Predicción de Parto</th>
-                      <th style={{ padding: '12px' }}>Estado</th>
+                      <th style={{ padding: '8px 10px' }}>ID Vaca</th>
+                      <th style={{ padding: '8px 10px' }}>Tipo</th>
+                      <th style={{ padding: '8px 10px' }}>Lote</th>
+                      <th style={{ padding: '8px 10px' }}>Gestación</th>
+                      <th style={{ padding: '8px 10px' }}>Predicción Parto</th>
+                      <th style={{ padding: '8px 10px' }}>Estado</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.pregnantCows.map((cow) => (
+                    {displayedPregnantCows.map((cow) => (
                       <tr key={cow.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '12px', fontWeight: 'bold' }}>{cow.identifier}</td>
-                        <td style={{ padding: '12px' }}>{cow.type}</td>
-                        <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{cow.lote || 'GENERAL'}</td>
-                        <td style={{ padding: '12px', fontWeight: 'bold', color: '#FF9800' }}>
+                        <td style={{ padding: '8px 10px', fontWeight: 'bold' }}>{cow.identifier}</td>
+                        <td style={{ padding: '8px 10px' }}>{cow.type}</td>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{cow.lote || 'GENERAL'}</td>
+                        <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#FF9800' }}>
                           {cow.calculatedMonths} meses
                         </td>
-                        <td style={{ padding: '12px', fontWeight: 'bold', color: '#10B981' }}>
+                        <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#10B981' }}>
                           {cow.estimatedBirthDate.toLocaleDateString('es-ES', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
                           })}
                         </td>
-                        <td style={{ padding: '12px' }}>
+                        <td style={{ padding: '8px 10px' }}>
                           {cow.isNearCalving ? (
-                            <span style={{ padding: '4px 10px', background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                            <span style={{ padding: '2px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>
                               A PUNTO DE PARIR
                             </span>
                           ) : (
-                            <span style={{ padding: '4px 10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                            <span style={{ padding: '2px 8px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>
                               EN GESTACIÓN
                             </span>
                           )}
@@ -721,41 +734,41 @@ export default function DashboardHome() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))',
-                gap: '24px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
+                gap: '20px',
               }}
             >
-              {/* Últimos Movimientos de Ganado */}
-              <div className="premium-card" style={{ padding: '24px' }}>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '16px' }}>
+              {/* Últimos Movimientos (Top 4) */}
+              <div className="premium-card" style={{ padding: '20px' }}>
+                <h2 style={{ fontSize: '1.15rem', marginBottom: '12px' }}>
                   Últimos Movimientos de Ganado
                 </h2>
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--panel-border)' }}>
-                        <th style={{ padding: '10px', color: 'var(--text-muted)' }}>Identificador</th>
-                        <th style={{ padding: '10px', color: 'var(--text-muted)' }}>Tipo</th>
-                        <th style={{ padding: '10px', color: 'var(--text-muted)' }}>Evento</th>
-                        <th style={{ padding: '10px', color: 'var(--text-muted)' }}>Fecha</th>
+                        <th style={{ padding: '8px', color: 'var(--text-muted)' }}>Identificador</th>
+                        <th style={{ padding: '8px', color: 'var(--text-muted)' }}>Tipo</th>
+                        <th style={{ padding: '8px', color: 'var(--text-muted)' }}>Evento</th>
+                        <th style={{ padding: '8px', color: 'var(--text-muted)' }}>Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
                       {latestMovements.length === 0 ? (
                         <tr>
-                          <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                             Sin movimientos recientes.
                           </td>
                         </tr>
                       ) : (
                         latestMovements.map((a) => (
                           <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                            <td style={{ padding: '10px', fontWeight: 'bold' }}>{a.identifier || 'S/N'}</td>
-                            <td style={{ padding: '10px' }}>{a.type}</td>
-                            <td style={{ padding: '10px' }}>
+                            <td style={{ padding: '8px', fontWeight: 'bold' }}>{a.identifier || 'S/N'}</td>
+                            <td style={{ padding: '8px' }}>{a.type}</td>
+                            <td style={{ padding: '8px' }}>
                               <span
                                 style={{
-                                  padding: '4px 10px',
+                                  padding: '2px 8px',
                                   background:
                                     a.movementType === 'Venta'
                                       ? 'rgba(76, 175, 80, 0.2)'
@@ -772,15 +785,15 @@ export default function DashboardHome() {
                                         : a.movementType === 'Muerte'
                                           ? '#FF5722'
                                           : 'white',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
+                                  borderRadius: '10px',
+                                  fontSize: '10px',
                                   fontWeight: 'bold',
                                 }}
                               >
                                 {a.movementType.toUpperCase()}
                               </span>
                             </td>
-                            <td style={{ padding: '10px', color: 'var(--text-muted)' }}>
+                            <td style={{ padding: '8px', color: 'var(--text-muted)' }}>
                               {new Date(a.movementDate).toLocaleDateString('es-ES', {
                                 day: '2-digit',
                                 month: 'short',
@@ -797,44 +810,44 @@ export default function DashboardHome() {
 
               {/* Resumen de Flujo de Caja del Mes */}
               {financialStats && (
-                <div className="premium-card" style={{ padding: '24px' }}>
-                  <h2 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#10B981' }}>
-                    Resumen Financiero del Mes Actual
+                <div className="premium-card" style={{ padding: '20px' }}>
+                  <h2 style={{ fontSize: '1.15rem', marginBottom: '12px', color: '#10B981' }}>
+                    Resumen Financiero del Mes
                   </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)' }}>
                       <div>
-                        <div style={{ fontWeight: 'bold', color: '#10B981' }}>Ventas de Ganado</div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{financialStats.salesCount} ventas registadas</span>
+                        <div style={{ fontWeight: 'bold', color: '#10B981', fontSize: '13px' }}>Ventas de Ganado</div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{financialStats.salesCount} ventas</span>
                       </div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#10B981' }}>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#10B981' }}>
                         + Q {financialStats.incomeTotal.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
                       <div>
-                        <div style={{ fontWeight: 'bold', color: '#EF4444' }}>Compras de Ganado</div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{financialStats.purchasesCount} compras este mes</span>
+                        <div style={{ fontWeight: 'bold', color: '#EF4444', fontSize: '13px' }}>Compras de Ganado</div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{financialStats.purchasesCount} compras</span>
                       </div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#EF4444' }}>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#EF4444' }}>
                         - Q {financialStats.purchasesTotal.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
                       <div>
-                        <div style={{ fontWeight: 'bold', color: '#EF4444' }}>Gastos Operativos Externos</div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Facturas y gastos generales</span>
+                        <div style={{ fontWeight: 'bold', color: '#EF4444', fontSize: '13px' }}>Gastos Operativos</div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Facturas y gastos generales</span>
                       </div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#EF4444' }}>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#EF4444' }}>
                         - Q {financialStats.externalTotal.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', borderTop: '2px solid var(--panel-border)', marginTop: '8px' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Balance Neto Mensual</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: financialStats.netBalance >= 0 ? '#10B981' : '#EF4444' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', borderTop: '2px solid var(--panel-border)', marginTop: '4px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>Balance Neto</div>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 'bold', color: financialStats.netBalance >= 0 ? '#10B981' : '#EF4444' }}>
                         Q {financialStats.netBalance.toLocaleString('es-GT', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
