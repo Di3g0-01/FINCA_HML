@@ -68,4 +68,22 @@ export const CustomAlert = {
       confirmButtonText: 'Aceptar',
     });
   },
+
+  showLoading: (title = 'Guardando registro...', text = 'Por favor espera un momento') => {
+    return Swal.fire({
+      ...baseConfig,
+      title,
+      text,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+  },
+
+  closeLoading: () => {
+    Swal.close();
+  },
 };

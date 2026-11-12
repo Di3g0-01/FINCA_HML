@@ -14,6 +14,7 @@ export default function AnimalFormModal({
   cows,
 }) {
   // --- STATE & HOOKS ---
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     type: 'VACA',
     lote: 'GENERAL',
@@ -131,6 +132,7 @@ export default function AnimalFormModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     let finalType = formData.type;
     if (formData.birth_date && formData.type !== 'CABALLO') {
@@ -165,6 +167,12 @@ export default function AnimalFormModal({
     }
 
     try {
+      setIsSubmitting(true);
+      CustomAlert.showLoading(
+        animalToEdit ? 'Actualizando animal...' : 'Registrando nuevo nacimiento...',
+        'Por favor espera, estamos procesando los datos de forma segura...'
+      );
+
       const payload = { ...formData, type: finalType };
       if (payload.motherIdentifier) {
         const mId = cowIdByIdentifier.get(
@@ -172,6 +180,8 @@ export default function AnimalFormModal({
         );
         if (mId) payload.mother_id = mId;
         else {
+          CustomAlert.closeLoading();
+          setIsSubmitting(false);
           CustomAlert.info('Aviso', 'El identificador de la madre no existe.');
           return;
         }
@@ -186,9 +196,9 @@ export default function AnimalFormModal({
       ].forEach((f) => {
         if (!payload[f]) payload[f] = null;
       });
-            delete payload.is_pregnant;
-            delete payload.pregnancy_months;
-            ['color', 'nickname', 'breed', 'sex'].forEach((f) => {
+      delete payload.is_pregnant;
+      delete payload.pregnancy_months;
+      ['color', 'nickname', 'breed', 'sex'].forEach((f) => {
         if (!payload[f]) payload[f] = null;
       });
 
@@ -197,15 +207,25 @@ export default function AnimalFormModal({
         ? parseFloat(payload.birth_weight)
         : null;
 
-      if (!animalToEdit) payload.origin = 'NACIMIENTO';
-      else delete payload.origin;
+      if (!animalToEdit) {
+        payload.origin = 'NACIMIENTO';
+        // Generar UUID único de transacción para garantizar idempotencia
+        payload.idempotency_key =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      } else {
+        delete payload.origin;
+      }
 
-      if (animalToEdit)
+      if (animalToEdit) {
         await axios.patch(
           `/animals/${animalToEdit.id}`,
           payload,
         );
-      else {
+        CustomAlert.closeLoading();
+        await CustomAlert.success('¡Actualizado con éxito!', 'El registro ha sido actualizado correctamente.');
+      } else {
         // If user is OPERADOR, send to requests instead of directly to animals
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user.role === 'OPERADOR') {
@@ -213,19 +233,29 @@ export default function AnimalFormModal({
             type: 'NACIMIENTO',
             payload,
           });
-          CustomAlert.success(
+          CustomAlert.closeLoading();
+          await CustomAlert.success(
             'Solicitud Enviada',
             'Tu solicitud de nacimiento ha sido enviada al administrador para su revisión.',
           );
         } else {
-          await axios.post('/animals', payload);
+          const res = await axios.post('/animals', payload);
+          const savedAnimal = res.data;
+          CustomAlert.closeLoading();
+          await CustomAlert.success(
+            '¡Nacimiento Registrado!',
+            `El animal fue registrado exitosamente con el identificador: ${savedAnimal?.identifier || 'Asignado'}`
+          );
         }
       }
 
       onSaved();
       onClose();
     } catch (error) {
-      CustomAlert.info('Aviso', 'Error al guardar. Verifica los datos.');
+      CustomAlert.closeLoading();
+      CustomAlert.info('Aviso', error?.response?.data?.message || 'Error al guardar. Verifica los datos.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -470,11 +500,11 @@ export default function AnimalFormModal({
               marginTop: '32px',
             }}
           >
-            <button type="button" onClick={onClose} className="btn-secondary">
+            <button type="button" onClick={onClose} disabled={isSubmitting} className="btn-secondary">
               Cancelar
             </button>
-            <button type="submit" className="btn-primary">
-              Guardar
+            <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </form>

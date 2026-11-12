@@ -8,6 +8,7 @@ import CustomSelect from '../components/CustomSelect';
 export default function PurchasesView() {
   const [animals, setAnimals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -93,6 +94,7 @@ export default function PurchasesView() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     try {
       if (formData.type === 'CABALLO') {
@@ -102,6 +104,13 @@ export default function PurchasesView() {
         }
         formData.identifier = formData.nickname;
       }
+
+      setIsSubmitting(true);
+      CustomAlert.showLoading(
+        animalToEdit ? 'Actualizando compra...' : 'Registrando compra...',
+        'Por favor espera un momento...'
+      );
+
       const payload = {
         ...formData,
         origin: 'COMPRA',
@@ -111,13 +120,24 @@ export default function PurchasesView() {
         birth_date: formData.birth_date || null,
       };
 
+      if (!animalToEdit) {
+        payload.idempotency_key =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      }
+
       if (animalToEdit) {
         await axios.patch(
           `/animals/${animalToEdit.id}`,
           payload,
         );
+        CustomAlert.closeLoading();
+        await CustomAlert.success('¡Compra Actualizada!', 'Los datos se actualizaron correctamente.');
       } else {
         await axios.post('/animals', payload);
+        CustomAlert.closeLoading();
+        await CustomAlert.success('¡Compra Registrada!', 'El animal ha ingresado al inventario con éxito.');
       }
 
       setIsModalOpen(false);
@@ -138,8 +158,11 @@ export default function PurchasesView() {
       });
       fetchAnimals();
     } catch (error) {
+      CustomAlert.closeLoading();
       console.error(error);
-      CustomAlert.info('Aviso', 'Error guardando/editando la compra.');
+      CustomAlert.info('Aviso', error?.response?.data?.message || 'Error guardando/editando la compra.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -723,6 +746,7 @@ export default function PurchasesView() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={isSubmitting}
                   style={{
                     padding: '12px 24px',
                     background: 'transparent',
@@ -734,10 +758,18 @@ export default function PurchasesView() {
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="btn-primary"
-                  style={{ background: '#2196F3', color: '#fff' }}
+                  style={{
+                    background: '#2196F3',
+                    color: '#fff',
+                    opacity: isSubmitting ? 0.7 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  {animalToEdit
+                  {isSubmitting
+                    ? 'Procesando...'
+                    : animalToEdit
                     ? 'Guardar Cambios'
                     : 'Guardar e Ingresar a Inventario'}
                 </button>

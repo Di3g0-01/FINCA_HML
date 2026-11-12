@@ -39,6 +39,19 @@ export class AnimalsService implements OnModuleInit {
   // --- STANDARD CRUD ---
 
   async create(animalData: Partial<Animal>, username: string = 'SYSTEM') {
+    // 0. Idempotencia basada en UUID
+    if (animalData.idempotency_key) {
+      const existingKey = await this.animalsRepository.findOne({
+        where: { idempotency_key: animalData.idempotency_key },
+      });
+      if (existingKey) {
+        this.logger.warn(
+          `Petición duplicada detectada con idempotency_key: ${animalData.idempotency_key}. Retornando registro existente.`,
+        );
+        return existingKey;
+      }
+    }
+
     if (animalData.type === AnimalType.CABALLO) {
       if (!animalData.nickname) {
         throw new BadRequestException(

@@ -163,6 +163,10 @@ export class Animal {
   @Column({ type: 'text', nullable: true })
   death_reason: string | null;
 
+  @Index({ unique: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  idempotency_key: string | null;
+
   @Index()
   @CreateDateColumn()
   created_at: Date;
