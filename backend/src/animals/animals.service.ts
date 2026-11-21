@@ -286,20 +286,20 @@ export class AnimalsService implements OnModuleInit {
       const exactSearch = search.trim();
       query.andWhere(
         new Brackets((qb) => {
-          qb.where('animal.identifier = :exactSearch', { exactSearch })
+          qb.where('animal.identifier ILIKE :search', { search: `%${exactSearch}%` })
             .orWhere('animal.nickname ILIKE :search', {
               search: `%${exactSearch}%`,
             })
-            .orWhere('mother.identifier = :exactSearch', { exactSearch })
+            .orWhere('mother.identifier ILIKE :search', { search: `%${exactSearch}%` })
             // Hijos del animal buscado
             .orWhere(
-              'animal.mother_id IN (SELECT a.id FROM animals a WHERE a.identifier = :exactSearch)',
-              { exactSearch },
+              'animal.mother_id IN (SELECT a.id FROM animals a WHERE a.identifier ILIKE :search)',
+              { search: `%${exactSearch}%` },
             )
             // Madre del animal buscado
             .orWhere(
-              'animal.id IN (SELECT a.mother_id FROM animals a WHERE a.identifier = :exactSearch AND a.mother_id IS NOT NULL)',
-              { exactSearch },
+              'animal.id IN (SELECT a.mother_id FROM animals a WHERE a.identifier ILIKE :search AND a.mother_id IS NOT NULL)',
+              { search: `%${exactSearch}%` },
             );
         }),
       );
