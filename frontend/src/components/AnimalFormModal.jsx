@@ -174,18 +174,48 @@ export default function AnimalFormModal({
       );
 
       const payload = { ...formData, type: finalType };
-      if (payload.motherIdentifier) {
-        const mId = cowIdByIdentifier.get(
-          payload.motherIdentifier.trim().toUpperCase(),
-        );
-        if (mId) payload.mother_id = mId;
-        else {
-          CustomAlert.closeLoading();
-          setIsSubmitting(false);
-          CustomAlert.info('Aviso', 'El identificador de la madre no existe.');
-          return;
+      if (payload.motherIdentifier && payload.motherIdentifier.trim() !== '') {
+        const cleanMotherId = payload.motherIdentifier.trim().toUpperCase();
+        let mId = cowIdByIdentifier.get(cleanMotherId);
+        
+        // Si no está en la lista en memoria, buscarla o crearla como referencia histórica
+        if (!mId) {
+          try {
+            const searchRes = await axios.get(`/animals?search=${cleanMotherId}&limit=10`);
+            const foundList = searchRes.data.data || searchRes.data;
+            const match = Array.isArray(foundList)
+              ? foundList.find((a) => String(a.identifier).trim().toUpperCase() === cleanMotherId)
+              : null;
+
+            if (match) {
+              mId = match.id;
+            } else {
+              // Si la madre no existe en absoluto, registrarla automáticamente como referencia histórica
+              const createRes = await axios.post('/animals', {
+                identifier: cleanMotherId,
+                type: 'VACA',
+                sex: 'H',
+                status: 'MUERTO',
+                origin: 'NACIMIENTO',
+                observations: 'Referencia histórica (Madre creada automáticamente)',
+              });
+              if (createRes.data && createRes.data.id) {
+                mId = createRes.data.id;
+              }
+            }
+          } catch (motherErr) {
+            console.warn('Error verificando/creando madre:', motherErr?.message);
+          }
         }
-      } else payload.mother_id = null;
+
+        if (mId) {
+          payload.mother_id = mId;
+        } else {
+          payload.mother_id = null;
+        }
+      } else {
+        payload.mother_id = null;
+      }
 
       delete payload.motherIdentifier;
       [

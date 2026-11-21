@@ -73,10 +73,10 @@ export default function AnimalsView() {
 
   useEffect(() => {
     axios
-      .get('/animals?status=ACTIVO&limit=5000')
+      .get('/animals?limit=5000')
       .then((res) => {
         const data = res.data.data || res.data;
-        setAllCows(data.filter((a) => a.type === 'VACA'));
+        setAllCows(data.filter((a) => a.type === 'VACA' || a.sex === 'H'));
       })
       .catch(() => {});
   }, [animals]);
