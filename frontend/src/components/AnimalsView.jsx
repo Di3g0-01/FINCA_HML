@@ -767,41 +767,62 @@ export default function AnimalsView() {
           if (pendingRelations.length > 0) {
             try {
               const dbDataRes = await axios.get(
-                '/animals?limit=5000',
+                '/animals?limit=10000',
               );
               const animalsList = dbDataRes.data.data || dbDataRes.data;
-              animalsList.forEach((a) => {
-                if (!idMap.has(a.identifier)) idMap.set(a.identifier, a.id);
+              if (Array.isArray(animalsList)) {
+                animalsList.forEach((a) => {
+                  if (a && a.identifier) {
+                    idMap.set(String(a.identifier).trim().toUpperCase(), a.id);
+                  }
+                });
+              }
+
+              // 1. Identificar madres únicas necesarias que no están registradas
+              const uniqueMothersNeeded = new Set();
+              pendingRelations.forEach((rel) => {
+                const normMother = String(rel.motherStr).trim().toUpperCase();
+                if (!idMap.has(normMother)) {
+                  uniqueMothersNeeded.add(normMother);
+                }
               });
 
-              for (const rel of pendingRelations) {
-                let motherId = idMap.get(rel.motherStr);
-                if (!motherId) {
-                  try {
-                    const mRes = await axios.post(
-                      '/animals',
-                      {
-                        identifier: rel.motherStr,
-                        type: 'VACA',
-                        sex: 'H',
-                        status: 'MUERTO',
-                        origin: 'NACIMIENTO',
-                        observations: 'Referencia historica (Madre muerta)',
-                      },
-                    );
-                    motherId = mRes.data.id;
-                    idMap.set(rel.motherStr, motherId);
-                  } catch (e) {}
+              // 2. Registrar madres faltantes de forma controlada y secuencial
+              for (const motherIdentifier of uniqueMothersNeeded) {
+                try {
+                  const mRes = await axios.post('/animals', {
+                    identifier: motherIdentifier,
+                    type: 'VACA',
+                    sex: 'H',
+                    status: 'MUERTO',
+                    origin: 'NACIMIENTO',
+                    observations: 'Referencia histórica (Madre creada por importación)',
+                  });
+                  if (mRes.data && mRes.data.id) {
+                    idMap.set(motherIdentifier, mRes.data.id);
+                  }
+                } catch (createMotherErr) {
+                  console.warn(`No se pudo crear automáticamente la madre ${motherIdentifier}:`, createMotherErr?.message);
                 }
-                if (motherId)
-                  await axios
-                    .patch(`/animals/${rel.childId}`, {
+              }
+
+              // 3. Vincular las crías con sus madres con pausas para evitar sobrecarga del servidor
+              for (const rel of pendingRelations) {
+                const normMother = String(rel.motherStr).trim().toUpperCase();
+                const motherId = idMap.get(normMother);
+                if (motherId && rel.childId) {
+                  try {
+                    await axios.patch(`/animals/${rel.childId}`, {
                       mother_id: motherId,
-                    })
-                    .catch(() => {});
+                    });
+                    await new Promise((resolve) => setTimeout(resolve, 50));
+                  } catch (patchErr) {
+                    console.warn(`Error al asignar madre ${normMother} a animal ${rel.childId}:`, patchErr?.message);
+                  }
+                }
               }
             } catch (relErr) {
-              console.error(relErr);
+              console.error('Error general en la vinculación de madres:', relErr);
             }
           }
 

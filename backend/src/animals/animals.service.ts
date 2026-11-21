@@ -440,36 +440,37 @@ export class AnimalsService implements OnModuleInit {
       updateData.mother_id !== current.mother_id
     ) {
       changes.push(`Madre cambiada`);
-      await this.animalsRepository.manager.transaction(
-        async (transactionalEntityManager) => {
-          if (updateData.mother_id) {
-            const newMother = await transactionalEntityManager.findOne(Animal, {
-              where: { id: updateData.mother_id },
+      try {
+        if (updateData.mother_id) {
+          const newMother = await this.animalsRepository.findOne({
+            where: { id: updateData.mother_id },
+          });
+          if (newMother) {
+            const offspringCount = await this.animalsRepository.count({
+              where: { mother_id: newMother.id },
             });
-            if (newMother) {
-              const offspringCount = await transactionalEntityManager.count(
-                Animal,
-                { where: { mother_id: newMother.id } },
-              );
-              newMother.total_calvings = offspringCount + 1;
-              await transactionalEntityManager.save(newMother);
-            }
+            newMother.total_calvings = offspringCount + 1;
+            await this.animalsRepository.save(newMother);
+          } else {
+            // Si el mother_id no existe en la base de datos, no permitir error de Foreign Key
+            updateData.mother_id = null;
           }
-          if (current.mother_id) {
-            const oldMother = await transactionalEntityManager.findOne(Animal, {
-              where: { id: current.mother_id },
+        }
+        if (current.mother_id) {
+          const oldMother = await this.animalsRepository.findOne({
+            where: { id: current.mother_id },
+          });
+          if (oldMother) {
+            const offspringCount = await this.animalsRepository.count({
+              where: { mother_id: oldMother.id },
             });
-            if (oldMother) {
-              const offspringCount = await transactionalEntityManager.count(
-                Animal,
-                { where: { mother_id: oldMother.id } },
-              );
-              oldMother.total_calvings = Math.max(0, offspringCount - 1);
-              await transactionalEntityManager.save(oldMother);
-            }
+            oldMother.total_calvings = Math.max(0, offspringCount - 1);
+            await this.animalsRepository.save(oldMother);
           }
-        },
-      );
+        }
+      } catch (motherErr) {
+        this.logger.warn(`Error al actualizar conteo de madre para animal ${id}: ${motherErr?.message}`);
+      }
     }
 
     await this.animalsRepository.update(id, updateData);
