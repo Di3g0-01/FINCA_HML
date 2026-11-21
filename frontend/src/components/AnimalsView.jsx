@@ -249,7 +249,7 @@ export default function AnimalsView() {
     } catch (err) {
       CustomAlert.info('Aviso', 'Error al exportar Excel');
     }
-  }, []);
+  }, [filterStatus]);
 
   const handleExportPDF = useCallback(async () => {
     try {
@@ -318,7 +318,7 @@ export default function AnimalsView() {
       console.error(err);
       CustomAlert.info('Aviso', 'Error al exportar PDF');
     }
-  }, []);
+  }, [filterStatus]);
 
   const handleImportExcel = useCallback(
     (e) => {

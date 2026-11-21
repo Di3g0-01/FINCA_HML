@@ -185,11 +185,11 @@ export class AnimalsService implements OnModuleInit {
           mother.pregnancy_months = null;
           mother.pregnancy_start_date = null;
         }
-        // Recount offspring to ensure accuracy
+        // Solo actualizar si no tiene partos o si el recuento es mayor
         const offspringCount = await this.animalsRepository.count({
           where: { mother_id: mother.id },
         });
-        mother.total_calvings = offspringCount + 1; // Existing + this new one
+        mother.total_calvings = Math.max(mother.total_calvings || 0, offspringCount + 1);
         await this.animalsRepository.save(mother);
       }
     }
@@ -348,6 +348,7 @@ export class AnimalsService implements OnModuleInit {
       { key: 'grado', label: 'Grado' },
       { key: 'is_pregnant', label: 'Preñada' },
       { key: 'pregnancy_months', label: 'Meses de preñez' },
+      { key: 'total_calvings', label: 'No. Partos' },
     ];
 
     fieldsToTrack.forEach((f) => {
@@ -449,7 +450,7 @@ export class AnimalsService implements OnModuleInit {
             const offspringCount = await this.animalsRepository.count({
               where: { mother_id: newMother.id },
             });
-            newMother.total_calvings = offspringCount + 1;
+            newMother.total_calvings = Math.max(newMother.total_calvings || 0, offspringCount + 1);
             await this.animalsRepository.save(newMother);
           } else {
             // Si el mother_id no existe en la base de datos, no permitir error de Foreign Key
