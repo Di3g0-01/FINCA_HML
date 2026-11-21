@@ -20,6 +20,7 @@ export default function AnimalFormModal({
     lote: 'GENERAL',
     birth_date: '',
     color: '',
+    status: 'ACTIVO',
     observations: '',
     is_pregnant: false,
     pregnancy_months: '',
@@ -67,6 +68,7 @@ export default function AnimalFormModal({
           ? animalToEdit.birth_date.split('T')[0]
           : '',
         color: animalToEdit.color || '',
+        status: animalToEdit.status || 'ACTIVO',
         observations: animalToEdit.observations || '',
         is_pregnant: animalToEdit.is_pregnant || false,
         pregnancy_months: animalToEdit.pregnancy_months || '',
@@ -95,6 +97,7 @@ export default function AnimalFormModal({
         lote: 'GENERAL',
         birth_date: '',
         color: '',
+        status: 'ACTIVO',
         observations: '',
         is_pregnant: false,
         pregnancy_months: '',
@@ -374,6 +377,20 @@ export default function AnimalFormModal({
                   background: 'rgba(255,255,255,0.01)',
                   color: 'var(--text-muted)',
                 }}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estado del Animal</label>
+              <CustomSelect
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                options={[
+                  { label: 'Activo', value: 'ACTIVO' },
+                  { label: 'Baja / Muerto', value: 'MUERTO' },
+                  { label: 'Vendido', value: 'VENDIDO' },
+                ]}
               />
             </div>
             <div className="form-group">

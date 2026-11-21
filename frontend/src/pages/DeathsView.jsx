@@ -591,11 +591,12 @@ export default function DeathsView() {
                             gap: '8px',
                           }}
                         >
-                          {JSON.parse(localStorage.getItem('user') || '{}')
-                            .role === 'ADMIN' && (
+                          {(JSON.parse(localStorage.getItem('user') || '{}').role === 'ADMIN' ||
+                            JSON.parse(localStorage.getItem('user') || '{}').role === 'SUPERUSER') && (
                             <>
                               <button
                                 onClick={() => handleEdit(animal)}
+                                title="Editar causa/fecha"
                                 style={{
                                   background: 'rgba(33,150,243,0.1)',
                                   color: '#2196F3',
@@ -609,16 +610,22 @@ export default function DeathsView() {
                               </button>
                               <button
                                 onClick={() => handleRevert(animal.id)}
+                                title="Reactivar animal (pasar a Activo)"
                                 style={{
-                                  background: 'rgba(255,152,0,0.1)',
-                                  color: '#FF9800',
+                                  background: 'rgba(16,185,129,0.1)',
+                                  color: '#10B981',
                                   border: 'none',
-                                  padding: '6px',
+                                  padding: '6px 10px',
                                   borderRadius: '4px',
                                   cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
                                 }}
                               >
-                                <X size={16} />
+                                Reactivar
                               </button>
                             </>
                           )}
