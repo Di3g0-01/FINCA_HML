@@ -691,7 +691,7 @@ export default function DashboardHome() {
               </h2>
               {stats.pregnantCows.length > 5 && (
                 <button
-                  onClick={() => navigate('/calving-control')}
+                  onClick={() => navigate('/dashboard/calving-control')}
                   className="btn-secondary"
                   style={{ fontSize: '12px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FF9800', borderColor: 'rgba(255,152,0,0.3)' }}
                 >
